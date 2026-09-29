@@ -53,6 +53,52 @@
     "payment": "Cash on delivery · Whish",
     "copyright": "© {year} LIVRE. All rights reserved."
   },
+  "home": {
+    "title": "LIVRE — personalized name jewelry from Lebanon",
+    "placeholder": "Placeholder",
+    "sections": {
+      "hero": {
+        "title": "Hero",
+        "description": "Background video and image carousel, promo headline with code and countdown, and a mini name preview (gold, silver or rose; one or two rings)."
+      },
+      "lira": {
+        "title": "The Lira collection",
+        "description": "The 3D Lira coin with the Lira necklaces and bracelets."
+      },
+      "shopByStyle": {
+        "title": "Shop by style",
+        "description": "Category cards: necklaces, name necklaces, bracelets, rings, earrings, gifts and more."
+      },
+      "bestSellers": {
+        "title": "Best sellers",
+        "description": "Carousel of our best-selling pieces."
+      },
+      "howItWorks": {
+        "title": "How it works",
+        "description": "01 Personalize it · 02 We craft it · 03 Delivered to you."
+      },
+      "season": {
+        "title": "Season banner",
+        "description": "The current season (Valentine's, Mother's Day, Ramadan…) with its code and countdown. Only shown while a season is active."
+      },
+      "reviews": {
+        "title": "Loved by customers",
+        "description": "Customer reviews and photos."
+      },
+      "newArrivals": {
+        "title": "New arrivals",
+        "description": "Our latest pieces."
+      },
+      "whyUs": {
+        "title": "Why Livre — since 2020",
+        "description": "Handcrafted with care · Personalized for your story · Quality materials · Trusted by Lebanese."
+      },
+      "trustBar": {
+        "title": "Trust bar",
+        "description": "Free shipping · Secure payment · Best price · Sales all the time."
+      }
+    }
+  },
   "notFound": {
     "title": "Page not found",
     "description": "We couldn't find the page you were looking for.",
