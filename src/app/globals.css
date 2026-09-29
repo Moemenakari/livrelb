@@ -45,6 +45,40 @@
   --font-sans: var(--font-readex), ui-sans-serif, system-ui, sans-serif;
 }
 
+@theme {
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-marquee-rtl: marquee-rtl 35s linear infinite;
+  --animate-drawer-in: drawer-in 250ms ease-out;
+  --animate-drawer-in-rtl: drawer-in-rtl 250ms ease-out;
+  --animate-fade-in: fade-in 250ms ease-out;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes marquee-rtl {
+    to {
+      transform: translateX(50%);
+    }
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes drawer-in-rtl {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
 /* Wide spacing for small capitals. Letter-spacing breaks Arabic letter
    joining, so it is switched off on Arabic text. */
 @utility tracking-caps {
@@ -57,6 +91,11 @@
 @layer base {
   html {
     color-scheme: dark;
+  }
+
+  /* No page scrolling behind an open modal (mobile menu). */
+  html:has(dialog[open]) {
+    overflow: hidden;
   }
 
   body {

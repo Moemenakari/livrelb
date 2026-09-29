@@ -7,6 +7,52 @@
     "brandName": "LIVRE",
     "skipToContent": "انتقل إلى المحتوى"
   },
+  "announcements": {
+    "label": "إعلانات"
+  },
+  "nav": {
+    "mainLabel": "القائمة الرئيسية",
+    "homeLabel": "LIVRE — الصفحة الرئيسية",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "menuTitle": "القائمة",
+    "search": "بحث",
+    "account": "حسابي",
+    "cart": "السلة",
+    "categories": {
+      "nameNecklaces": "قلادات بالأسماء",
+      "necklaces": "قلادات",
+      "bracelets": "أساور",
+      "rings": "خواتم",
+      "earrings": "أقراط",
+      "liraCollection": "مجموعة الليرة",
+      "gifts": "هدايا",
+      "newArrivals": "وصل حديثاً"
+    }
+  },
+  "localeSwitcher": {
+    "label": "EN",
+    "ariaLabel": "English"
+  },
+  "footer": {
+    "about": "مجوهرات بالأسماء ومجموعة الليرة المميّزة — تُصنع حسب الطلب ونوصلها إلى كل لبنان.",
+    "shop": "تسوّق",
+    "help": "مساعدة",
+    "policies": "السياسات",
+    "links": {
+      "contact": "تواصل معنا",
+      "faq": "الأسئلة الشائعة",
+      "sizeGuide": "دليل المقاسات",
+      "shipping": "سياسة الشحن",
+      "returns": "الإرجاع والاستبدال",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الخدمة"
+    },
+    "whatsapp": "واتساب",
+    "instagram": "إنستغرام",
+    "payment": "الدفع عند الاستلام · Whish",
+    "copyright": "© {year} LIVRE. جميع الحقوق محفوظة."
+  },
   "notFound": {
     "title": "الصفحة غير موجودة",
     "description": "لم نتمكن من العثور على الصفحة التي تبحث عنها.",

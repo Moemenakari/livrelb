@@ -3,6 +3,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
 import { resolveLocale } from "@/i18n/resolve-locale";
+import { AnnouncementBar } from "@/components/layout/announcement-bar";
+import { Footer } from "@/components/layout/footer";
+import { Navbar } from "@/components/layout/navbar";
 import { fontVariables } from "../fonts";
 import "../globals.css";
 
@@ -33,12 +36,18 @@ export default async function LocaleLayout({
     <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
       <body className="flex min-h-dvh flex-col">
         <NextIntlClientProvider>
-          <a href="#main" className="sr-only focus:not-sr-only">
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-gold focus:px-4 focus:py-2 focus:text-background"
+          >
             {t("skipToContent")}
           </a>
+          <AnnouncementBar />
+          <Navbar />
           <main id="main" className="flex-1">
             {children}
           </main>
+          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>

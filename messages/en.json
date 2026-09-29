@@ -7,6 +7,52 @@
     "brandName": "LIVRE",
     "skipToContent": "Skip to content"
   },
+  "announcements": {
+    "label": "Announcements"
+  },
+  "nav": {
+    "mainLabel": "Main",
+    "homeLabel": "LIVRE — home",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuTitle": "Menu",
+    "search": "Search",
+    "account": "My account",
+    "cart": "Cart",
+    "categories": {
+      "nameNecklaces": "Name Necklaces",
+      "necklaces": "Necklaces",
+      "bracelets": "Bracelets",
+      "rings": "Rings",
+      "earrings": "Earrings",
+      "liraCollection": "Lira Collection",
+      "gifts": "Gifts",
+      "newArrivals": "New Arrivals"
+    }
+  },
+  "localeSwitcher": {
+    "label": "عربي",
+    "ariaLabel": "العربية"
+  },
+  "footer": {
+    "about": "Personalized name jewelry and the signature Lira collection — made to order and delivered across Lebanon.",
+    "shop": "Shop",
+    "help": "Help",
+    "policies": "Policies",
+    "links": {
+      "contact": "Contact us",
+      "faq": "FAQ",
+      "sizeGuide": "Size guide",
+      "shipping": "Shipping policy",
+      "returns": "Returns & exchanges",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service"
+    },
+    "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
+    "payment": "Cash on delivery · Whish",
+    "copyright": "© {year} LIVRE. All rights reserved."
+  },
   "notFound": {
     "title": "Page not found",
     "description": "We couldn't find the page you were looking for.",
