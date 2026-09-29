@@ -225,6 +225,8 @@ Staff use the same admin, plus a "My sales" view and their personal link/coupon 
 ---
 
 ## 10. Build phases (do them in order, stop after each for review)
+> Update: the project restarted in the `livrelb` repo (github.com/Moemenakari/livrelb). The storefront look, the live name preview and the real 3D Lira coin are built FIRST (see RESTART_PROMPT.md), before the database. Onecklace.com is the quality/UX reference.
+
 1. **Setup**: Next.js, Tailwind, i18n, Supabase connection, design tokens, base layout (navbar, footer, announcement bar).
 2. **Database**: migrations for all tables + RLS + seed data (few categories, 10 sample products).
 3. **Catalog**: homepage sections (with static placeholders), category page, product page with live name preview.

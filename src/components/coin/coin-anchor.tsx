@@ -11,10 +11,13 @@ export type AnchorId = "hero" | "lira";
 export function CoinAnchor({
   id,
   alt,
+  eager = false,
   className = "",
 }: {
   id: AnchorId;
   alt: string;
+  /** Above the fold: load the fallback photo right away. */
+  eager?: boolean;
   className?: string;
 }) {
   const mode = useCoinMode();
@@ -26,6 +29,7 @@ export function CoinAnchor({
           src="/coin/coin.webp"
           alt={alt}
           fill
+          loading={eager ? "eager" : "lazy"}
           sizes="(min-width: 1024px) 420px, 70vw"
           className="rounded-full object-contain drop-shadow-[0_18px_30px_rgba(43,38,34,0.25)]"
         />

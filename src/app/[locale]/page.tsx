@@ -97,6 +97,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <div className={`${inner} grid items-center gap-6 pt-6 pb-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pt-14 lg:pb-20`}>
           <CoinAnchor
             id="hero"
+            eager
             alt={t("lira.coinAlt")}
             className="mx-auto w-[58%] max-w-72 lg:order-last lg:w-full lg:max-w-[26rem]"
           />
