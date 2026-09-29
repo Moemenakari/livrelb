@@ -19,7 +19,8 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
       lang={target}
       hrefLang={target}
       aria-label={t("ariaLabel")}
-      className={className}
+      // font-sans re-resolves the font stack for this link's own language.
+      className={`font-sans ${className}`}
     >
       {t("label")}
     </Link>

@@ -30,7 +30,7 @@ export function MobileMenu({
         onClick={() => dialogRef.current?.showModal()}
         aria-label={openLabel}
         aria-haspopup="dialog"
-        className="flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold lg:hidden"
+        className="flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold-dark lg:hidden"
       >
         <Menu className="size-6" strokeWidth={1.5} />
       </button>
@@ -44,16 +44,16 @@ export function MobileMenu({
           const target = event.target as HTMLElement;
           if (target === event.currentTarget || target.closest("a")) close();
         }}
-        className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-[85vw] max-w-sm bg-surface p-0 text-foreground backdrop:bg-black/70 open:animate-drawer-in backdrop:animate-fade-in rtl:open:animate-drawer-in-rtl motion-reduce:animate-none"
+        className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-[85vw] max-w-sm bg-background p-0 text-foreground backdrop:bg-foreground/25 open:animate-drawer-in backdrop:animate-fade-in rtl:open:animate-drawer-in-rtl motion-reduce:animate-none"
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-line ps-5 pe-2">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line ps-5 pe-2">
             {header}
             <button
               type="button"
               onClick={close}
               aria-label={closeLabel}
-              className="flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold"
+              className="flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold-dark"
             >
               <X className="size-6" strokeWidth={1.5} />
             </button>

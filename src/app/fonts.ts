@@ -1,30 +1,39 @@
-import { Amiri, Cinzel, Readex_Pro } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  IBM_Plex_Sans_Arabic,
+  Jost,
+  Noto_Naskh_Arabic,
+} from "next/font/google";
 
-// Headings: Cinzel's wide inscriptional capitals echo the lettering on the
-// 1975 Lira coin. It has no Arabic glyphs, so Arabic headings use Amiri
-// (see --display-stack in globals.css).
-const cinzel = Cinzel({
+// Brief §2: an elegant thin serif for headings, a clean light sans for body.
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-cinzel",
+  variable: "--font-cormorant",
 });
 
-const amiri = Amiri({
-  weight: ["400", "700"],
+const jost = Jost({
+  subsets: ["latin"],
+  variable: "--font-jost",
+});
+
+// Arabic pair. Not preloaded: only Arabic text uses them, so English pages
+// don't download them.
+const notoNaskh = Noto_Naskh_Arabic({
   subsets: ["arabic"],
-  variable: "--font-amiri",
-  // Only Arabic pages use it; don't make English pages download it.
+  variable: "--font-naskh",
   preload: false,
 });
 
-// Body: one variable family drawn for both Latin and Arabic. Only the Latin
-// file is preloaded; the Arabic one loads when Arabic text is on the page.
-const readexPro = Readex_Pro({
-  subsets: ["latin"],
-  variable: "--font-readex",
+const plexArabic = IBM_Plex_Sans_Arabic({
+  weight: ["400", "500", "600"],
+  subsets: ["arabic"],
+  variable: "--font-plex-arabic",
+  preload: false,
 });
 
 export const fontVariables = [
-  cinzel.variable,
-  amiri.variable,
-  readexPro.variable,
+  cormorant.variable,
+  jost.variable,
+  notoNaskh.variable,
+  plexArabic.variable,
 ].join(" ");

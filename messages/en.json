@@ -58,12 +58,14 @@
     "placeholder": "Placeholder",
     "sections": {
       "hero": {
-        "title": "Hero",
-        "description": "Background video and image carousel, promo headline with code and countdown, and a mini name preview (gold, silver or rose; one or two rings)."
+        "title": "Hero photo or video",
+        "description": "Photo and video carousel, promo headline with code and countdown, and a mini name preview (gold, silver or rose; one or two rings).",
+        "cta": "Design your necklace"
       },
       "lira": {
         "title": "The Lira collection",
-        "description": "The 3D Lira coin with the Lira necklaces and bracelets."
+        "description": "The 3D Lira coin with the Lira necklaces and bracelets.",
+        "coinAlt": "The 1975 Lebanese 1 Livre coin, front and back"
       },
       "shopByStyle": {
         "title": "Shop by style",

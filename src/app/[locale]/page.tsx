@@ -1,41 +1,116 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
-import { SectionPlaceholder } from "@/components/home/section-placeholder";
+import { mainCategories } from "@/config/navigation";
+import { primaryButton } from "@/components/ui/styles";
+import {
+  CategoryGridPlaceholder,
+  LiraCoin,
+  PhotoPlaceholder,
+  ProductGridPlaceholder,
+  ReviewCardsPlaceholder,
+  Section,
+  SectionHeading,
+} from "@/components/home/placeholders";
+import type messages from "../../../messages/en.json";
 
-// Homepage sections in the order of brief §8.1 (the announcement bar and
-// footer, items 1 and 11, live in the layout). Numbers match the brief.
-const sections = [
-  { key: "hero", number: "2", className: "min-h-[70svh]" },
-  { key: "lira", number: "3", className: "min-h-[28rem]" },
-  { key: "shopByStyle", number: "4", className: "min-h-72" },
-  { key: "bestSellers", number: "5", className: "min-h-80" },
-  { key: "howItWorks", number: "6", className: "min-h-64" },
-  { key: "season", number: "6b", className: "min-h-48" },
-  { key: "reviews", number: "7", className: "min-h-64" },
-  { key: "newArrivals", number: "8", className: "min-h-80" },
-  { key: "whyUs", number: "9", className: "min-h-64" },
-  { key: "trustBar", number: "10", className: "min-h-28" },
-] as const;
+type SectionKey = keyof typeof messages.home.sections;
 
+// Homepage in the order of brief §8.1. The announcement bar (1) and footer
+// (11) live in the layout; the numbers below match the brief.
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   await resolveLocale(params);
   const t = await getTranslations("home");
+  const tNav = await getTranslations("nav");
+
+  const heading = (key: SectionKey, number: string) => ({
+    number,
+    badge: t("placeholder"),
+    title: t(`sections.${key}.title`),
+    description: t(`sections.${key}.description`),
+  });
+
+  const categories = mainCategories.map(({ key, href }) => ({
+    href,
+    label: tNav(`categories.${key}`),
+  }));
 
   return (
     <>
       <h1 className="sr-only">{t("title")}</h1>
-      <div className="flex flex-col gap-4 py-4 lg:gap-6 lg:py-6">
-        {sections.map(({ key, number, className }) => (
-          <SectionPlaceholder
-            key={key}
-            number={number}
-            badge={t("placeholder")}
-            title={t(`sections.${key}.title`)}
-            description={t(`sections.${key}.description`)}
-            className={className}
+
+      {/* 2. Hero: the jewelry photos are the hero */}
+      <section className="bg-background">
+        <div className="mx-auto max-w-7xl px-4 pt-4 pb-14 lg:px-8 lg:pt-8 lg:pb-20">
+          <PhotoPlaceholder
+            tone="beige"
+            className="aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9]"
           />
-        ))}
-      </div>
+          <div className="mt-8">
+            <SectionHeading {...heading("hero", "2")}>
+              <Link href="/category/name-necklaces" className={`mt-3 ${primaryButton}`}>
+                {t("sections.hero.cta")}
+              </Link>
+            </SectionHeading>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Lira collection */}
+      <Section tone="ivory">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <SectionHeading {...heading("lira", "3")} />
+          <div className="lg:order-first">
+            <LiraCoin alt={t("sections.lira.coinAlt")} />
+          </div>
+        </div>
+      </Section>
+
+      {/* 4. Shop by style */}
+      <Section>
+        <SectionHeading {...heading("shopByStyle", "4")} />
+        <CategoryGridPlaceholder categories={categories} />
+      </Section>
+
+      {/* 5. Best sellers */}
+      <Section>
+        <SectionHeading {...heading("bestSellers", "5")} />
+        <ProductGridPlaceholder />
+      </Section>
+
+      {/* 6. How it works */}
+      <Section tone="beige">
+        <SectionHeading {...heading("howItWorks", "6")} />
+      </Section>
+
+      {/* 6b. Current season, only while one is active */}
+      <Section>
+        <div className="rounded-xl bg-blush px-6 py-12">
+          <SectionHeading {...heading("season", "6b")} />
+        </div>
+      </Section>
+
+      {/* 7. Loved by customers */}
+      <Section tone="ivory">
+        <SectionHeading {...heading("reviews", "7")} />
+        <ReviewCardsPlaceholder />
+      </Section>
+
+      {/* 8. New arrivals */}
+      <Section>
+        <SectionHeading {...heading("newArrivals", "8")} />
+        <ProductGridPlaceholder />
+      </Section>
+
+      {/* 9. Why us */}
+      <Section tone="beige">
+        <SectionHeading {...heading("whyUs", "9")} />
+      </Section>
+
+      {/* 10. Trust bar */}
+      <Section>
+        <SectionHeading {...heading("trustBar", "10")} />
+      </Section>
     </>
   );
 }

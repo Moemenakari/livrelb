@@ -16,7 +16,7 @@ export async function AnnouncementBar() {
     >
       {items.map((text) => (
         <li key={text} className="flex items-center gap-5 px-5 whitespace-nowrap">
-          <span aria-hidden className="text-gold">
+          <span aria-hidden className="text-beige/80">
             ✦
           </span>
           {text}
@@ -28,7 +28,7 @@ export async function AnnouncementBar() {
   return (
     <section
       aria-label={t("label")}
-      className="overflow-hidden bg-cedar py-2 text-xs text-white"
+      className="overflow-hidden bg-cedar py-2 text-[13px] tracking-wide text-white rtl:tracking-normal"
     >
       <div className="flex w-max animate-marquee hover:[animation-play-state:paused] rtl:animate-marquee-rtl motion-reduce:w-full motion-reduce:animate-none">
         {copy(false)}

@@ -42,7 +42,7 @@ connect Supabase, fill in `.env.local` from the Supabase dashboard
 messages/en.json, ar.json    All UI text (English, Arabic)
 src/app/[locale]/            Pages; layout.tsx sets lang + dir (rtl for ar)
 src/app/globals.css          Brand color tokens, fonts, animations
-src/app/fonts.ts             Cinzel + Amiri (headings), Readex Pro (body)
+src/app/fonts.ts             Cormorant Garamond + Jost; Arabic: Noto Naskh + IBM Plex Sans Arabic
 src/components/layout/       Announcement bar, navbar, mobile menu, footer
 src/config/                  Announcement texts, nav links, contact links
 src/i18n/                    Locales and locale-aware Link / redirect
@@ -60,9 +60,11 @@ public/brand/                Brand files served by the site
   `start-*`, `end-*`, `text-start`) and the `rtl:` variant, not
   left/right. For letter-spaced labels use `tracking-caps`, which switches
   itself off for Arabic (spacing breaks Arabic letter joining).
-- **Colors and fonts** come from the tokens in `globals.css`: `bg-background`,
-  `text-foreground`, `text-gold`, `bg-cedar`, `text-beige`, `text-muted`,
-  `border-line`, `font-display`, `font-logo`.
+- **Light boutique theme** (brief §2). Colors and fonts come from the tokens in
+  `globals.css`: `bg-background` (white), `bg-surface` (ivory), `bg-beige`,
+  `bg-blush`, `text-foreground`, `text-muted`, `border-line`, `bg-gold`,
+  `bg-cedar`, `font-display`, `font-logo`. No black or dark sections. Small
+  gold text uses `text-gold-dark` (`text-gold` is too light to read on white).
 - **Secrets** only in `.env.local` / Vercel settings, never in code.
 - Check every screen at **375px wide in English and Arabic** before calling
   it done.

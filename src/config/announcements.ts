@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/routing";
 export const announcements: Record<Locale, string>[] = [
   {
     en: "Design your name necklace",
-    ar: "صمّم قلادتك باسمك",
+    ar: "صمّمي قلادتك باسمك",
   },
   {
     en: "Free shipping over $50",
@@ -13,6 +13,6 @@ export const announcements: Record<Locale, string>[] = [
   },
   {
     en: "Excellent ★★★★★ quality — loved by our customers",
-    ar: "جودة ممتازة ★★★★★ — يحبّها زبائننا",
+    ar: "جودة ممتازة ★★★★★ — تحبّها زبوناتنا",
   },
 ];

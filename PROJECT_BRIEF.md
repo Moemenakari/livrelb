@@ -37,10 +37,13 @@ The business today runs on 5 separate Instagram pages, each handled by one emplo
   - Primary mark: a round coin badge with a beaded rim; a simplified cedar in **cedar green** in the center; the wordmark **LIVRE** under it in wide serif capitals like the coin lettering, in **gold**.
   - Secondary mark (favicon, packaging, stickers): the "1" framed by a half laurel wreath in gold.
   - Arabic lockup: "ليرة" next to "LIVRE" for Arabic pages.
-  - Must work in one color (gold on black, black on beige) and at 32px.
+  - Must work in one color (gold on white, cedar on ivory) and at 32px.
 - **Tagline ideas:** "Your story, in a Livre" · "Made in Lebanon, worn with love" **[CONFIRM]**
-- **Theme:** dark, premium. Black background, white text, accents in **gold**, **beige**, and **cedar green**.
-  - Suggested tokens (tune later): `--bg #0B0B0B`, `--text #FFFFFF`, `--gold #C9A24B`, `--beige #E8DCC4`, `--cedar #1F6B3A`.
+- **Theme: LIGHT, soft and clean** (like a jewelry boutique, not a dark "tech/AI" site). Warm white background, dark soft text, the jewelry photos are the hero. Gold and cedar green are small accents only.
+  - Tokens: `--bg #FFFFFF`, `--surface #FAF7F2` (ivory sections), `--beige #EFE6D8`, `--blush #F6E9E6` (soft girly touch), `--text #2B2622`, `--muted #7A7068`, `--line #E8E1D8`, `--gold #B08D57` (buttons, prices, small details), `--cedar #2F5D3A` (announcement bar, badges, logo cedar).
+  - Black only for small text, never as a page or section background.
+  - Style rules: lots of white space, thin 1px lines, soft rounded corners (8–12px), big product photos on white/ivory, no neon, no glow, no heavy gradients, no dark glassmorphism.
+- **Typography (easy on the eyes):** headings in an elegant thin serif (Cormorant Garamond), body in a clean light sans (Jost). Arabic: headings Noto Naskh Arabic, body IBM Plex Sans Arabic. Body text 16px, line-height 1.6, text color `--text` (not pure black).
 - **Languages:** English + Arabic (full RTL support). English default.
 - **Mobile first.** Most traffic comes from Instagram on phones.
 - **Reference site for UX inspiration:** onecklace.com — take structure and ideas only, never copy its assets, text, or design.
