@@ -198,7 +198,7 @@
     "hero": {
       "eyebrow": "أهلاً بكِ في LIVRE",
       "title": "خصم {percent}% على طلبكِ الأول",
-      "subtitle": "خصم {percent}% على أي طلب مع الكود {code}",
+      "subtitle": "خصم {percent}% على أي طلب مع الكود",
       "cta": "صمّمي قلادتكِ",
       "ctaSecondary": "الأكثر مبيعاً"
     },

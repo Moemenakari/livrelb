@@ -29,7 +29,7 @@ export async function AnnouncementBar() {
   return (
     <section
       aria-label={t("label")}
-      className="overflow-hidden border-b border-line bg-surface py-1.5 text-[12px] tracking-wide text-foreground/80 rtl:tracking-normal"
+      className="relative z-[1] overflow-hidden border-b border-line bg-surface py-1.5 text-[12px] tracking-wide text-foreground/80 rtl:tracking-normal"
     >
       <div className="flex w-max animate-marquee hover:[animation-play-state:paused] rtl:animate-marquee-rtl motion-reduce:w-full motion-reduce:animate-none">
         {copy(false)}

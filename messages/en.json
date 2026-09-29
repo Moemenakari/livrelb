@@ -198,7 +198,7 @@
     "hero": {
       "eyebrow": "Welcome to LIVRE",
       "title": "{percent}% OFF your first order",
-      "subtitle": "{percent}% off any order with code {code}",
+      "subtitle": "{percent}% off any order with code",
       "cta": "Design your necklace",
       "ctaSecondary": "Shop bestsellers"
     },

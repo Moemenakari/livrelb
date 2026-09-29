@@ -39,7 +39,7 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="bg-ink text-white/70">
+    <footer className="relative z-[1] bg-ink text-white/70">
       <div className="mx-auto max-w-7xl px-4 py-14 lg:px-8 lg:py-20">
         <div className="flex flex-col gap-6 border-b border-white/10 pb-12 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-lg">
