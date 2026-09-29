@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
 import { resolveLocale } from "@/i18n/resolve-locale";
+import { fontVariables } from "../fonts";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -29,7 +30,7 @@ export default async function LocaleLayout({
   const t = await getTranslations("common");
 
   return (
-    <html lang={locale} dir={getDirection(locale)}>
+    <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
       <body className="flex min-h-dvh flex-col">
         <NextIntlClientProvider>
           <a href="#main" className="sr-only focus:not-sr-only">

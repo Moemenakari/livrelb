@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
+/*
+ * Brand tokens (PROJECT_BRIEF §2). Change a value here and every Tailwind
+ * class that uses it follows: bg-background, text-gold, bg-cedar, border-line...
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0b0b0b;
+  --text: #ffffff;
+  --gold: #c9a24b;
+  --beige: #e8dcc4;
+  --cedar: #1f6b3a;
+
+  /* Derived shades */
+  --surface: #151515;
+  --muted: #a8a29a;
+  --line: #2a2a2a;
+  --gold-light: #dfc07a;
+  --cedar-dark: #16502b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-beige: var(--beige);
+  --color-cedar: var(--cedar);
+  --color-cedar-dark: var(--cedar-dark);
+
+  /* Font variables come from src/app/fonts.ts */
+  --font-display: var(--font-cinzel), var(--font-amiri), ui-serif, Georgia, serif;
+  --font-sans: var(--font-readex), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Wide spacing for small capitals. Letter-spacing breaks Arabic letter
+   joining, so it is switched off on Arabic text. */
+@utility tracking-caps {
+  letter-spacing: 0.18em;
+  &:lang(ar) {
+    letter-spacing: 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
 }
