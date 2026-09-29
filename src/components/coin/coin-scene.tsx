@@ -54,6 +54,7 @@ function isHidden(anchors: Anchors): boolean {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const f = coinFrame(window.scrollY, anchors.hero, anchors.lira, vw, vh);
+  if (f.opacity < 0.01) return true;
   const r = f.size * 0.35;
   const points = [
     [f.x, f.y],
@@ -70,18 +71,22 @@ function isHidden(anchors: Anchors): boolean {
 
 export default function CoinScene({ tone = "silver" }: { tone?: keyof typeof tones }) {
   const anchors = useRef<Anchors>({ hero: null, lira: null });
+  const canvas = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState(true);
   const [dpr, setDpr] = useState(1.75);
 
   // Measure the slots now and whenever the layout changes; pause rendering
-  // while the coin is completely hidden behind other sections.
+  // while the coin is completely hidden behind other sections. A paused
+  // canvas keeps its last frame, so hide it too (the next frame shows it).
   useEffect(() => {
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         anchors.current = readAnchors();
-        setActive(!isHidden(anchors.current));
+        const hidden = isHidden(anchors.current);
+        if (hidden && canvas.current) canvas.current.style.opacity = "0";
+        setActive(!hidden);
       });
     };
     update();
@@ -97,6 +102,7 @@ export default function CoinScene({ tone = "silver" }: { tone?: keyof typeof ton
 
   return (
     <Canvas
+      ref={canvas}
       dpr={[1, dpr]}
       frameloop={active ? "always" : "never"}
       camera={{ fov: 30, position: [0, 0, 10], near: 0.1, far: 40 }}

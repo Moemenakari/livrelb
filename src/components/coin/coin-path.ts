@@ -4,8 +4,10 @@
 //  1. Travel: from the hero slot to the Lira-section slot. The coin stays
 //     at the same height on screen (the page scrolls under it) and drifts
 //     sideways, arriving exactly as the Lira slot reaches it.
-//  2. Ambient: it shrinks, fades and keeps drifting left and right in the
-//     background for the rest of the page.
+//  2. Leave: it rides up with the Lira section like part of the page, so
+//     it never sits under the section's text at full brightness.
+//  3. Ambient: once off screen, a smaller, faint coin fades in and drifts
+//     left and right in the background for the rest of the page.
 
 export type AnchorBox = {
   /** Center x in viewport px. */
@@ -30,6 +32,8 @@ export function coinFrame(
   vh: number,
 ): CoinFrame {
   const mobile = vw < 768;
+  // One-column layouts scroll text over the pinned coin: dim it mid-way.
+  const stacked = vw < 1024;
   // The screen height the coin is pinned at: where the hero slot sits at
   // the top of the page.
   const pinY = Math.min(hero.cy, vh * 0.6);
@@ -40,27 +44,28 @@ export function coinFrame(
 
   const travel = lira.cy - hero.cy;
   if (scrollY <= travel) {
-    const e = easeInOut(clamp01(scrollY / travel));
+    const p = clamp01(scrollY / travel);
+    const e = easeInOut(p);
     return {
       x: lerp(hero.cx, lira.cx, e),
-      y: lerp(hero.cy - scrollY, pinY, clamp01(scrollY / (travel * 0.25))),
+      y: lerp(hero.cy - scrollY, pinY, clamp01(p * 4)),
       size: lerp(hero.size, lira.size, e),
-      opacity: 1,
+      opacity: stacked ? 1 - 0.7 * Math.sin(Math.PI * p) : 1,
     };
   }
 
   const q = scrollY - travel;
-  const b = easeInOut(clamp01(q / (vh * 0.9)));
-  const amplitude = vw * (mobile ? 0.26 : 0.32);
-  // Start the sine where the Lira slot is so the drift continues smoothly.
-  const phase = Math.asin(Math.max(-1, Math.min(1, (lira.cx - vw / 2) / amplitude)));
-  const ambientX = vw / 2 + amplitude * Math.sin(q / 700 + phase);
-  const ambientSize = Math.min(vw, vh) * (mobile ? 0.42 : 0.3);
+  const exit = pinY + lira.size / 2;
+  if (q <= exit) {
+    return { x: lira.cx, y: pinY - q, size: lira.size, opacity: 1 };
+  }
 
+  const a = q - exit;
+  const amplitude = vw * (mobile ? 0.26 : 0.32);
   return {
-    x: lerp(lira.cx, ambientX, b),
-    y: pinY + Math.sin(q / 900) * 18 * b,
-    size: lerp(lira.size, ambientSize, b),
-    opacity: lerp(1, 0.32, b),
+    x: vw / 2 + amplitude * Math.sin(a / 700),
+    y: vh * 0.55 + Math.sin(a / 900) * 18,
+    size: Math.min(vw, vh) * (mobile ? 0.42 : 0.3),
+    opacity: 0.3 * easeInOut(clamp01(a / (vh * 0.5))),
   };
 }
