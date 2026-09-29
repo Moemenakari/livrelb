@@ -94,7 +94,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
   ].filter(Boolean) as { label: string; className: string }[];
 
   return (
-    <article className={`group flex flex-col gap-3 ${className}`}>
+    <article className={`group relative flex flex-col gap-3 ${className}`}>
       <div className="relative overflow-hidden rounded-lg">
         <div
           ref={trackRef}

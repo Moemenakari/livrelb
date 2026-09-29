@@ -17,6 +17,8 @@ export const eyebrow =
 export const container = "mx-auto w-full max-w-7xl px-4 lg:px-8";
 
 // Horizontal swipe row on mobile that becomes a grid from lg up. Add the
-// lg:grid-cols-* class and a width on the children for mobile.
+// lg:grid-cols-* class and a width on the children for mobile. `relative`
+// makes the row clip absolutely positioned children (sr-only text), which
+// would otherwise widen the page.
 export const swipeRow =
-  "no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:gap-6 lg:overflow-visible lg:px-0";
+  "no-scrollbar relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:gap-6 lg:overflow-visible lg:px-0";
