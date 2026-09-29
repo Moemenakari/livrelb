@@ -98,7 +98,7 @@ async function colorMap(face, name) {
 // read as a tilt: raised relief is lighter than the field around it.
 async function bumpMap(face, name) {
   const base = (await crop(face, face.r * FACE_FRACTION, BUMP_SIZE)).greyscale();
-  const sharpPx = await base.clone().blur(0.6).raw().toBuffer();
+  const sharpPx = await base.clone().blur(1.1).raw().toBuffer();
   const broadPx = await base.clone().blur(10).raw().toBuffer();
   const out = Buffer.alloc(sharpPx.length);
   const c = BUMP_SIZE / 2;
