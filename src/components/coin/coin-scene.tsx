@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer, PerformanceMonitor, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { coinFrame, type AnchorBox } from "./coin-path";
+import { COIN_TEXTURES } from "./coin-assets";
 
 // The 3D 1975 Lebanese 1 Livre coin (brief §2, restart brief): a thin metal
 // body with a raised lip and beaded rim, both faces textured from the real
@@ -131,14 +132,9 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
   const group = useRef<THREE.Group>(null);
   const beads = useRef<THREE.InstancedMesh>(null);
   const sweep = useRef<THREE.PointLight>(null);
-  const start = useRef<number | null>(null);
+  const elapsed = useRef(0);
 
-  const [front, back, frontBump, backBump] = useTexture([
-    "/coin/front.webp",
-    "/coin/back.webp",
-    "/coin/front-bump.webp",
-    "/coin/back-bump.webp",
-  ]);
+  const [front, back, frontBump, backBump] = useTexture(COIN_TEXTURES);
 
   useMemo(() => {
     for (const map of [front, back]) map.colorSpace = THREE.SRGBColorSpace;
@@ -189,7 +185,7 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
     mesh.instanceMatrix.needsUpdate = true;
   }, []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const g = group.current;
     const a = anchors.current;
     if (!g || !a?.hero) {
@@ -197,9 +193,10 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
       return;
     }
     g.visible = true;
-    const now = state.clock.elapsedTime;
-    start.current ??= now;
-    const t = now - start.current;
+    // Animation time advances at most 1/30 s per frame: the first frames
+    // stall on shader compilation, and a wall clock would skip the intro.
+    elapsed.current += Math.min(delta, 1 / 30);
+    const t = elapsed.current;
 
     const { width: vw, height: vh } = state.size;
     const f = coinFrame(window.scrollY, a.hero, a.lira, vw, vh);
