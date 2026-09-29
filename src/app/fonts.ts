@@ -1,13 +1,11 @@
 import { Amiri, Cinzel, Readex_Pro } from "next/font/google";
 
 // Headings: Cinzel's wide inscriptional capitals echo the lettering on the
-// 1975 Lira coin. It has no Arabic glyphs, so Arabic headings use Amiri.
+// 1975 Lira coin. It has no Arabic glyphs, so Arabic headings use Amiri
+// (see --display-stack in globals.css).
 const cinzel = Cinzel({
   subsets: ["latin"],
   variable: "--font-cinzel",
-  // The generated fallback font is a local serif that has Arabic glyphs and
-  // would win over Amiri in the font stack. Without it, Arabic reaches Amiri.
-  adjustFontFallback: false,
 });
 
 const amiri = Amiri({

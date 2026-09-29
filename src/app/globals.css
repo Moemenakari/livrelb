@@ -17,6 +17,14 @@
   --line: #2a2a2a;
   --gold-light: #dfc07a;
   --cedar-dark: #16502b;
+
+  /* Heading fonts. Arabic pages put Amiri first: otherwise the browser draws
+     Arabic with Cinzel's generated fallback (a local serif), not Amiri. */
+  --display-stack: var(--font-cinzel), var(--font-amiri), ui-serif, Georgia, serif;
+}
+
+:lang(ar) {
+  --display-stack: var(--font-amiri), var(--font-cinzel), ui-serif, Georgia, serif;
 }
 
 @theme inline {
@@ -32,7 +40,8 @@
   --color-cedar-dark: var(--cedar-dark);
 
   /* Font variables come from src/app/fonts.ts */
-  --font-display: var(--font-cinzel), var(--font-amiri), ui-serif, Georgia, serif;
+  --font-display: var(--display-stack);
+  --font-logo: var(--font-cinzel), ui-serif, Georgia, serif;
   --font-sans: var(--font-readex), ui-sans-serif, system-ui, sans-serif;
 }
 
