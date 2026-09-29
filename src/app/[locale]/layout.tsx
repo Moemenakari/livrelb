@@ -6,6 +6,8 @@ import { resolveLocale } from "@/i18n/resolve-locale";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { PromoBar } from "@/components/layout/promo-bar";
+import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { fontVariables } from "../fonts";
 import "../globals.css";
 
@@ -44,10 +46,12 @@ export default async function LocaleLayout({
           </a>
           <AnnouncementBar />
           <Navbar />
+          <PromoBar />
           <main id="main" className="flex-1">
             {children}
           </main>
           <Footer />
+          <WhatsAppFloat />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,9 +1,10 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { announcements } from "@/config/announcements";
 
-// Auto-scrolling marquee. The track holds two identical copies and slides by
-// exactly one copy, so the loop is seamless. It scrolls the other way in RTL,
-// pauses on hover, and turns into static wrapped text for reduced motion.
+// Thin announcement line above the header (restart brief). The track holds
+// two identical copies and slides by exactly one copy, so the loop is
+// seamless. It scrolls the other way in RTL, pauses on hover, and turns into
+// static wrapped text for reduced motion.
 export async function AnnouncementBar() {
   const locale = await getLocale();
   const t = await getTranslations("announcements");
@@ -16,7 +17,7 @@ export async function AnnouncementBar() {
     >
       {items.map((text) => (
         <li key={text} className="flex items-center gap-5 px-5 whitespace-nowrap">
-          <span aria-hidden className="text-beige/80">
+          <span aria-hidden className="text-gold">
             ✦
           </span>
           {text}
@@ -28,7 +29,7 @@ export async function AnnouncementBar() {
   return (
     <section
       aria-label={t("label")}
-      className="overflow-hidden bg-cedar py-2 text-[13px] tracking-wide text-white rtl:tracking-normal"
+      className="overflow-hidden border-b border-line bg-surface py-1.5 text-[12px] tracking-wide text-foreground/80 rtl:tracking-normal"
     >
       <div className="flex w-max animate-marquee hover:[animation-play-state:paused] rtl:animate-marquee-rtl motion-reduce:w-full motion-reduce:animate-none">
         {copy(false)}

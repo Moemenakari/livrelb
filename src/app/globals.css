@@ -15,7 +15,10 @@
   --muted: #7a7068;
   --line: #e8e1d8;
   --gold: #b08d57; /* buttons, prices, small details */
-  --cedar: #2f5d3a; /* announcement bar, badges, logo cedar */
+  --cedar: #2f5d3a; /* promo bar, badges, logo cedar */
+  /* Warm near-black. Only for small badges (SALE / BEST SELLER), primary
+     buttons and the footer (restart brief), never page sections. */
+  --ink: #1f1a17;
 
   /* Derived: --gold is 3.1:1 on white, too light for small text.
      This shade is 4.9:1 and still reads as gold. */
@@ -47,6 +50,7 @@
   --color-gold: var(--gold);
   --color-gold-dark: var(--gold-dark);
   --color-cedar: var(--cedar);
+  --color-ink: var(--ink);
 
   /* Font variables come from src/app/fonts.ts */
   --font-display: var(--serif-stack);
@@ -60,6 +64,7 @@
   --animate-drawer-in: drawer-in 250ms ease-out;
   --animate-drawer-in-rtl: drawer-in-rtl 250ms ease-out;
   --animate-fade-in: fade-in 250ms ease-out;
+  --animate-rise-in: rise-in 300ms ease-out;
 
   @keyframes marquee {
     to {
@@ -85,6 +90,20 @@
     from {
       opacity: 0;
     }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+
+/* Horizontal swipe rows without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 

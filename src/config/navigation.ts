@@ -1,18 +1,24 @@
-// Link targets for the navbar, mobile menu and footer. Labels live in
-// messages/*.json under the same keys. Category URLs are placeholders until
-// the catalog phase builds the pages (they show the 404 page for now).
+import type { CategorySlug } from "@/lib/catalog";
 
-export const mainCategories = [
-  { key: "nameNecklaces", href: "/category/name-necklaces" },
-  { key: "necklaces", href: "/category/necklaces" },
-  { key: "bracelets", href: "/category/bracelets" },
-  { key: "rings", href: "/category/rings" },
-  { key: "earrings", href: "/category/earrings" },
-  { key: "liraCollection", href: "/category/lira-collection" },
-  { key: "gifts", href: "/gifts" },
-  { key: "newArrivals", href: "/category/new-arrivals" },
-] as const;
+// Navbar and mobile menu order (restart brief). Labels come from the
+// category data (navName, else name).
+export const navCategories: CategorySlug[] = [
+  "name-necklaces",
+  "necklaces",
+  "bracelets",
+  "mens-jewelry",
+  "rings",
+  "earrings",
+  "lira-collection",
+  "gifts",
+  "bestsellers",
+  "new",
+];
 
+export const categoryHref = (slug: CategorySlug) => `/category/${slug}`;
+export const productHref = (slug: string) => `/product/${slug}`;
+
+// Help and policy pages are built in a later phase (they 404 for now).
 export const helpLinks = [
   { key: "contact", href: "/contact" },
   { key: "faq", href: "/faq" },

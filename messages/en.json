@@ -5,10 +5,29 @@
   },
   "common": {
     "brandName": "LIVRE",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "freeShipping": "Free shipping",
+    "sale": "Sale",
+    "bestSeller": "Best seller",
+    "new": "New",
+    "viewAll": "View all",
+    "shopNow": "Shop now",
+    "stars": "{rating} out of 5 stars",
+    "reviewCount": "{count, plural, one {# review} other {# reviews}}",
+    "previous": "Previous",
+    "next": "Next",
+    "close": "Close"
   },
   "announcements": {
     "label": "Announcements"
+  },
+  "promo": {
+    "label": "Current offer",
+    "tagline": "Your Story, Your Jewelry ✨",
+    "offer": "{percent}% OFF",
+    "code": "Code:",
+    "copy": "Copy code {code}",
+    "copied": "Copied!"
   },
   "nav": {
     "mainLabel": "Main",
@@ -19,23 +38,21 @@
     "search": "Search",
     "account": "My account",
     "cart": "Cart",
-    "categories": {
-      "nameNecklaces": "Name Necklaces",
-      "necklaces": "Necklaces",
-      "bracelets": "Bracelets",
-      "rings": "Rings",
-      "earrings": "Earrings",
-      "liraCollection": "Lira Collection",
-      "gifts": "Gifts",
-      "newArrivals": "New Arrivals"
-    }
+    "cartCount": "Cart, {count, plural, =0 {empty} one {# item} other {# items}}"
   },
   "localeSwitcher": {
     "label": "عربي",
     "ariaLabel": "العربية"
   },
+  "whatsapp": {
+    "float": "Chat with us on WhatsApp",
+    "join": "Hi LIVRE! Please add me to your WhatsApp list for new drops and codes ✨"
+  },
   "footer": {
     "about": "Personalized name jewelry and the signature Lira collection — made to order and delivered across Lebanon.",
+    "newsletterTitle": "Join the LIVRE list",
+    "newsletterText": "New drops, restocks and secret codes, straight to your WhatsApp. No emails, promise.",
+    "newsletterCta": "Join on WhatsApp",
     "shop": "Shop",
     "help": "Help",
     "policies": "Policies",
@@ -50,55 +67,234 @@
     },
     "whatsapp": "WhatsApp",
     "instagram": "Instagram",
-    "payment": "Cash on delivery · Whish",
-    "copyright": "© {year} LIVRE. All rights reserved."
+    "paymentLabel": "We accept",
+    "copyright": "© {year} LIVRE. All rights reserved.",
+    "madeIn": "Made with love in Lebanon"
+  },
+  "payment": {
+    "cod": "Cash on Delivery",
+    "whish": "Whish"
+  },
+  "namePreview": {
+    "placeholder": "Yourname",
+    "label": "Preview of the name “{name}” in metal"
+  },
+  "placeholders": {
+    "model": "Model photo",
+    "detail": "Close-up photo",
+    "packaging": "Gift box photo",
+    "lifestyle": "Lifestyle photo",
+    "category": "Category photo",
+    "founder": "Founder photo",
+    "step": "Photo"
+  },
+  "productCard": {
+    "slides": "Photos of {name}",
+    "showSlide": "Show photo {index}",
+    "showMaterial": "Show in {material}",
+    "priceNow": "Price {price}",
+    "priceWas": "was {price}"
+  },
+  "trust": {
+    "freeShipping": "Free Shipping",
+    "handcrafted": "Handcrafted to Order",
+    "securePayment": "Secure Payment",
+    "delivery": "Delivery 2–7 days"
+  },
+  "category": {
+    "breadcrumb": "Breadcrumb",
+    "home": "Home",
+    "stylesLabel": "Styles",
+    "allStyles": "All",
+    "count": "{count, plural, one {# piece} other {# pieces}}",
+    "sortLabel": "Sort by",
+    "sort": {
+      "featured": "Featured",
+      "priceLow": "Price: low to high",
+      "priceHigh": "Price: high to low",
+      "newest": "Newest"
+    },
+    "metalLabel": "Metal",
+    "metal": {
+      "all": "All metals",
+      "gold": "Gold",
+      "silver": "Silver",
+      "rose": "Rose gold"
+    },
+    "previewLabel": "See your name on every necklace",
+    "previewPlaceholder": "Type a name",
+    "empty": "No pieces match these filters.",
+    "clear": "Clear filters"
+  },
+  "product": {
+    "breadcrumbLabel": "Breadcrumb",
+    "off": "-{percent}% OFF",
+    "save": "You save {amount}",
+    "reviewsLink": "{count, plural, one {# review} other {# reviews}}",
+    "chooseMaterial": "Choose material",
+    "chooseFont": "Choose font",
+    "nameLabel": "Please write name / word",
+    "initialLabel": "Please write your letter",
+    "nameHint": "Up to {max, plural, one {# letter} other {# letters}}. Arabic names work too.",
+    "nameCount": "{count}/{max}",
+    "preview": "Preview",
+    "size": {
+      "chain": "Choose chain length",
+      "bracelet": "Choose bracelet length",
+      "ring": "Choose ring size"
+    },
+    "cm": "{value} cm",
+    "usSize": "US {value}",
+    "sizeGuide": "Size guide",
+    "ringsLabel": "Pendant ring",
+    "rings": {
+      "center": "One ring in the center",
+      "sides": "Two rings on the sides"
+    },
+    "giftBox": "Add Gift Box & Bag",
+    "giftBoxPrice": "+{price}",
+    "addToCart": "Add to cart",
+    "added": "Added to your bag",
+    "addedDetail": "{name} · {material}",
+    "nameRequired": "Please write a name first",
+    "whatsapp": "Have a question? Talk to us on WhatsApp",
+    "whatsappMessage": "Hi LIVRE! I have a question about the {product}: {url}",
+    "deliveryNote": "Order today, delivered in 2–7 days",
+    "freeShippingNote": "Free delivery on your first order and on orders over {amount}",
+    "tabsLabel": "Product information",
+    "tabs": {
+      "description": "Product Description",
+      "details": "Size & Materials",
+      "shipping": "Shipping Information"
+    },
+    "shippingText": "We deliver everywhere in Lebanon in 2–7 working days. Personalized pieces are made to order, so please check the spelling before you order.\nDelivery is free on your first order and on every order over {amount}. Otherwise a small delivery fee is added at checkout.\nPay cash on delivery or with Whish. Need it faster? Message us on WhatsApp.",
+    "gallery": "Product photos",
+    "thumbnail": "Show photo {index}",
+    "youMayAlsoLike": "You May Also Like",
+    "recentlyViewed": "Recently Viewed",
+    "reviewsTitle": "Customer Reviews",
+    "reviewsSummary": "Based on {count, plural, one {# review} other {# reviews}}",
+    "sizeGuideTitle": "Chain length guide",
+    "sizeGuideIntro": "Measured end to end, clasp included. Not sure? 45 cm suits most necks.",
+    "chainGuide": {
+      "35": "Choker, sits at the base of the neck",
+      "40": "On the collarbone",
+      "45": "Just below the collarbone, our most popular",
+      "50": "Upper chest",
+      "55": "Long, great for layering"
+    },
+    "braceletGuide": "Measure your wrist and add 1–2 cm for a comfortable fit.",
+    "ringGuide": "Wrap a strip of paper around your finger, measure it and message us on WhatsApp: we'll tell you your size."
+  },
+  "countdown": {
+    "label": "Offer ends in",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Min",
+    "seconds": "Sec"
   },
   "home": {
     "title": "LIVRE — personalized name jewelry from Lebanon",
-    "placeholder": "Placeholder",
-    "sections": {
-      "hero": {
-        "title": "Hero photo or video",
-        "description": "Photo and video carousel, promo headline with code and countdown, and a mini name preview (gold, silver or rose; one or two rings).",
-        "cta": "Design your necklace"
+    "hero": {
+      "eyebrow": "Welcome to LIVRE",
+      "title": "{percent}% OFF your first order",
+      "subtitle": "{percent}% off any order with code {code}",
+      "cta": "Design your necklace",
+      "ctaSecondary": "Shop bestsellers"
+    },
+    "mini": {
+      "title": "Try your name",
+      "inputLabel": "Your name",
+      "metalLabel": "Metal",
+      "gold": "Gold",
+      "silver": "Silver",
+      "rose": "Rose",
+      "ringsLabel": "Rings",
+      "ringCenter": "One ring",
+      "ringSides": "Two rings",
+      "cta": "Design it"
+    },
+    "lira": {
+      "eyebrow": "The Lira Collection",
+      "title": "Your story, in a Livre",
+      "text": "Remember the 1 Livre coin? The cedar on one side, the laurel wreath on the other. We turned the 1975 coin into jewelry you can wear every day: a little piece of home, in silver or gold.",
+      "cta": "Shop the Lira collection",
+      "coinAlt": "The 1975 Lebanese 1 Livre coin"
+    },
+    "shopByStyle": {
+      "title": "Shop by Style",
+      "subtitle": "Find the piece that tells your story."
+    },
+    "bestSellers": {
+      "title": "Best Sellers",
+      "subtitle": "The pieces everyone is wearing.",
+      "cta": "Shop all bestsellers"
+    },
+    "steps": {
+      "title": "How It Works",
+      "personalize": {
+        "title": "Personalize it",
+        "text": "Choose your design and add the names, dates or words that mean the most to you."
       },
-      "lira": {
-        "title": "The Lira collection",
-        "description": "The 3D Lira coin with the Lira necklaces and bracelets.",
-        "coinAlt": "The 1975 Lebanese 1 Livre coin, front and back"
+      "craft": {
+        "title": "We craft it",
+        "text": "Each piece is made to order and checked by hand before it leaves us."
       },
-      "shopByStyle": {
-        "title": "Shop by style",
-        "description": "Category cards: necklaces, name necklaces, bracelets, rings, earrings, gifts and more."
-      },
-      "bestSellers": {
-        "title": "Best sellers",
-        "description": "Carousel of our best-selling pieces."
-      },
-      "howItWorks": {
-        "title": "How it works",
-        "description": "01 Personalize it · 02 We craft it · 03 Delivered to you."
-      },
-      "season": {
-        "title": "Season banner",
-        "description": "The current season (Valentine's, Mother's Day, Ramadan…) with its code and countdown. Only shown while a season is active."
-      },
-      "reviews": {
-        "title": "Loved by customers",
-        "description": "Customer reviews and photos."
-      },
-      "newArrivals": {
-        "title": "New arrivals",
-        "description": "Our latest pieces."
-      },
-      "whyUs": {
-        "title": "Why Livre — since 2020",
-        "description": "Handcrafted with care · Personalized for your story · Quality materials · Trusted by Lebanese."
-      },
-      "trustBar": {
-        "title": "Trust bar",
-        "description": "Free shipping · Secure payment · Best price · Sales all the time."
+      "deliver": {
+        "title": "Delivered to you",
+        "text": "Free delivery on your first order and on orders over $50, delivered in 2–7 days."
       }
+    },
+    "reviews": {
+      "title": "Loved by Customers",
+      "subtitle": "Real notes from real LIVRE girls."
+    },
+    "founder": {
+      "quote": "I wanted jewelry that feels like home: your name in metal, the cedar, the coin our grandparents kept. Every LIVRE piece is made for one person, and that is what makes it precious.",
+      "name": "Nour",
+      "role": "Founder of LIVRE"
+    },
+    "newArrivals": {
+      "title": "New Arrivals",
+      "subtitle": "Fresh from our workshop.",
+      "cta": "Shop what's new"
+    },
+    "whyUs": {
+      "title": "Why LIVRE",
+      "subtitle": "Since 2020",
+      "handcrafted": {
+        "title": "Handcrafted with care",
+        "text": "Cut, polished and checked by hand, one piece at a time."
+      },
+      "personalized": {
+        "title": "Personalized for your story",
+        "text": "Your name, your letter, your words, in the script you love."
+      },
+      "quality": {
+        "title": "Quality materials",
+        "text": "Sterling silver, thick 18K plating and solid 14K gold."
+      },
+      "trusted": {
+        "title": "Trusted by Lebanese",
+        "text": "Thousands of pieces delivered from Beirut to Akkar."
+      }
+    },
+    "create": {
+      "title": "Create something personal",
+      "text": "A name, an initial, a coin from home. Design it in a minute and see it before you buy.",
+      "cta": "Start designing",
+      "payTitle": "Pay the way you like"
+    },
+    "trustBar": {
+      "label": "Why shop with us",
+      "freeShipping": "Free shipping",
+      "freeShippingText": "On your first order and over $50",
+      "securePayment": "Secure payment",
+      "securePaymentText": "Cash on delivery or Whish",
+      "bestPrice": "Best price",
+      "bestPriceText": "Fine jewelry, fair prices",
+      "sales": "Sales all the time",
+      "salesText": "New codes every season"
     }
   },
   "notFound": {
