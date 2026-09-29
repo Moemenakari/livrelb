@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LIVRE — livrelb.com
 
-## Getting Started
+Online store for personalized name jewelry and the Lebanese Lira collection.
+English + Arabic (RTL), mobile first. The full spec is in
+[PROJECT_BRIEF.md](PROJECT_BRIEF.md).
 
-First, run the development server:
+Stack: Next.js 16 (App Router, TypeScript) · Tailwind CSS 4 · next-intl ·
+Supabase · Vercel.
+
+## Run it locally
+
+Requirements: **Node.js 20.9 or newer** and npm.
 
 ```bash
+npm install
+cp .env.example .env.local      # PowerShell: Copy-Item .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>. It redirects to `/en`; the Arabic site is at
+`/ar`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The site runs without Supabase keys (nothing reads the database yet). To
+connect Supabase, fill in `.env.local` from the Supabase dashboard
+(Project Settings → API Keys), restart `npm run dev`, and open
+<http://localhost:3000/api/health>. You should see `{"supabase":"ok"}`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command              | What it does                                              |
+| -------------------- | --------------------------------------------------------- |
+| `npm run dev`        | Dev server on port 3000                                   |
+| `npm run build`      | Production build                                          |
+| `npm start`          | Serve the production build                                |
+| `npm run lint`       | ESLint (also blocks hardcoded text in JSX)                |
+| `npm run typecheck`  | TypeScript check                                          |
+| `npm run i18n:check` | Fails if `en.json` and `ar.json` don't have the same keys |
 
-To learn more about Next.js, take a look at the following resources:
+## Where things live
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+messages/en.json, ar.json    All UI text (English, Arabic)
+src/app/[locale]/            Pages; layout.tsx sets lang + dir (rtl for ar)
+src/app/globals.css          Brand color tokens, fonts, animations
+src/app/fonts.ts             Cinzel + Amiri (headings), Readex Pro (body)
+src/components/layout/       Announcement bar, navbar, mobile menu, footer
+src/config/                  Announcement texts, nav links, contact links
+src/i18n/                    Locales and locale-aware Link / redirect
+src/lib/supabase/            Supabase clients (browser + server)
+src/proxy.ts                 Adds the /en or /ar prefix to every URL
+assets/                      Brand source files (1975 Lira coin photo)
+public/brand/                Brand files served by the site
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Rules of the codebase
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **No hardcoded text.** Every string goes in both `messages/en.json` and
+  `messages/ar.json`. `npm run lint` and `npm run i18n:check` catch misses.
+- **RTL.** Use logical Tailwind classes (`ms-*`, `me-*`, `ps-*`, `pe-*`,
+  `start-*`, `end-*`, `text-start`) and the `rtl:` variant, not
+  left/right. For letter-spaced labels use `tracking-caps`, which switches
+  itself off for Arabic (spacing breaks Arabic letter joining).
+- **Colors and fonts** come from the tokens in `globals.css`: `bg-background`,
+  `text-foreground`, `text-gold`, `bg-cedar`, `text-beige`, `text-muted`,
+  `border-line`, `font-display`, `font-logo`.
+- **Secrets** only in `.env.local` / Vercel settings, never in code.
+- Check every screen at **375px wide in English and Arabic** before calling
+  it done.
