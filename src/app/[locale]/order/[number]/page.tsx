@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { CalendarClock, MessageCircle, PackageSearch } from "lucide-react";
+import { CalendarClock, MessageCircle, PackageSearch, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
@@ -10,6 +10,7 @@ import { findProduct, getCatalog } from "@/lib/catalog";
 import { fonts, isFontKey, materials } from "@/lib/catalog/materials";
 import type { MaterialKey } from "@/lib/catalog/types";
 import { ORDERS_COOKIE } from "@/lib/checkout/cookies";
+import { orderPoints } from "@/lib/checkout/points";
 import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
@@ -48,7 +49,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
       .from("orders")
       .select(
         `id, number, status, customer_name, payment_method, subtotal_cents, discount_cents,
-         delivery_fee_cents, total_cents,
+         points_used, points_discount_cents, delivery_fee_cents, total_cents,
          order_items (id, product_slug, product_name, custom_text, size_kind, size_value,
            chain_connection, qty, line_total_cents, materials (key), fonts (key))`,
       )
@@ -71,6 +72,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
     );
   }
 
+  const points = await orderPoints(db, order);
   const whatsapp = catalog.settings.whatsappNumber;
   const firstName = order.customer_name.split(/\s+/)[0];
   const row = "flex items-center justify-between gap-4";
@@ -172,6 +174,15 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
               <dd className="text-cedar">{"-"}{formatPrice(dollars(order.discount_cents))}</dd>
             </div>
           )}
+          {order.points_discount_cents > 0 && (
+            <div className={row}>
+              <dt className="text-muted">{tCart("pointsDiscount", { points: order.points_used })}</dt>
+              <dd className="text-cedar">
+                {"-"}
+                {formatPrice(dollars(order.points_discount_cents))}
+              </dd>
+            </div>
+          )}
           <div className={row}>
             <dt className="text-muted">{tCart("delivery")}</dt>
             <dd>
@@ -188,6 +199,15 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
           </div>
         </dl>
       </section>
+
+      {(points.toEarn > 0 || points.earned > 0) && (
+        <p className="flex items-center gap-3 rounded-xl bg-gold/10 px-4 py-3 text-sm">
+          <Sparkles className="size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
+          {points.earned > 0
+            ? t("pointsEarned", { points: points.earned })
+            : t("pointsToEarn", { points: points.toEarn })}
+        </p>
+      )}
 
       <section className="flex flex-col gap-4">
         <h2 className="text-2xl">{t("statusTitle")}</h2>

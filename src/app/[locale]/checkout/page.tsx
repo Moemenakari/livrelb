@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { getCatalog } from "@/lib/catalog";
+import { googleLoginEnabled, savedCustomer } from "@/lib/checkout/customer";
 import { getCheckoutOptions } from "@/lib/checkout/options";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
-
-// The area and "Who helped you?" lists refresh every 5 minutes.
-export const revalidate = 300;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/checkout">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -15,10 +13,16 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/checkout
 }
 
 // Checkout (brief §8.4): one page, phone + name, no account, no email.
+// Rendered per request: a remembered browser (or Google login) is prefilled.
 export default async function CheckoutPage({ params }: PageProps<"/[locale]/checkout">) {
   const locale = await resolveLocale(params);
   const t = await getTranslations("checkout");
-  const [{ settings }, options] = await Promise.all([getCatalog(), getCheckoutOptions(locale)]);
+  const [{ settings }, options, saved, googleEnabled] = await Promise.all([
+    getCatalog(),
+    getCheckoutOptions(locale),
+    savedCustomer(),
+    googleLoginEnabled(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 lg:px-8 lg:pt-12">
@@ -30,6 +34,8 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         areas={options.areas}
         helpers={options.helpers}
         freeShippingOver={settings.freeShippingOver}
+        saved={saved}
+        googleEnabled={googleEnabled}
       />
     </div>
   );

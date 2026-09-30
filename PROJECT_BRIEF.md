@@ -210,6 +210,15 @@ Core tables:
 - Reviews: approve/hide.
 - Staff (owner only): add, edit, disable employees, and toggle each employee's permissions.
 - Settings (owner only): shipping, WhatsApp number, announcement bar.
+- **LIVRE Points settings** (owner): on/off, points per $1 (default 10), points per approved review (default 10), value of 100 points (default $1). Staff can add/remove a customer's points by hand (reason "adjust", logged in `points_ledger`).
+- **Product editor** (Phase 4):
+  - Name EN/AR, description EN/AR (rich text), categories.
+  - **A price per material, typed by the owner/staff** (e.g. gold $10, silver $20). `product_materials` is the only source of truth for prices. The "Double Gold Stainless Steel = 3× gold" rule (`src/lib/catalog/pricing.ts`) only pre-fills empty price fields when a product is created; every price stays editable.
+  - Sizes, and which fonts are allowed (+ the default font).
+  - **Upload 1–7 photos** per product, drag to reorder, pick the main photo.
+- **Real photos replace the drawn placeholders:** when a product has uploaded photos, the storefront shows the photos, not the drawn artwork. The drawings stay only as a fallback when there are no photos.
+- **Zoom on the storefront:** tap a product photo to open it fullscreen, pinch-zoom on mobile, hover-zoom on desktop.
+- **Fonts are separate from photos:** photos are just photos (staff don't need to know which font is in a photo). The 15 fonts are always available for customers to try their name in the live preview; a product only stores which fonts are allowed and its default one.
 
 ### 8.6 Staff panel
 Staff use the same admin, plus a "My sales" view and their personal link/coupon with copy and share buttons.

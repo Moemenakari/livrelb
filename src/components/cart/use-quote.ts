@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { quoteCart } from "@/lib/checkout/actions";
 import type { CartItemInput, Quote } from "@/lib/checkout/types";
 
-type Input = { items: CartItemInput[]; coupon?: string; phone?: string; area?: string };
+type Input = { items: CartItemInput[]; coupon?: string; phone?: string; area?: string; usePoints?: boolean };
 
 /**
  * The server's prices for the bag (quote_order), refreshed shortly after

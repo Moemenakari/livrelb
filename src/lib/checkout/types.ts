@@ -31,6 +31,17 @@ export type Quote = {
   subtotal: number;
   discount: number;
   coupon: { code: string; error?: "coupon_invalid" | "coupon_min_order"; minOrder?: number } | null;
+  /** LIVRE Points of the verified customer (0 for everyone else). */
+  points: {
+    balance: number;
+    /** What the whole balance is worth (USD, whole redeem units). */
+    value: number;
+    /** Spent on this bag when "Use my points" is on. */
+    used: number;
+    discount: number;
+    /** Earned once the order is confirmed. */
+    toEarn: number;
+  };
   delivery: number;
   /** null until a phone number is known. */
   isFirstOrder: boolean | null;
@@ -55,6 +66,7 @@ export type CheckoutInput = {
   coupon: string;
   helper: string;
   payment: "cod" | "whish";
+  usePoints: boolean;
   items: CartItemInput[];
 };
 
@@ -74,7 +86,20 @@ export type CheckoutError =
 
 export type CheckoutResult = { ok: true; number: number } | { ok: false; error: CheckoutError };
 
-export type ReturningCustomer = { name: string; area: string | null; address: string | null };
+/**
+ * The customer this browser is verified as (remembered device or Google):
+ * her saved details prefill the checkout. `google` alone: signed in with
+ * Google but no order yet.
+ */
+export type SavedCustomer = {
+  google: boolean;
+  name?: string;
+  phone?: string;
+  area?: string;
+  address?: string;
+  building?: string;
+  points?: number;
+};
 
 /** Order status steps shown on the confirmation and tracking pages. */
 export const orderSteps = ["pending", "confirmed", "in_production", "shipped", "delivered"] as const;

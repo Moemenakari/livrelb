@@ -335,7 +335,9 @@
     "total": "Total",
     "checkout": "Checkout",
     "viewCart": "View bag",
-    "unavailable": "Prices can't be checked right now. Please try again in a moment."
+    "unavailable": "Prices can't be checked right now. Please try again in a moment.",
+    "pointsDiscount": "LIVRE Points ({points})",
+    "pointsEarn": "You'll earn {points} LIVRE Points with this order"
   },
   "checkout": {
     "title": "Checkout",
@@ -344,7 +346,7 @@
     "phone": "Phone number",
     "phonePrefix": "+961",
     "phoneHint": "Lebanese number, or start with + for another country.",
-    "welcomeBack": "Welcome back, {name}! We filled in your saved details.",
+    "welcomeBack": "Welcome back, {name}! Your details are filled in.",
     "delivery": "Delivery",
     "area": "Area",
     "areaPlaceholder": "Choose your area",
@@ -376,7 +378,12 @@
       "cart_changed": "Some pieces in your bag changed. Please check your bag.",
       "unavailable": "We can't take orders right now. Please try again in a moment.",
       "failed": "Something went wrong. Please try again."
-    }
+    },
+    "notYou": "Not you? Clear",
+    "google": "Continue with Google",
+    "googleSignedIn": "You're signed in with Google. Your details will be saved with this order for next time, on any device.",
+    "pointsHave": "You have {points} points = {value}",
+    "pointsUse": "Use my points on this order"
   },
   "order": {
     "number": "Order #{number}",
@@ -391,7 +398,9 @@
     "whatsappMessage": "Hi LIVRE! My order number is #{number}.",
     "track": "Track my order",
     "continue": "Continue shopping",
-    "locked": "To see this order, track it with the phone number it was placed with."
+    "locked": "To see this order, track it with the phone number it was placed with.",
+    "pointsToEarn": "You'll earn {points} LIVRE Points when your order is confirmed.",
+    "pointsEarned": "This order earned you {points} LIVRE Points."
   },
   "orderStatus": {
     "pending": "New",

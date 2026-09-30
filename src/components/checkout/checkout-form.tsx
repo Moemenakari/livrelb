@@ -1,23 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { Banknote, Loader2, Lock, Smartphone } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useRef, useState, useTransition, type ReactNode } from "react";
+import { Banknote, Loader2, Lock, Smartphone, Sparkles } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { clearCart, toInput, useCart, useCoupon } from "@/lib/cart";
-import { findCustomer, placeOrder } from "@/lib/checkout/actions";
-import type { AreaOption, CheckoutError, HelperOption } from "@/lib/checkout/types";
+import { clearSavedCustomer, placeOrder } from "@/lib/checkout/actions";
+import type { AreaOption, CheckoutError, HelperOption, SavedCustomer } from "@/lib/checkout/types";
 import { formatPrice } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { CartLine } from "@/components/cart/cart-line";
 import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
 import { primaryButton } from "@/components/ui/styles";
+import { GoogleButton } from "./google-button";
 
 type Props = {
   areas: AreaOption[];
   helpers: HelperOption[];
   freeShippingOver: number;
+  /** The customer this browser is verified as: prefills the form. */
+  saved: SavedCustomer | null;
+  /** Show "Continue with Google" (the provider is switched on in Supabase). */
+  googleEnabled: boolean;
 };
 
 type Field = "name" | "phone" | "area" | "address";
@@ -37,22 +42,27 @@ const legend = "mb-1 font-display text-2xl";
 // Checkout (brief §8.4): one page, no account and no email. Prices, the
 // discount and delivery come from the server (quote_order) and are
 // recalculated again when the order is placed (place_order).
-export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
+export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEnabled }: Props) {
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
   const router = useRouter();
   const items = useCart();
   const coupon = useCoupon();
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [area, setArea] = useState("");
-  const [address, setAddress] = useState("");
-  const [building, setBuilding] = useState("");
+  const locale = useLocale();
+  // Prefilled from her remembered device or Google account (never from a
+  // typed phone number); she can edit everything.
+  const [known, setKnown] = useState(saved?.name ? saved : null);
+  const [name, setName] = useState(known?.name ?? "");
+  const [phone, setPhone] = useState(known?.phone ? localPhone(known.phone) : "");
+  const [area, setArea] = useState(known?.area && areas.some((a) => a.slug === known.area) ? known.area : "");
+  const [address, setAddress] = useState(known?.address ?? "");
+  const [building, setBuilding] = useState(known?.building ?? "");
+  const [usePoints, setUsePoints] = useState(false);
+  const [clearing, startClearing] = useTransition();
   const [notes, setNotes] = useState("");
   const [helper, setHelper] = useState("");
   const [payment, setPayment] = useState<"cod" | "whish">("cod");
-  const [welcome, setWelcome] = useState<string | null>(null);
   const [error, setError] = useState<CheckoutError | null>(null);
   const [placed, setPlaced] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -67,23 +77,20 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
     coupon,
     phone: e164 ?? undefined,
     area: area || undefined,
+    usePoints,
   });
 
-  // Returning customer: found by phone, her saved details fill the empty fields.
-  const looked = useRef<string | null>(null);
-  useEffect(() => {
-    if (!e164 || e164.replace(/\D/g, "").length < 10 || looked.current === e164) return;
-    const timer = setTimeout(async () => {
-      looked.current = e164;
-      const saved = await findCustomer(e164);
-      if (!saved) return;
-      setWelcome(saved.name.split(/\s+/)[0]);
-      setName((v) => v || saved.name);
-      if (saved.area && areas.some((a) => a.slug === saved.area)) setArea((v) => v || saved.area!);
-      setAddress((v) => v || saved.address || "");
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [e164, areas]);
+  const forget = () =>
+    startClearing(async () => {
+      await clearSavedCustomer();
+      setKnown(null);
+      setName("");
+      setPhone("");
+      setArea("");
+      setAddress("");
+      setBuilding("");
+      setUsePoints(false);
+    });
 
   const errorField = error ? fieldFor[error] : undefined;
   const border = (field: Field) => (errorField === field ? "border-red-700" : "border-line");
@@ -119,6 +126,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
         coupon,
         helper,
         payment,
+        usePoints,
         items: items.map(toInput),
       });
       if (result.ok) {
@@ -168,6 +176,24 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
       className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-14"
     >
       <div className="flex flex-col gap-10">
+        {known ? (
+          <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-blush px-4 py-3 text-sm" role="status">
+            <span>{t("welcomeBack", { name: (known.name ?? "").split(" ")[0] })}</span>
+            <button
+              type="button"
+              onClick={forget}
+              disabled={clearing}
+              className="text-muted underline underline-offset-4 hover:text-foreground"
+            >
+              {t("notYou")}
+            </button>
+          </p>
+        ) : saved?.google ? (
+          <p className="rounded-lg bg-surface px-4 py-3 text-sm text-muted">{t("googleSignedIn")}</p>
+        ) : (
+          googleEnabled && <GoogleButton locale={locale} />
+        )}
+
         <fieldset className={section}>
           <legend className={legend}>{t("details")}</legend>
           <Labeled label={t("name")} id="co-name" error={errorField === "name" ? t(`errors.${error!}`) : undefined}>
@@ -190,7 +216,8 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
             error={errorField === "phone" ? t(`errors.${error!}`) : undefined}
           >
             <div className={`flex items-center rounded-lg border bg-background focus-within:border-gold ${border("phone")}`} dir="ltr">
-              {!/^\s*(\+|00)/.test(phone) && (
+              {/* "+961" unless she typed a country code or a leading 0 (03 123 456). */}
+              {!/^\s*(\+|0)/.test(phone) && (
                 <span className="ps-4 text-base text-muted" aria-hidden>
                   {t("phonePrefix")}
                 </span>
@@ -211,11 +238,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
               />
             </div>
           </Labeled>
-          {welcome && (
-            <p className="rounded-lg bg-blush px-4 py-3 text-sm" role="status">
-              {t("welcomeBack", { name: welcome })}
-            </p>
-          )}
         </fieldset>
 
         <fieldset className={section}>
@@ -351,6 +373,24 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
             </Link>
           </p>
         )}
+        {quote && quote.points.balance > 0 && quote.points.value > 0 && (
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3">
+            <Sparkles className="size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
+            <span className="flex flex-1 flex-col text-sm">
+              <span className="font-medium">
+                {t("pointsHave", { points: quote.points.balance, value: formatPrice(quote.points.value) })}
+              </span>
+              <span className="text-xs text-muted">{t("pointsUse")}</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={usePoints}
+              onChange={(e) => setUsePoints(e.target.checked)}
+              className="size-5 accent-[var(--gold)]"
+            />
+          </label>
+        )}
         <CouponField coupon={coupon} quote={quote} />
         <CartSummary
           quote={quote}
@@ -387,6 +427,11 @@ export function CheckoutForm({ areas, helpers, freeShippingOver }: Props) {
       </div>
     </form>
   );
+}
+
+/** +9613123456 -> "03123456" for the phone field (+961 is shown before it). */
+function localPhone(e164: string): string {
+  return e164.startsWith("+961") ? `0${e164.slice(4)}` : e164;
 }
 
 function Labeled({

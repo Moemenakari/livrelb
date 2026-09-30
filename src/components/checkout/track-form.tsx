@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { trackOrder, type TrackState } from "@/lib/checkout/actions";
 import { formatPrice } from "@/lib/format";
@@ -75,6 +75,14 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
             </p>
           </div>
           <OrderStatusSteps status={state.orderStatus} />
+          {(state.points.earned > 0 || state.points.toEarn > 0) && (
+            <p className="flex items-center gap-2 text-sm text-gold-dark">
+              <Sparkles className="size-4" strokeWidth={1.5} aria-hidden />
+              {state.points.earned > 0
+                ? tOrder("pointsEarned", { points: state.points.earned })
+                : tOrder("pointsToEarn", { points: state.points.toEarn })}
+            </p>
+          )}
           <ul className="flex flex-col gap-1 border-t border-line pt-4 text-sm">
             {state.items.map((item, i) => (
               <li key={i} className="flex justify-between gap-3">

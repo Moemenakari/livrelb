@@ -8,6 +8,8 @@ import type { Json } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
+import { forgetCustomer, rememberCustomer, verifiedCustomer } from "./customer";
+import { orderPoints } from "./points";
 import type {
   CartItemInput,
   CheckoutError,
@@ -16,7 +18,6 @@ import type {
   OrderStatus,
   QuoteLine,
   QuoteResult,
-  ReturningCustomer,
 } from "./types";
 
 // Server functions for the cart and checkout. They are reachable by anyone
@@ -62,6 +63,11 @@ type DbQuote = {
   subtotal_cents: number;
   discount_cents: number;
   coupon: { code: string; error?: string; min_order_cents?: number } | null;
+  points_balance: number;
+  points_value_cents: number;
+  points_used: number;
+  points_discount_cents: number;
+  points_to_earn: number;
   delivery_fee_cents: number;
   is_first_order: boolean | null;
   total_cents: number;
@@ -75,17 +81,22 @@ export async function quoteCart(input: {
   coupon?: string;
   phone?: string;
   area?: string;
+  usePoints?: boolean;
 }): Promise<QuoteResult> {
   const db = admin();
   if (!db) return { ok: false, error: "unavailable" };
   const items = cleanItems(input.items);
   if (!items) return { ok: false, error: "invalid" };
 
+  // Points only for the customer the server verified, never from the browser.
+  const { customerId } = await verifiedCustomer();
   const { data, error } = await db.rpc("quote_order", {
     p_items: items as unknown as Json,
     p_coupon_code: str(input.coupon, 30) || undefined,
     p_phone: str(input.phone, 30) || undefined,
     p_area: str(input.area, 40) || undefined,
+    p_customer_id: customerId ?? undefined,
+    p_use_points: input.usePoints === true,
   });
   if (error || !data) return { ok: false, error: "unavailable" };
 
@@ -108,6 +119,13 @@ export async function quoteCart(input: {
             minOrder: q.coupon.min_order_cents ? dollars(q.coupon.min_order_cents) : undefined,
           }
         : null,
+      points: {
+        balance: q.points_balance,
+        value: dollars(q.points_value_cents),
+        used: q.points_used,
+        discount: dollars(q.points_discount_cents),
+        toEarn: q.points_to_earn,
+      },
       delivery: dollars(q.delivery_fee_cents),
       isFirstOrder: q.is_first_order,
       total: dollars(q.total_cents),
@@ -115,23 +133,6 @@ export async function quoteCart(input: {
       firstOrderFreeDelivery: q.first_order_free_delivery,
     },
   };
-}
-
-/**
- * Returning customer, found by phone: her saved name, area and address to
- * prefill the checkout. Null when the phone is new (or invalid).
- */
-export async function findCustomer(phone: string): Promise<ReturningCustomer | null> {
-  const db = admin();
-  const e164 = normalizePhone(str(phone, 30));
-  if (!db || !e164) return null;
-  const { data } = await db
-    .from("customers")
-    .select("name, address, areas (slug)")
-    .eq("phone", e164)
-    .maybeSingle();
-  if (!data) return null;
-  return { name: data.name, area: data.areas?.slug ?? null, address: data.address };
 }
 
 const dbErrors: Partial<Record<string, CheckoutError>> = {
@@ -169,6 +170,7 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
 
   const jar = await cookies();
   const ref = jar.get(REF_COOKIE)?.value;
+  const { customerId, authUserId } = await verifiedCustomer();
 
   const { data, error } = await db.rpc("place_order", {
     p_customer: { name, phone: str(input.phone, 30), area, address: building ? `${address}\n${building}` : address },
@@ -179,6 +181,9 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     p_ref_code: ref && REF_CODE.test(ref) ? ref : undefined,
     p_notes: notes || undefined,
     p_request_id: requestId,
+    p_customer_id: customerId ?? undefined,
+    p_use_points: input.usePoints === true,
+    p_auth_user_id: authUserId ?? undefined,
   });
   if (error || !data) {
     const code = error?.message.split(":")[0].trim() ?? "";
@@ -187,7 +192,10 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     return { ok: false, error: dbErrors[code] ?? (lineError ? "cart_changed" : "failed") };
   }
 
-  const order = data as { order_id: string; number: number };
+  const order = data as { order_id: string; number: number; customer_id: string; trusted: boolean };
+  // Next time this browser's checkout is prefilled (only when the database
+  // trusts it with this customer: see place_order).
+  if (order.trusted) await rememberCustomer(order.customer_id);
   const placed = (jar.get(ORDERS_COOKIE)?.value ?? "").split(".").filter((id) => UUID.test(id));
   jar.set(ORDERS_COOKIE, [...placed.filter((id) => id !== order.order_id), order.order_id].slice(-10).join("."), {
     httpOnly: true,
@@ -199,6 +207,11 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   return { ok: true, number: order.number };
 }
 
+/** "Not you? Clear": forget this browser (and sign out of Google). */
+export async function clearSavedCustomer(): Promise<void> {
+  await forgetCustomer();
+}
+
 export type TrackState =
   | { status: "idle" }
   | { status: "not_found"; number: string; phone: string }
@@ -208,6 +221,8 @@ export type TrackState =
       orderStatus: OrderStatus;
       placedAt: string;
       total: number;
+      /** Points this order earned, or will earn once confirmed (0 = none). */
+      points: { earned: number; toEarn: number };
       items: { name: string; text: string | null; qty: number }[];
     };
 
@@ -223,18 +238,22 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
 
   const { data } = await db
     .from("orders")
-    .select("number, status, created_at, total_cents, order_items (product_slug, product_name, custom_text, qty)")
+    .select(
+      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents,
+       order_items (product_slug, product_name, custom_text, qty)`,
+    )
     .eq("number", Number(number))
     .eq("phone", e164)
     .maybeSingle();
   if (!data) return notFound;
-  const catalog = await getCatalog();
+  const [catalog, points] = await Promise.all([getCatalog(), orderPoints(db, data)]);
   return {
     status: "found",
     number: data.number,
     orderStatus: data.status,
     placedAt: data.created_at,
     total: dollars(data.total_cents),
+    points,
     items: data.order_items.map((i) => ({
       name: findProduct(catalog, i.product_slug)?.name[locale] ?? i.product_name,
       text: i.custom_text,

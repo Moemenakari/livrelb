@@ -14,18 +14,19 @@ import type {
 // not configured. Star ratings come from the reviews, never from here.
 // `media` stays empty until real photos exist.
 
-// Sample pricing: Silver, Gold and Rose Gold all cost the base price (the
-// gold price); every piece also comes in Double Gold Stainless Steel at
-// three times the base price.
-const offers = (keys: MaterialKey[], base: number, compareAt?: number): MaterialOffer[] =>
-  [...keys, "doubleGold" as const].map((material) => {
-    const factor = material === "doubleGold" ? 3 : 1;
-    return {
-      material,
-      price: base * factor,
-      compareAtPrice: compareAt ? compareAt * factor : undefined,
-    };
-  });
+// Sample prices, as the owner would type them in the admin: every metal of
+// every product has its own price (product_materials). Here Silver, Gold
+// and Rose Gold share one price and Double Gold Stainless Steel is listed
+// separately; nothing is calculated from another price.
+const offers = (
+  keys: MaterialKey[],
+  price: number,
+  compareAt: number | undefined,
+  doubleGold: [price: number, compareAt?: number],
+): MaterialOffer[] => [
+  ...keys.map((material) => ({ material, price, compareAtPrice: compareAt })),
+  { material: "doubleGold", price: doubleGold[0], compareAtPrice: doubleGold[1] },
+];
 
 const chain: SizeOption = { kind: "chain", values: [35, 40, 45, 50, 55], default: 45 };
 const bracelet: SizeOption = { kind: "bracelet", values: [15, 16, 17, 18, 19], default: 17 };
@@ -74,7 +75,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces", "gifts"],
     style: "cursive",
     isBestSeller: true,
-    offers: offers(plated, 44, 58),
+    offers: offers(plated, 44, 58, [132, 174]),
     defaultMaterial: "gold",
     personalization: nameNecklace("Maya"),
     size: chain,
@@ -96,7 +97,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces", "gifts"],
     style: "arabic",
     isBestSeller: true,
-    offers: offers(plated, 44, 57),
+    offers: offers(plated, 44, 57, [132, 171]),
     defaultMaterial: "gold",
     personalization: nameNecklace("ليلى", "tripoli"),
     size: chain,
@@ -117,7 +118,7 @@ export const products: Product[] = [
     },
     categories: ["lira-collection", "necklaces", "gifts"],
     isBestSeller: true,
-    offers: offers(["silver", "gold"], 54, 70),
+    offers: offers(["silver", "gold"], 54, 70, [162, 210]),
     defaultMaterial: "gold",
     size: chain,
     art: { kind: "coin", variant: "necklace" },
@@ -137,7 +138,7 @@ export const products: Product[] = [
     },
     categories: ["bracelets", "gifts"],
     isBestSeller: true,
-    offers: offers(plated, 34, 44),
+    offers: offers(plated, 34, 44, [102, 132]),
     defaultMaterial: "rose",
     personalization: { ...nameNecklace("Rami"), connections: [] },
     size: bracelet,
@@ -158,7 +159,7 @@ export const products: Product[] = [
     },
     categories: ["necklaces", "gifts"],
     isBestSeller: true,
-    offers: offers(plated, 34, 43),
+    offers: offers(plated, 34, 43, [102, 129]),
     defaultMaterial: "gold",
     size: chain,
     art: { kind: "cedar" },
@@ -179,7 +180,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces", "gifts"],
     style: "initial",
     isBestSeller: true,
-    offers: offers(plated, 30, 37),
+    offers: offers(plated, 30, 37, [90, 111]),
     defaultMaterial: "gold",
     personalization: {
       kind: "initial",
@@ -207,7 +208,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces"],
     style: "bold",
     isNew: true,
-    offers: offers(plated, 47, 60),
+    offers: offers(plated, 47, 60, [141, 180]),
     defaultMaterial: "gold",
     personalization: nameNecklace("Jana", "faraya"),
     size: chain,
@@ -229,7 +230,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces"],
     style: "dainty",
     isBestSeller: true,
-    offers: offers(plated, 40, 50),
+    offers: offers(plated, 40, 50, [120, 150]),
     defaultMaterial: "silver",
     personalization: nameNecklace("Rita"),
     size: chain,
@@ -251,7 +252,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces", "gifts"],
     style: "twoFonts",
     isNew: true,
-    offers: offers(plated, 50, 64),
+    offers: offers(plated, 50, 64, [150, 192]),
     defaultMaterial: "rose",
     personalization: nameNecklace("Sarah"),
     size: chain,
@@ -273,7 +274,7 @@ export const products: Product[] = [
     categories: ["name-necklaces", "necklaces"],
     style: "initial",
     isNew: true,
-    offers: offers(plated, 30),
+    offers: offers(plated, 30, undefined, [90]),
     defaultMaterial: "gold",
     personalization: {
       kind: "initial",
@@ -299,7 +300,7 @@ export const products: Product[] = [
       ar: "اسم بالخط العربي على مقاس المعصم. جميل له أو لها.",
     },
     categories: ["bracelets", "mens-jewelry"],
-    offers: offers(plated, 37),
+    offers: offers(plated, 37, undefined, [111]),
     defaultMaterial: "silver",
     personalization: { ...nameNecklace("كريم", "tripoli"), connections: [] },
     size: bracelet,
@@ -319,7 +320,7 @@ export const products: Product[] = [
       ar: "ليرة لبنانية مصغّرة في وسط سوار ناعم. تتناسق تماماً مع قلادة الليرة.",
     },
     categories: ["lira-collection", "bracelets", "gifts"],
-    offers: offers(["silver", "gold"], 40, 50),
+    offers: offers(["silver", "gold"], 40, 50, [120, 150]),
     defaultMaterial: "gold",
     size: bracelet,
     art: { kind: "coin", variant: "bracelet" },
@@ -339,7 +340,7 @@ export const products: Product[] = [
     },
     categories: ["lira-collection", "earrings"],
     isNew: true,
-    offers: offers(["silver", "gold"], 37),
+    offers: offers(["silver", "gold"], 37, undefined, [111]),
     defaultMaterial: "gold",
     art: { kind: "coin", variant: "earrings" },
     media: [],
@@ -357,7 +358,7 @@ export const products: Product[] = [
       ar: "ليرة 1975 بحجمها الكامل على سلسلة 2 ملم. مصنوعة لتُلبس كل يوم.",
     },
     categories: ["lira-collection", "mens-jewelry"],
-    offers: offers(["silver", "gold"], 60),
+    offers: offers(["silver", "gold"], 60, undefined, [180]),
     defaultMaterial: "silver",
     size: { kind: "chain", values: [50, 55, 60], default: 55 },
     art: { kind: "coin", variant: "necklace" },
@@ -376,7 +377,7 @@ export const products: Product[] = [
       ar: "أرزة أكبر وأثقل على سلسلة 2 ملم. بسيطة وقوية ولبنانية بفخر.",
     },
     categories: ["mens-jewelry", "necklaces"],
-    offers: offers(["silver", "gold"], 50),
+    offers: offers(["silver", "gold"], 50, undefined, [150]),
     defaultMaterial: "silver",
     size: { kind: "chain", values: [50, 55, 60], default: 55 },
     art: { kind: "cedar" },
@@ -395,7 +396,7 @@ export const products: Product[] = [
       ar: "خاتم عصري بحرف واحد محفور بخطنا المتصل. البسيه وحده أو مع خواتم أخرى.",
     },
     categories: ["rings", "gifts"],
-    offers: offers(plated, 40, 50),
+    offers: offers(plated, 40, 50, [120, 150]),
     defaultMaterial: "gold",
     personalization: {
       kind: "initial",
@@ -422,7 +423,7 @@ export const products: Product[] = [
     },
     categories: ["rings"],
     isNew: true,
-    offers: offers(plated, 24),
+    offers: offers(plated, 24, undefined, [72]),
     defaultMaterial: "rose",
     size: ring,
     art: { kind: "ring", engraving: "plain" },
@@ -443,7 +444,7 @@ export const products: Product[] = [
     categories: ["earrings", "gifts"],
     isNew: true,
     isBestSeller: true,
-    offers: offers(plated, 30, 37),
+    offers: offers(plated, 30, 37, [90, 111]),
     defaultMaterial: "gold",
     art: { kind: "hoops", pearl: false },
     media: [],
@@ -461,7 +462,7 @@ export const products: Product[] = [
       ar: "لؤلؤة ناعمة معلقة بحلقة صغيرة. أنيقة للأعراس وسهلة لكل يوم.",
     },
     categories: ["earrings", "gifts"],
-    offers: offers(plated, 37),
+    offers: offers(plated, 37, undefined, [111]),
     defaultMaterial: "gold",
     art: { kind: "hoops", pearl: true },
     media: [],
@@ -480,7 +481,7 @@ export const products: Product[] = [
     },
     categories: ["mens-jewelry", "name-necklaces"],
     style: "arabic",
-    offers: offers(["silver", "gold"], 54),
+    offers: offers(["silver", "gold"], 54, undefined, [162]),
     defaultMaterial: "silver",
     personalization: nameNecklace("علي", "tripoli"),
     size: { kind: "chain", values: [50, 55, 60], default: 55 },

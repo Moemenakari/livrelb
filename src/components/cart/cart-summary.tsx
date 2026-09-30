@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, X } from "lucide-react";
+import { Sparkles, Truck, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { setCoupon } from "@/lib/cart";
 import type { Quote } from "@/lib/checkout/types";
@@ -139,6 +139,15 @@ export function CartSummary({ quote, fresh, failed, estimate, freeShippingOver, 
             <dd className="text-cedar">{"-"}{formatPrice(discount)}</dd>
           </div>
         )}
+        {quote && quote.points.discount > 0 && (
+          <div className={row}>
+            <dt className="text-muted">{t("pointsDiscount", { points: quote.points.used })}</dt>
+            <dd className="text-cedar">
+              {"-"}
+              {formatPrice(quote.points.discount)}
+            </dd>
+          </div>
+        )}
         <div className={row}>
           <dt className="text-muted">{t("delivery")}</dt>
           <dd className="text-end">
@@ -159,6 +168,12 @@ export function CartSummary({ quote, fresh, failed, estimate, freeShippingOver, 
           <dd>{formatPrice(quote?.total ?? subtotal)}</dd>
         </div>
       </dl>
+      {quote && quote.points.toEarn > 0 && (
+        <p className="flex items-center gap-2 text-xs text-gold-dark">
+          <Sparkles className="size-3.5" strokeWidth={1.5} aria-hidden />
+          {t("pointsEarn", { points: quote.points.toEarn })}
+        </p>
+      )}
       {failed && <p className="text-xs text-red-700">{t("unavailable")}</p>}
     </div>
   );

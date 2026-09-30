@@ -784,6 +784,8 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"]
           request_id: string | null
           phone: string
+          points_discount_cents: number
+          points_used: number
           staff_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
@@ -813,6 +815,8 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           request_id?: string | null
           phone: string
+          points_discount_cents?: number
+          points_used?: number
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
@@ -842,6 +846,8 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           request_id?: string | null
           phone?: string
+          points_discount_cents?: number
+          points_used?: number
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
@@ -886,6 +892,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      points_ledger: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          delta: number
+          id: string
+          note: string | null
+          order_id: string | null
+          reason: Database["public"]["Enums"]["points_reason"]
+          review_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          delta: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason: Database["public"]["Enums"]["points_reason"]
+          review_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          delta?: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason?: Database["public"]["Enums"]["points_reason"]
+          review_id?: string | null
+        }
+        Relationships: []
       }
       product_categories: {
         Row: {
@@ -1254,6 +1296,7 @@ export type Database = {
           city_ar: string | null
           created_at: string
           created_by: string | null
+          customer_id: string | null
           customer_name: string
           id: string
           is_approved: boolean
@@ -1273,6 +1316,7 @@ export type Database = {
           city_ar?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           customer_name: string
           id?: string
           is_approved?: boolean
@@ -1292,6 +1336,7 @@ export type Database = {
           city_ar?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           customer_name?: string
           id?: string
           is_approved?: boolean
@@ -1341,6 +1386,11 @@ export type Database = {
           free_shipping_threshold_cents: number
           id: number
           instagram_url: string
+          points_enabled: boolean
+          points_per_dollar: number
+          points_per_review: number
+          points_redeem_cents: number
+          points_redeem_points: number
           shipping_info_ar: string
           shipping_info_en: string
           updated_at: string
@@ -1357,6 +1407,11 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           instagram_url?: string
+          points_enabled?: boolean
+          points_per_dollar?: number
+          points_per_review?: number
+          points_redeem_cents?: number
+          points_redeem_points?: number
           shipping_info_ar?: string
           shipping_info_en?: string
           updated_at?: string
@@ -1373,6 +1428,11 @@ export type Database = {
           free_shipping_threshold_cents?: number
           id?: number
           instagram_url?: string
+          points_enabled?: boolean
+          points_per_dollar?: number
+          points_per_review?: number
+          points_redeem_cents?: number
+          points_redeem_points?: number
           shipping_info_ar?: string
           shipping_info_en?: string
           updated_at?: string
@@ -1481,6 +1541,7 @@ export type Database = {
       }
     }
     Functions: {
+      customer_profile: { Args: { p_customer_id: string }; Returns: Json }
       list_helpers: {
         Args: never
         Returns: {
@@ -1496,8 +1557,11 @@ export type Database = {
           p_items: Json
           p_notes?: string
           p_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_auth_user_id?: string
+          p_customer_id?: string
           p_ref_code?: string
           p_request_id?: string
+          p_use_points?: boolean
         }
         Returns: Json
       }
@@ -1505,8 +1569,10 @@ export type Database = {
         Args: {
           p_area?: string
           p_coupon_code?: string
+          p_customer_id?: string
           p_items: Json
           p_phone?: string
+          p_use_points?: boolean
         }
         Returns: Json
       }
@@ -1534,6 +1600,7 @@ export type Database = {
         | "cancelled"
       payment_method: "cod" | "whish"
       personalization_kind: "name" | "initial"
+      points_reason: "order" | "review" | "redeem" | "adjust"
       product_status: "draft" | "active" | "archived"
       review_source: "website" | "instagram" | "whatsapp"
       size_kind: "chain" | "bracelet" | "ring"
@@ -1689,6 +1756,7 @@ export const Constants = {
       ],
       payment_method: ["cod", "whish"],
       personalization_kind: ["name", "initial"],
+      points_reason: ["order", "review", "redeem", "adjust"],
       product_status: ["draft", "active", "archived"],
       review_source: ["website", "instagram", "whatsapp"],
       size_kind: ["chain", "bracelet", "ring"],

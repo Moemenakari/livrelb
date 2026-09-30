@@ -72,6 +72,35 @@ forever; each order stores `staff_id` + `attribution_source` (`code`,
 
 Checks: Supabase dashboard → Advisors (security: no warnings).
 
+## LIVRE Points
+
+`points_ledger` holds every change (`order`, `review`, `redeem`, `adjust`);
+a customer's balance is the sum. Rules live in `site_settings`
+(`points_enabled`, `points_per_dollar` = 10, `points_per_review` = 10,
+`points_redeem_points` = 100 worth `points_redeem_cents` = $1):
+
+- An order earns its points when it is marked Confirmed (or later); if it is
+  cancelled they are removed and any points spent on it come back
+  (`private.sync_order_points`, run by a trigger on `orders.status`).
+- An approved review with a `customer_id` earns `points_per_review` once.
+- At checkout a verified customer can spend her points (whole units of 100).
+- A logged-in customer reads only her own rows (RLS); staff add manual
+  `adjust` rows from the admin.
+
+## Returning customers (no lookup by phone)
+
+Typing a phone number never reveals anything. The checkout is prefilled
+only for a customer the server has verified:
+
+- **Remembered device:** after an order, an httpOnly cookie signed with
+  `CUSTOMER_COOKIE_SECRET` (1 year). Only set when the order created the
+  customer or the browser was already verified as her, so typing someone
+  else's phone never gives access to her details or points. "Not you?
+  Clear" deletes it.
+- **Google login (optional):** Supabase Auth with the Google provider. The
+  account is linked to the customer at her next order (same trust rule).
+  The button only shows once the provider is switched on in Supabase.
+
 ## Staff login
 
 Phone + password through Supabase Auth. The phone is turned into an
