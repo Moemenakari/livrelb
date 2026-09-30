@@ -5,7 +5,9 @@ English + Arabic (RTL), mobile first. The full spec is in
 [PROJECT_BRIEF.md](PROJECT_BRIEF.md).
 
 Stack: Next.js 16 (App Router, TypeScript) · Tailwind CSS 4 · next-intl ·
-Supabase · Vercel.
+Supabase (Postgres) · Cloudflare Workers via OpenNext · Cloudflare R2 for
+images. Details: [docs/database.md](docs/database.md),
+[docs/hosting.md](docs/hosting.md).
 
 ## Run it locally
 
@@ -20,21 +22,27 @@ npm run dev
 Open <http://localhost:3000>. It redirects to `/en`; the Arabic site is at
 `/ar`.
 
-The site runs without Supabase keys (nothing reads the database yet). To
-connect Supabase, fill in `.env.local` from the Supabase dashboard
-(Project Settings → API Keys), restart `npm run dev`, and open
-<http://localhost:3000/api/health>. You should see `{"supabase":"ok"}`.
+The storefront reads the catalog from Supabase when
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are set
+in `.env.local` (Supabase → Project Settings → API Keys). Without them it
+falls back to the sample files in `src/lib/catalog/`, so it always runs.
+<http://localhost:3000/api/health> shows which one is used
+(`"catalog":"supabase"` or `"static"`).
 
 ## Scripts
 
-| Command              | What it does                                              |
-| -------------------- | --------------------------------------------------------- |
-| `npm run dev`        | Dev server on port 3000                                   |
-| `npm run build`      | Production build                                          |
-| `npm start`          | Serve the production build                                |
-| `npm run lint`       | ESLint (also blocks hardcoded text in JSX)                |
-| `npm run typecheck`  | TypeScript check                                          |
-| `npm run i18n:check` | Fails if `en.json` and `ar.json` don't have the same keys |
+| Command                    | What it does                                                   |
+| -------------------------- | -------------------------------------------------------------- |
+| `npm run dev`              | Dev server on port 3000                                        |
+| `npm run build`            | Production build                                               |
+| `npm start`                | Serve the production build                                     |
+| `npm run lint`             | ESLint (also blocks hardcoded text in JSX)                     |
+| `npm run typecheck`        | TypeScript check                                               |
+| `npm run i18n:check`       | Fails if `en.json` and `ar.json` don't have the same keys      |
+| `npm run db:seed:generate` | Rewrites `supabase/seed.sql` from the sample catalog           |
+| `npm run db:create-owner`  | Creates the owner's login (needs `SUPABASE_SECRET_KEY`)        |
+| `npm run preview`          | Cloudflare build, run locally in the Workers runtime           |
+| `npm run deploy`           | Cloudflare build and deploy (see [docs/hosting.md](docs/hosting.md)) |
 
 ## Where things live
 
@@ -50,27 +58,38 @@ src/components/preview/      <NamePreview> live name preview, metal look, script
 src/components/product/      Product card, drawn product art, gallery, configurator
 src/components/coin/         3D Lira coin (React Three Fiber) and its scroll path
 src/components/home/         Homepage pieces (countdown, hero mini preview)
-src/config/                  Promo code + countdown end, announcements, nav, contact links
-src/lib/catalog/             SAMPLE catalog: products, materials, fonts, categories, reviews
+src/config/                  Navigation order, site URL, WhatsApp link helper
+src/lib/catalog/             getCatalog() (Supabase or sample files) and read helpers
+src/lib/supabase/            Supabase clients and generated database types
+src/lib/storage/r2.ts        Signed uploads to Cloudflare R2 (admin, next phase)
+src/lib/phone.ts             Phone numbers to E.164 (+961 by default)
 src/i18n/                    Locales and locale-aware Link / redirect
-src/lib/supabase/            Supabase clients (browser + server)
 src/proxy.ts                 Adds the /en or /ar prefix to every URL
+supabase/migrations/         Database schema, RLS, order function
+supabase/seed.sql            Sample data (generated, see below)
+scripts/                     Seed generator, owner account, coin textures
+.github/workflows/           Daily encrypted database backup
 assets/                      Brand source files (1975 Lira coin photo)
 public/brand/                Brand files served by the site
 public/coin/                 Coin textures (built by scripts/build-coin-textures.mjs)
 ```
 
-## Sample data and photos
+## Data, sample data and photos
 
-The catalog in `src/lib/catalog/` is sample data shaped like the database
-tables in the brief, so Phase 2 can replace it with Supabase queries.
-Prices, ratings, reviews and the founder quote are placeholders.
+The storefront reads everything (products, prices per metal, categories,
+reviews, promo code, countdown, delivery rules, WhatsApp number,
+announcements) from Supabase through `getCatalog()`, cached and refreshed
+hourly (and by `revalidateTag("catalog")` once the admin exists). See
+[docs/database.md](docs/database.md) for tables, security and backups.
+
+`src/lib/catalog/` also holds the **sample catalog**: it seeds the database
+(`npm run db:seed:generate` writes `supabase/seed.sql`) and is the fallback
+without Supabase. Sample reviews (`is_sample`) only show in development.
 
 Until a product has photos, its images are drawn (the name necklace in the
-chosen metal, the coin, the cedar...). To use real photos, put them in
-`public/products/<slug>/` and list them in the product's `media` array; the
-first photo gets the live name preview drawn over it. Empty "Model photo"
-style slots mark where more photos go.
+chosen metal, the coin, the cedar...). Real photos go to Cloudflare R2 and
+their URLs into `product_media`; the first photo gets the live name preview
+drawn over it. Empty "Model photo" style slots mark where more photos go.
 
 The coin textures come from `assets/lira-coin-1975.jpg`. After replacing
 the photo, run `node scripts/build-coin-textures.mjs`.
