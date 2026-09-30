@@ -67,7 +67,7 @@ export type CheckoutInput = {
   notes: string;
   coupon: string;
   helper: string;
-  payment: "cod" | "whish";
+  payment: "cod" | "whish" | "card";
   usePoints: boolean;
   /** Honeypot field: empty for people. */
   website?: string;

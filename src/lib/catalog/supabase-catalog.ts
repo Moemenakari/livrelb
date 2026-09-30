@@ -247,6 +247,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         redeemValue: dollars(s.points_redeem_cents),
       },
       whishOnline: s.whish_online_enabled,
+      cardOnline: s.card_online_enabled,
+      metaPixelId: s.meta_pixel_id,
+      ga4Id: s.ga4_id,
       shippingInfo: s.shipping_info_en.trim()
         ? loc(s.shipping_info_en, s.shipping_info_ar.trim() || s.shipping_info_en)
         : undefined,

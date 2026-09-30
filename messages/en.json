@@ -73,7 +73,8 @@
   },
   "payment": {
     "cod": "Cash on Delivery",
-    "whish": "Whish"
+    "whish": "Whish",
+    "card": "Visa / Mastercard"
   },
   "namePreview": {
     "placeholder": "Yourname",
@@ -236,6 +237,19 @@
     },
     "gift": {
       "detail": "Every piece ships in our LIVRE gift box with a pouch, ready to give. No extra cost."
+    }
+  },
+  "cardPay": {
+    "title": "Pay now by card",
+    "intro": "Visa or Mastercard. You pay on your bank's secure page.",
+    "pay": "Pay by card",
+    "secure": "Secure payment. LIVRE never sees or stores your card number.",
+    "paid": "Payment received. Thank you!",
+    "errors": {
+      "declined": "The payment wasn't completed. You can try again or pay another way.",
+      "not_available": "Card payment isn't available right now.",
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
+      "failed": "Something went wrong. Please try again."
     }
   },
   "whishPay": {
@@ -438,6 +452,8 @@
     "codHint": "Pay when your order arrives.",
     "whish": "Whish",
     "whishHint": "We'll send you the Whish details after confirming your order.",
+    "card": "Visa / Mastercard",
+    "cardHint": "Pay now on your bank's secure page. We never see your card details.",
     "summary": "Order summary",
     "placeOrder": "Place order · {total}",
     "placing": "Placing your order…",
@@ -470,6 +486,20 @@
     },
     "weAccept": "We accept",
     "secure": "Secure checkout. Your information is protected."
+  },
+  "tracking": {
+    "progress": "Order progress",
+    "stage": {
+      "placed": "Placed",
+      "crafting": "Handcrafting",
+      "onTheWay": "On the way",
+      "delivered": "Delivered"
+    },
+    "eta": "Estimated delivery:",
+    "carrier": "Courier",
+    "trackingNumber": "Tracking number",
+    "updates": "Updates",
+    "cancelled": "This order was cancelled."
   },
   "order": {
     "number": "Order #{number}",

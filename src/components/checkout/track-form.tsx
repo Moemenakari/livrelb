@@ -7,7 +7,7 @@ import { lookupPoints, trackOrder, type PointsState, type TrackState } from "@/l
 import { formatMoney, formatPrice } from "@/lib/format";
 import { LivreCoin } from "@/components/icons/livre-coin";
 import { primaryButton } from "@/components/ui/styles";
-import { OrderStatusSteps } from "./order-status";
+import { TrackingPanel } from "./tracking-panel";
 
 const input =
   "h-12 w-full rounded-lg border border-line bg-background px-4 text-base outline-none placeholder:text-muted focus:border-gold";
@@ -80,7 +80,7 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
               {t("placedOn", { date: format.dateTime(new Date(state.placedAt), { dateStyle: "medium" }) })}
             </p>
           </div>
-          <OrderStatusSteps status={state.orderStatus} />
+          <TrackingPanel status={state.orderStatus} tracking={state.tracking} />
           {(state.points.earned > 0 || state.points.toEarn > 0) && (
             <p className="flex items-center gap-2 text-sm text-gold-dark">
               <Sparkles className="size-4" strokeWidth={1.5} aria-hidden />

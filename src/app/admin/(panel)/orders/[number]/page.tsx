@@ -66,7 +66,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
     <>
       <PageHeader
         title={`Order #${order.number}`}
-        subtitle={`${dateTime(order.created_at)} · ${order.payment_method === "cod" ? "Cash on delivery" : "Whish"}`}
+        subtitle={`${dateTime(order.created_at)} · ${{ cod: "Cash on delivery", whish: "Whish", card: "Visa / Mastercard" }[order.payment_method]}`}
         actions={<Badge tone={statusTones[order.status]}>{statusLabels[order.status]}</Badge>}
       />
 
@@ -166,6 +166,8 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
             staffId={order.staff_id}
             staffOptions={names.filter((s) => s.isActive || s.id === order.staff_id).map((s) => ({ id: s.id, name: s.name }))}
             whatsapp={settings?.whatsapp_number ? { phone: order.phone, text: whatsappText } : null}
+            carrier={order.carrier}
+            trackingNumber={order.tracking_number}
           />
 
           <PointsApprovalCard

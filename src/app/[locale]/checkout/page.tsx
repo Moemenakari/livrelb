@@ -5,6 +5,7 @@ import { getCatalog } from "@/lib/catalog";
 import { googleLoginEnabled, savedCustomer } from "@/lib/checkout/customer";
 import { getCheckoutOptions } from "@/lib/checkout/options";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
+import { cardConfigured } from "@/lib/payments/card";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/checkout">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -36,6 +37,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         freeShippingOver={settings.freeShippingOver}
         saved={saved}
         googleEnabled={googleEnabled}
+        cardEnabled={settings.cardOnline && cardConfigured()}
       />
     </div>
   );

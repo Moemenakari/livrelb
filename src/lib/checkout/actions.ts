@@ -10,7 +10,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
 import { forgetCustomer, rememberCustomer, verifiedCustomer } from "./customer";
+import { cardConfigured } from "@/lib/payments/card";
 import { orderPoints } from "./points";
+import { orderTracking, type Tracking } from "./tracking";
 import type {
   CartItemInput,
   CheckoutError,
@@ -31,6 +33,13 @@ const dollars = (cents: number) => cents / 100;
 
 function admin() {
   return isSupabaseConfigured() ? createAdminClient() : null;
+}
+
+/** Card payment is on in the admin and the bank gateway keys are set. */
+async function cardAvailable(db: NonNullable<ReturnType<typeof admin>>): Promise<boolean> {
+  if (!cardConfigured()) return false;
+  const { data } = await db.from("site_settings").select("card_online_enabled").eq("id", 1).maybeSingle();
+  return Boolean(data?.card_online_enabled);
 }
 
 const str = (value: unknown, max: number): string =>
@@ -180,7 +189,7 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
   const items = cleanItems(input.items);
   if (!items || items.length === 0) return { ok: false, error: "cart_invalid" };
-  const payment = input.payment === "whish" ? "whish" : "cod";
+  const payment = input.payment === "whish" ? "whish" : input.payment === "card" && (await cardAvailable(db)) ? "card" : "cod";
   const helper = UUID.test(str(input.helper, 40)) ? str(input.helper, 40) : undefined;
   const requestId = UUID.test(str(input.requestId, 40)) ? str(input.requestId, 40) : crypto.randomUUID();
 
@@ -240,6 +249,7 @@ export type TrackState =
       total: number;
       /** Points this order earned, or will earn once confirmed (0 = none). */
       points: { earned: number; toEarn: number };
+      tracking: Tracking;
       items: { name: string; text: string | null; qty: number }[];
     };
 
@@ -257,14 +267,18 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
   const { data } = await db
     .from("orders")
     .select(
-      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents,
+      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number,
        order_items (product_slug, product_name, custom_text, qty)`,
     )
     .eq("number", Number(number))
     .eq("phone", e164)
     .maybeSingle();
   if (!data) return notFound;
-  const [catalog, points] = await Promise.all([getCatalog(), orderPoints(db, data)]);
+  const catalog = await getCatalog();
+  const [points, tracking] = await Promise.all([
+    orderPoints(db, data),
+    orderTracking(db, data, locale, catalog.settings.deliveryDays),
+  ]);
   return {
     status: "found",
     number: data.number,
@@ -272,6 +286,7 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
     placedAt: data.created_at,
     total: dollars(data.total_cents),
     points,
+    tracking,
     items: data.order_items.map((i) => ({
       name: findProduct(catalog, i.product_slug)?.name[locale] ?? i.product_name,
       text: i.custom_text,

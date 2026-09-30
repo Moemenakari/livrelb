@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Loader2, MessageCircle, Printer } from "lucide-react";
 import { whatsappUrl } from "@/config/site";
-import { addAdjustment, reassignOrder, setOrderStatus, type AdjustmentType } from "@/lib/admin/order-actions";
+import { addAdjustment, addTrackingNote, reassignOrder, saveShipping, setOrderStatus, type AdjustmentType } from "@/lib/admin/order-actions";
 import { orderStatuses, statusLabels, type AdminOrderStatus } from "@/lib/admin/format";
 import { buttonClass, Card, Field, inputClass, secondaryButtonClass } from "./ui";
 
@@ -17,6 +17,8 @@ type Props = {
   staffOptions: { id: string; name: string }[];
   /** null until the shop's WhatsApp number is set in Settings. */
   whatsapp: { phone: string; text: string } | null;
+  carrier: string | null;
+  trackingNumber: string | null;
 };
 
 const flow: AdminOrderStatus[] = ["pending", "confirmed", "in_production", "shipped", "delivered"];
@@ -30,13 +32,17 @@ const adjustments: { type: AdjustmentType; label: string; value?: string; hint?:
 ];
 
 // Status buttons, adjustments, reassignment and print / WhatsApp for one order.
-export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, staffId, staffOptions, whatsapp }: Props) {
+export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, staffId, staffOptions, whatsapp, carrier: carrierNow, trackingNumber: numberNow }: Props) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [adjType, setAdjType] = useState<AdjustmentType>("gift");
   const [adjValue, setAdjValue] = useState("0");
   const [adjNote, setAdjNote] = useState("");
   const current = adjustments.find((a) => a.type === adjType)!;
+  const [carrier, setCarrier] = useState(carrierNow ?? "");
+  const [trackingNumber, setTrackingNumber] = useState(numberNow ?? "");
+  const [noteEn, setNoteEn] = useState("");
+  const [noteAr, setNoteAr] = useState("");
 
   const act = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) =>
     start(async () => {
@@ -142,6 +148,44 @@ export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, st
               Add
             </button>
           </form>
+        </Card>
+      )}
+
+      {canEdit && status !== "cancelled" && (
+        <Card title="Tracking for the customer" className="print:hidden">
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Courier" htmlFor="ship-carrier">
+                <input id="ship-carrier" value={carrier} maxLength={60} onChange={(e) => setCarrier(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Tracking number" htmlFor="ship-number">
+                <input id="ship-number" value={trackingNumber} maxLength={60} dir="ltr" onChange={(e) => setTrackingNumber(e.target.value)} className={inputClass} />
+              </Field>
+            </div>
+            <button type="button" disabled={pending} onClick={() => act(() => saveShipping(orderId, carrier, trackingNumber))} className={secondaryButtonClass}>
+              Save courier
+            </button>
+            <form
+              className="flex flex-col gap-2 border-t border-line pt-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                act(() => addTrackingNote(orderId, noteEn, noteAr), () => {
+                  setNoteEn("");
+                  setNoteAr("");
+                });
+              }}
+            >
+              <Field label="New update (English)" hint="Shown on the customer's tracking page, e.g. Driver is on the way." htmlFor="note-en">
+                <input id="note-en" value={noteEn} maxLength={140} onChange={(e) => setNoteEn(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Same update (Arabic)" hint="Empty = the English text is shown." htmlFor="note-ar">
+                <input id="note-ar" dir="rtl" value={noteAr} maxLength={140} onChange={(e) => setNoteAr(e.target.value)} className={inputClass} />
+              </Field>
+              <button type="submit" disabled={pending || !noteEn.trim()} className={secondaryButtonClass}>
+                Add update
+              </button>
+            </form>
+          </div>
         </Card>
       )}
 

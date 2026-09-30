@@ -15,9 +15,12 @@ import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { CheckoutSteps } from "@/components/checkout/checkout-steps";
-import { OrderStatusSteps } from "@/components/checkout/order-status";
+import { TrackingPanel } from "@/components/checkout/tracking-panel";
+import { orderTracking } from "@/lib/checkout/tracking";
 import { WhishPayment } from "@/components/checkout/whish-payment";
 import { whish } from "@/lib/payments/whish";
+import { cardConfigured } from "@/lib/payments/card";
+import { CardPayment } from "@/components/checkout/card-payment";
 import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -34,9 +37,10 @@ const dollars = (cents: number) => cents / 100;
 // Thank-you page (brief §8.4). Only the browser that placed the order sees
 // it (its id is in an httpOnly cookie); anyone else is sent to "Track my
 // order", which asks for the phone number.
-export default async function OrderPage({ params }: PageProps<"/[locale]/order/[number]">) {
+export default async function OrderPage({ params, searchParams }: PageProps<"/[locale]/order/[number]">) {
   const locale = await resolveLocale(params);
   const { number } = await params;
+  const paidFlag = (await searchParams).paid;
   if (!/^\d{1,12}$/.test(number) || !isSupabaseConfigured()) notFound();
   const db = createAdminClient();
   if (!db) notFound();
@@ -51,7 +55,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
     db
       .from("orders")
       .select(
-        `id, number, status, customer_name, payment_method, subtotal_cents, discount_cents,
+        `id, number, status, created_at, carrier, tracking_number, customer_name, payment_method, subtotal_cents, discount_cents,
          points_used, points_discount_cents, delivery_fee_cents, total_cents,
          order_items (id, product_slug, product_name, custom_text, size_kind, size_value,
            chain_connection, qty, line_total_cents, materials (key), fonts (key))`,
@@ -75,7 +79,10 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
     );
   }
 
-  const points = await orderPoints(db, order);
+  const [points, tracking] = await Promise.all([
+    orderPoints(db, order),
+    orderTracking(db, order, locale, { min: settings?.delivery_days_min ?? 2, max: settings?.delivery_days_max ?? 7 }),
+  ]);
   const whatsapp = catalog.settings.whatsappNumber;
   const firstName = order.customer_name.split(/\s+/)[0];
   const row = "flex items-center justify-between gap-4";
@@ -112,6 +119,10 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
           </p>
         </div>
       </div>
+
+      {order.payment_method === "card" && order.status !== "cancelled" && catalog.settings.cardOnline && cardConfigured() && (
+        <CardPayment orderNumber={order.number} paid={paidFlag === "1" ? true : paidFlag === "0" ? false : null} />
+      )}
 
       {order.payment_method === "whish" &&
         order.status !== "cancelled" &&
@@ -223,7 +234,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
 
       <section className="flex flex-col gap-4">
         <h2 className="text-2xl">{t("statusTitle")}</h2>
-        <OrderStatusSteps status={order.status} />
+        <TrackingPanel status={order.status} tracking={tracking} />
       </section>
 
       <div className="flex flex-col gap-3 sm:flex-row">

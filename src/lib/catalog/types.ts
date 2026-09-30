@@ -188,6 +188,11 @@ export type StoreSettings = {
   points: PointsRules;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
   whishOnline: boolean;
+  /** Visa / Mastercard on the website (also needs the gateway keys). */
+  cardOnline: boolean;
+  /** Analytics IDs from the admin; empty = off. */
+  metaPixelId: string;
+  ga4Id: string;
   /** Shipping tab text from the admin; empty = the default text. */
   shippingInfo?: Localized;
 };

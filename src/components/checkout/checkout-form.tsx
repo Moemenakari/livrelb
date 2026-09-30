@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
-import { Banknote, Loader2, Lock, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Loader2, Lock, Smartphone } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { clearCart, toInput, useCart, useCoupon } from "@/lib/cart";
@@ -24,6 +24,8 @@ type Props = {
   saved: SavedCustomer | null;
   /** Show "Continue with Google" (the provider is switched on in Supabase). */
   googleEnabled: boolean;
+  /** Visa / Mastercard is on and the bank gateway is set up. */
+  cardEnabled: boolean;
 };
 
 type Field = "name" | "phone" | "area" | "address";
@@ -43,7 +45,7 @@ const legend = "mb-1 font-display text-2xl";
 // Checkout (brief §8.4): one page, no account and no email. Prices, the
 // discount and delivery come from the server (quote_order) and are
 // recalculated again when the order is placed (place_order).
-export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEnabled }: Props) {
+export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEnabled, cardEnabled }: Props) {
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
   const router = useRouter();
@@ -65,7 +67,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
   const [helper, setHelper] = useState("");
   // Honeypot: hidden from people, bots fill it; the server drops those orders.
   const [website, setWebsite] = useState("");
-  const [payment, setPayment] = useState<"cod" | "whish">("cod");
+  const [payment, setPayment] = useState<"cod" | "whish" | "card">("cod");
   const [error, setError] = useState<CheckoutError | null>(null);
   const [placed, setPlaced] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -327,7 +329,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
         <fieldset className={section}>
           <legend className={legend}>{t("payment")}</legend>
           <div className="flex flex-col gap-2">
-            {(["cod", "whish"] as const).map((method) => (
+            {(cardEnabled ? (["card", "cod", "whish"] as const) : (["cod", "whish"] as const)).map((method) => (
               <label
                 key={method}
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3.5 transition-colors ${
@@ -344,6 +346,8 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
                 />
                 {method === "cod" ? (
                   <Banknote className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
+                ) : method === "card" ? (
+                  <CreditCard className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
                 ) : (
                   <Smartphone className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
                 )}
