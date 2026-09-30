@@ -103,6 +103,28 @@ a customer's balance is the sum. Rules live in `site_settings`
   and payment attempts per IP and per phone, keyed by an HMAC hash (no raw
   IP or phone stored). Old windows are cleaned up automatically.
 
+## Admin panel (Phase 4 B)
+
+`/admin` (English, phone first). Every page checks the login and an active
+staff row (`src/lib/admin/auth.ts`); every write is a server function that
+checks the permission again, then writes **as the staff member** so Row
+Level Security applies too.
+
+- `audit_row()` triggers log every insert / update / delete on the catalog,
+  promotions, coupons, reviews, settings, staff, permissions, manual entries,
+  order adjustments and points in `audit_log` (who, which row, what changed).
+  Imports log one line per batch. Orders and customer reassignments were
+  already logged by their guards.
+- `admin_save_product(p jsonb)` (security invoker): the product editor saves
+  a product with its prices per material, sizes, fonts (first = default),
+  categories and photos in one transaction.
+- `add_order_adjustment(order, type, value, note)`: gift, % discount, free
+  delivery, extra delivery fee or a note; the order total follows.
+- `admin_sales(from, to)`: website orders (not cancelled) + manual entries
+  per employee, for the dashboard (Beirut days). No profit, by design.
+- Staff logins are created, renamed, re-passworded and disabled (banned) by
+  the owner through the server key; the staff row is written as the owner.
+
 ## Returning customers (no lookup by phone)
 
 Typing a phone number never reveals anything. The checkout is prefilled

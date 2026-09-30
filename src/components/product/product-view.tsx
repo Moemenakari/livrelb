@@ -62,7 +62,7 @@ export type ProductViewData = {
   /** The same design worn the other way (necklace or bracelet), with its price change. */
   altSize?: SizeOption;
   art: Art;
-  media: { src: string; alt: string }[];
+  media: { src: string; alt: string; type: "image" | "video" }[];
   /** Selling details (Phase 4 A1): real sales, badges, points, deals. */
   offer: { sold: number; badges: OfferBadges; points: PointsRules; deals: Deal[] };
   /** Cards under "Add to cart" (Phase 4 A2). */

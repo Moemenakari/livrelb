@@ -12,15 +12,17 @@ const isDev = process.env.NODE_ENV !== "production";
 const origin = (url: string | undefined) => (url ? new URL(url).origin : "");
 
 // Content Security Policy without nonces, so pages stay statically generated
-// (Next.js guide "Without Nonces"). The browser only talks to this site and
-// Supabase (Google login); images come from here and R2.
+// (Next.js guide "Without Nonces"). The browser only talks to this site,
+// Supabase (Google login) and R2 (admin photo uploads); images come from
+// here and R2.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${origin(imagesUrl)}`.trim(),
   "font-src 'self' data:",
-  `connect-src 'self' ${origin(supabaseUrl)} ${supabaseUrl ? origin(supabaseUrl).replace("https://", "wss://") : ""}${isDev ? " ws:" : ""}`.trim(),
+  // R2: the admin uploads photos straight to the bucket (signed URLs).
+  `connect-src 'self' https://*.r2.cloudflarestorage.com ${origin(supabaseUrl)} ${supabaseUrl ? origin(supabaseUrl).replace("https://", "wss://") : ""}${isDev ? " ws:" : ""}`.trim(),
   `media-src 'self' blob: ${origin(imagesUrl)}`.trim(),
   "worker-src 'self' blob:",
   "object-src 'none'",

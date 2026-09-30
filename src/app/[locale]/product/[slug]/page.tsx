@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     size: product.size,
     altSize: product.altSize,
     art: product.art,
-    media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
+    media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] || product.name[locale], type: m.type ?? "image" })),
     offer: {
       sold,
       badges: {
@@ -156,7 +156,9 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
               {
                 key: "shipping",
                 label: t("tabs.shipping"),
-                text: t("shippingText", { amount: formatPrice(catalog.settings.freeShippingOver) }),
+                text:
+                  catalog.settings.shippingInfo?.[locale] ??
+                  t("shippingText", { amount: formatPrice(catalog.settings.freeShippingOver) }),
               },
             ]}
           />

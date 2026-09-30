@@ -1664,6 +1664,24 @@ export type Database = {
       }
     }
     Functions: {
+      add_order_adjustment: {
+        Args: {
+          p_note?: string
+          p_order_id: string
+          p_type: Database["public"]["Enums"]["adjustment_type"]
+          p_value?: number
+        }
+        Returns: string
+      }
+      admin_sales: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          orders_count: number
+          sales_cents: number
+          staff_id: string
+        }[]
+      }
+      admin_save_product: { Args: { p: Json }; Returns: string }
       customer_profile: { Args: { p_customer_id: string }; Returns: Json }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }

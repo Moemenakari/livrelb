@@ -92,7 +92,7 @@ export type ProductArt =
   | { kind: "hoops"; pearl: boolean };
 
 /** product_media: real photos. Empty array = generated art + placeholders. */
-export type ProductMedia = { src: string; alt: Localized };
+export type ProductMedia = { src: string; alt: Localized; type?: "image" | "video" };
 
 /** Category slugs come from the database, so any string. */
 export type CategorySlug = string;
@@ -188,6 +188,8 @@ export type StoreSettings = {
   points: PointsRules;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
   whishOnline: boolean;
+  /** Shipping tab text from the admin; empty = the default text. */
+  shippingInfo?: Localized;
 };
 
 export type PointsRules = {
@@ -217,6 +219,8 @@ export type PublicCoupon = {
 export type StorePromo = {
   code: string;
   percent: number;
+  /** Text typed in the admin; the default tagline when missing. */
+  text?: Localized;
   /** ISO date; null = no countdown. */
   endsAt: string | null;
 };
@@ -224,6 +228,8 @@ export type StorePromo = {
 /** promotions (hero): the first-order offer headline. */
 export type HeroOffer = {
   percent: number;
+  /** Headline typed in the admin; the default headline when missing. */
+  headline?: Localized;
   endsAt: string | null;
 };
 

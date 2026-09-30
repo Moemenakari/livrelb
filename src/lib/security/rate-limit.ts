@@ -15,6 +15,8 @@ const rules = {
   track: { ip: { limit: 30, windowSeconds: 600 }, phone: { limit: 10, windowSeconds: 600 } },
   points: { ip: { limit: 30, windowSeconds: 600 }, phone: { limit: 10, windowSeconds: 600 } },
   payment: { ip: { limit: 20, windowSeconds: 600 }, phone: { limit: 5, windowSeconds: 600 } },
+  // Staff login (/admin): slows down password guessing.
+  login: { ip: { limit: 20, windowSeconds: 900 }, phone: { limit: 8, windowSeconds: 900 } },
 } satisfies Record<string, { ip: Rule; phone: Rule }>;
 
 export type RateBucket = keyof typeof rules;

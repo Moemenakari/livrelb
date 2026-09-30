@@ -156,10 +156,10 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         altSize: sizeOf(options, options.find((o) => o.kind !== mainKind && o.kind !== "ring")?.kind),
         art,
         stock: row.stock_qty ?? undefined,
+        // Photos in order (the first is the main one), then the video.
         media: [...row.product_media]
-          .sort(bySort)
-          .filter((m) => m.type === "image")
-          .map((m) => ({ src: m.url, alt: loc(m.alt_en, m.alt_ar) })),
+          .sort((a, b) => Number(a.type === "video") - Number(b.type === "video") || a.sort_order - b.sort_order)
+          .map((m) => ({ src: m.url, alt: loc(m.alt_en, m.alt_ar), type: m.type })),
       },
     ];
   });
@@ -206,12 +206,20 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     sold?: Record<string, number>;
     coupons?: { code: string; type: PublicCoupon["type"]; value: number; min_order_cents: number }[];
   };
-  const bar = promotionsRes.data.find((p) => p.placement === "promo_bar" && p.code && p.percent);
-  const hero = promotionsRes.data.find((p) => p.placement === "hero" && p.percent);
+  // Promotions run between their start and end times (set in the admin).
+  const now = Date.now();
+  const running = promotionsRes.data.filter(
+    (p) => (!p.starts_at || Date.parse(p.starts_at) <= now) && (!p.ends_at || Date.parse(p.ends_at) > now),
+  );
+  const typed = (en: string | null, ar: string | null) => (en?.trim() ? loc(en.trim(), ar?.trim() || en.trim()) : undefined);
+  const bar = running.find((p) => p.placement === "promo_bar" && p.code && p.percent);
+  const hero = running.find((p) => p.placement === "hero" && p.percent);
   const promo: StorePromo | null = bar
-    ? { code: bar.code!, percent: bar.percent!, endsAt: bar.ends_at }
+    ? { code: bar.code!, percent: bar.percent!, endsAt: bar.ends_at, text: typed(bar.headline_en, bar.headline_ar) }
     : null;
-  const heroOffer: HeroOffer | null = hero ? { percent: hero.percent!, endsAt: hero.ends_at } : null;
+  const heroOffer: HeroOffer | null = hero
+    ? { percent: hero.percent!, endsAt: hero.ends_at, headline: typed(hero.headline_en, hero.headline_ar) }
+    : null;
 
   return {
     products,
@@ -238,6 +246,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         redeemValue: dollars(s.points_redeem_cents),
       },
       whishOnline: s.whish_online_enabled,
+      shippingInfo: s.shipping_info_en.trim()
+        ? loc(s.shipping_info_en, s.shipping_info_ar.trim() || s.shipping_info_en)
+        : undefined,
     },
     promo,
     heroOffer,

@@ -20,6 +20,30 @@ const refCookie = {
 // the checkout sends with the order. Browsers signed in with Google get
 // their Supabase session refreshed; everyone else skips that.
 export default async function proxy(request: NextRequest) {
+  // The admin (/admin) is English only, outside the locale routes. Its
+  // pages check the login themselves; here the session is only refreshed.
+  if (/^\/admin(\/|$)/.test(request.nextUrl.pathname)) {
+    let response = NextResponse.next({ request });
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (url && key) {
+      const supabase = createServerClient(url, key, {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (list) => {
+            // The refreshed login goes to the page (request) and the browser.
+            list.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
+            list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          },
+        },
+      });
+      await supabase.auth.getUser();
+    }
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
+
   const personal = request.nextUrl.pathname.match(/^\/r\/([^/]+)\/?$/);
   if (personal) {
     const code = personal[1].toLowerCase();
@@ -31,7 +55,11 @@ export default async function proxy(request: NextRequest) {
   const response = intl(request);
   const ref = request.nextUrl.searchParams.get("ref")?.toLowerCase();
   if (ref && REF_CODE.test(ref)) response.cookies.set(REF_COOKIE, ref, refCookie);
+  return refreshSession(request, response);
+}
 
+/** Refreshes the Supabase login (Google customers, staff) when there is one. */
+async function refreshSession(request: NextRequest, response: NextResponse) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (url && key && request.cookies.getAll().some((c) => c.name.startsWith("sb-"))) {

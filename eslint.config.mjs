@@ -16,6 +16,11 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // The admin (/admin) is English only (brief §8.5, Phase 4): no message files.
+    files: ["src/app/admin/**/*.tsx", "src/components/admin/**/*.tsx"],
+    rules: { "react/jsx-no-literals": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

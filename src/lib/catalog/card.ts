@@ -63,7 +63,7 @@ export function toCard(product: Product, locale: Locale): CardProduct {
     fonts: p?.fonts,
     connection: (p?.connections ?? product.connections)?.[0],
     art: product.art,
-    media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
+    media: product.media.filter((m) => m.type !== "video").map((m) => ({ src: m.src, alt: m.alt[locale] })),
     categories: product.categories,
     style: product.style,
   };

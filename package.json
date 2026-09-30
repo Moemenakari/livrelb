@@ -27,6 +27,7 @@
     "next-intl": "^4.14.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "read-excel-file": "^9.3.10",
     "server-only": "^0.0.1",
     "three": "^0.186.1"
   },

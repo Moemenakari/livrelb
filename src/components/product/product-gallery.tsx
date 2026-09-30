@@ -2,11 +2,11 @@
 
 import { useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Play } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { FontKey, MaterialKey, Piece, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
-import { NamePreview } from "@/components/preview/name-preview";
 import { PhotoSlot } from "@/components/ui/photo-slot";
+import { PhotoLightbox } from "./photo-lightbox";
 import { ProductArt } from "./product-art";
 
 export type GalleryState = {
@@ -23,14 +23,15 @@ type Props = {
   ref?: Ref<GalleryHandle>;
   name: string;
   art: Art;
-  media: { src: string; alt: string }[];
+  media: { src: string; alt: string; type?: "image" | "video" }[];
   personalizable: boolean;
   state: GalleryState;
 };
 
-// Product gallery (brief §8.3.1). The first slide always shows the live
-// preview: the drawn piece, or, once real photos exist, the name drawn over
-// the first photo. Swipe on phones, thumbnails and arrows on desktop.
+// Product gallery (brief §8.3.1). Without photos the first slide is the
+// live preview of the drawn piece; with photos, the photos come first
+// (tap to zoom) and the live preview follows them. Swipe on phones,
+// thumbnails and arrows on desktop.
 export function ProductGallery({ ref, name, art, media, personalizable, state }: Props) {
   const t = useTranslations("product");
   const tCommon = useTranslations("common");
@@ -53,44 +54,70 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
     />
   );
 
+  const photos = media.filter((m) => m.type !== "video");
+  const video = media.find((m) => m.type === "video");
+  const [zoomAt, setZoomAt] = useState<number | null>(null);
+
+  // A photo: tap / click opens it full screen (pinch to zoom there); on
+  // desktop the photo also zooms under the mouse.
+  const photoSlide = (m: { src: string; alt: string }, i: number): ReactNode => (
+    <button
+      type="button"
+      onClick={() => setZoomAt(i)}
+      aria-label={t("zoom")}
+      className="group/zoom relative block size-full cursor-zoom-in overflow-hidden"
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty("--zx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        e.currentTarget.style.setProperty("--zy", `${((e.clientY - r.top) / r.height) * 100}%`);
+      }}
+    >
+      <Image
+        src={m.src}
+        alt={m.alt}
+        fill
+        loading={i === 0 ? "eager" : "lazy"}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        className="object-cover transition-transform duration-200 [transform-origin:var(--zx,50%)_var(--zy,50%)] lg:group-hover/zoom:scale-[1.8]"
+      />
+      <span className="absolute end-3 top-3 flex size-9 items-center justify-center rounded-full bg-background/85 text-foreground shadow-sm lg:hidden" aria-hidden>
+        <Expand className="size-4" strokeWidth={1.5} />
+      </span>
+    </button>
+  );
+
+  // Real photos replace the drawings (brief §8.5): photos first (the main
+  // one leads), then the video, then the live preview of her name.
+  const previewSlide = {
+    key: "preview",
+    content: <div className="bg-surface">{drawn("", true)}</div>,
+    thumb: <div className="bg-surface">{drawn()}</div>,
+  };
   const slides: { key: string; content: ReactNode; thumb: ReactNode }[] =
     media.length > 0
-      ? media.map((m, i) => {
-          const photo = (
-            <Image
-              src={m.src}
-              alt={m.alt}
-              fill
-              loading={i === 0 ? "eager" : "lazy"}
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          );
-          return {
+      ? [
+          ...photos.map((m, i) => ({
             key: m.src,
-            content:
-              i === 0 && personalizable && art.kind === "name" ? (
-                <>
-                  {photo}
-                  <div className="absolute inset-x-[14%] bottom-[16%]">
-                    <NamePreview
-                      text={state.text}
-                      material={state.material}
-                      font={state.font}
-                      connection={state.connection}
-                      variant={state.piece ?? art.variant}
-                      shine
-                    />
-                  </div>
-                </>
-              ) : (
-                photo
-              ),
-            thumb: photo,
-          };
-        })
+            content: photoSlide(m, i),
+            thumb: <Image src={m.src} alt="" fill sizes="10vw" className="object-cover" />,
+          })),
+          ...(video
+            ? [
+                {
+                  key: video.src,
+                  content: <video src={video.src} controls playsInline preload="metadata" className="size-full bg-ink object-contain" />,
+                  thumb: (
+                    <div className="flex size-full items-center justify-center bg-ink text-white">
+                      <Play className="size-5" aria-hidden />
+                    </div>
+                  ),
+                },
+              ]
+            : []),
+          ...(personalizable ? [previewSlide] : []),
+        ]
       : [
-          { key: "preview", content: <div className="bg-surface">{drawn("", true)}</div>, thumb: <div className="bg-surface">{drawn()}</div> },
+          previewSlide,
           {
             key: "zoom",
             content: <div className="flex h-full items-center overflow-hidden bg-blush">{drawn("scale-[1.7] origin-[50%_62%]")}</div>,
@@ -100,6 +127,7 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
           { key: "packaging", content: <PhotoSlot label={tPlaceholders("packaging")} tone="ivory" className="h-full" />, thumb: <PhotoSlot label="" tone="ivory" className="h-full" /> },
           { key: "detail", content: <PhotoSlot label={tPlaceholders("detail")} tone="blush" className="h-full" />, thumb: <PhotoSlot label="" tone="blush" className="h-full" /> },
         ];
+  const previewIndex = slides.findIndex((s) => s.key === "preview");
 
   const goTo = (i: number, smooth = true) => {
     const track = trackRef.current;
@@ -110,7 +138,7 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
 
   // The configurator calls this when the design changes, so the live
   // preview slide comes back into view.
-  useImperativeHandle(ref, () => ({ showPreview: () => goTo(0) }));
+  useImperativeHandle(ref, () => ({ showPreview: () => previewIndex >= 0 && goTo(previewIndex) }));
 
   return (
     <div className="flex flex-col gap-3" aria-label={t("gallery")} role="region">
@@ -170,6 +198,8 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
           <ChevronRight className="size-5 rtl:-scale-x-100" strokeWidth={1.5} />
         </button>
       </div>
+
+      {zoomAt !== null && <PhotoLightbox photos={photos} start={zoomAt} onClose={() => setZoomAt(null)} />}
 
       <div className="hidden grid-cols-5 gap-3 lg:grid">
         {slides.map((slide, i) => (

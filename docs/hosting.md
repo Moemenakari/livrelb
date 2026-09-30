@@ -36,9 +36,11 @@ Product photos go to **Cloudflare R2**. Not deployed yet.
   in `R2_*` env vars, the public address in `NEXT_PUBLIC_R2_PUBLIC_URL`.
 - Bucket → Settings → CORS: allow `PUT` from `https://livrelb.com` (and
   `http://localhost:3000` for development), header `Content-Type`.
-- Uploads: `createUploadUrl()` in `src/lib/storage/r2.ts` (used by the admin
-  in the next phase) returns a 10-minute signed URL; the browser uploads the
-  file directly to R2.
+- Uploads: `createUploadUrl()` in `src/lib/storage/r2.ts` returns a
+  10-minute signed URL; the admin's browser makes photos WebP (max 1800 px)
+  and uploads them directly to R2. Until the `R2_*` variables are set, the
+  admin shows "Photo storage isn't set up yet" and the shop keeps the
+  drawings.
 
 ## What behaves differently from Vercel
 

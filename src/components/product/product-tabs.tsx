@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type KeyboardEvent } from "react";
+import { RichText } from "@/components/ui/rich-text";
 
 type Tab = { key: string; label: string; text: string };
 
@@ -57,9 +58,7 @@ export function ProductTabs({ tabs, label }: { tabs: Tab[]; label: string }) {
           hidden={active !== i}
           className="flex flex-col gap-3 pt-5 text-[15px] leading-relaxed text-foreground/85"
         >
-          {tab.text.split("\n").map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
+          <RichText text={tab.text} />
         </div>
       ))}
     </div>

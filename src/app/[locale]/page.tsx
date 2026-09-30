@@ -111,7 +111,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <p className={eyebrow}>{t("hero.eyebrow")}</p>
             <p className="font-display text-5xl leading-[1.05] font-medium lining-nums sm:text-6xl lg:text-7xl">
               {heroOffer
-                ? t("hero.title", { percent: heroOffer.percent })
+                ? (heroOffer.headline?.[locale] ?? t("hero.title", { percent: heroOffer.percent }))
                 : t("hero.titleDefault")}
             </p>
             {promo && (
