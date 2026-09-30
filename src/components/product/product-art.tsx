@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
-import type { FontKey, MaterialKey, ProductArt as Art, RingStyle } from "@/lib/catalog/types";
+import type { FontKey, MaterialKey, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
 import { NamePreview, aspectHeight, type Aspect } from "@/components/preview/name-preview";
 import { MetalDefs, coinTint, metalEdge, toTone } from "@/components/preview/metal";
 import { scriptFamily } from "@/components/preview/script-fonts";
@@ -15,7 +15,7 @@ type Props = {
   /** Name/initial for personalizable pieces. */
   text?: string;
   font?: FontKey;
-  rings?: RingStyle;
+  connection?: ChainConnection;
   aspect?: Aspect;
   shine?: boolean;
   className?: string;
@@ -26,7 +26,7 @@ export function ProductArt({
   material,
   text = "",
   font,
-  rings,
+  connection,
   aspect = "portrait",
   shine,
   className = "",
@@ -37,7 +37,7 @@ export function ProductArt({
         text={text}
         material={material}
         font={font}
-        rings={rings}
+        connection={connection}
         variant={art.variant}
         aspect={aspect}
         shine={shine}

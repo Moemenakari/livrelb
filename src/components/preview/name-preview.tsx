@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import type { FontKey, MaterialKey, MetalTone, RingStyle } from "@/lib/catalog/types";
+import type { FontKey, MaterialKey, MetalTone, ChainConnection } from "@/lib/catalog/types";
 import { estimateInk, measureInk, type Ink, type Point } from "./measure-ink";
 import { MetalDefs, metalEdge, metalLight, toTone } from "./metal";
 import { fontScale, isArabic, scriptFamily, scriptWeight } from "./script-fonts";
@@ -14,7 +14,7 @@ type Props = {
   text: string;
   material: MaterialKey | MetalTone;
   font?: FontKey;
-  rings?: RingStyle;
+  connection?: ChainConnection;
   /** Necklace: chain rises to the top corners. Bracelet: runs sideways. */
   variant?: "necklace" | "bracelet";
   /** Frame shape: the chain always starts at the top edge. */
@@ -59,7 +59,7 @@ export function NamePreview({
   text,
   material,
   font = "beirut",
-  rings = "sides",
+  connection = "sides",
   variant = "necklace",
   aspect = "wide",
   shine = false,
@@ -75,7 +75,7 @@ export function NamePreview({
   const family = scriptFamily(font, arabic);
   const fontCss = `${scriptWeight(arabic)} ${fontSize}px ${family}`;
   // A bracelet always hangs from two side rings.
-  const ringStyle: RingStyle = variant === "bracelet" ? "sides" : rings;
+  const connectionStyle: ChainConnection = variant === "bracelet" ? "sides" : connection;
 
   // Measure only once the font is loaded. Server and first client render use
   // the estimate so hydration matches.
@@ -121,7 +121,7 @@ export function NamePreview({
       `M ${L.w + 4} ${droop - 4} Q ${(L.w + ringRight.x) / 2} ${droop + 8} ${ringRight.x + RING_R} ${ringRight.y}`,
     ];
     ringPoints = [ringLeft, ringRight];
-  } else if (ringStyle === "center") {
+  } else if (connectionStyle === "center") {
     const low = ringTop.y - RING_R + 1.2;
     chains = [
       `M 44 -4 C 70 ${low * 0.8} ${ringTop.x - 80} ${low} ${ringTop.x} ${low} S ${L.w - 70} ${low * 0.8} ${L.w - 44} -4`,

@@ -146,10 +146,11 @@
     "cm": "{value} سم",
     "usSize": "مقاس {value}",
     "sizeGuide": "دليل المقاسات",
-    "ringsLabel": "حلقة التعليق",
-    "rings": {
-      "center": "حلقة واحدة في الوسط",
-      "sides": "حلقتان على الجانبين"
+    "connectionLabel": "طريقة تعليق السنسال",
+    "connectionHint": "مكان تعليق السنسال على الاسم",
+    "connection": {
+      "sides": "من الطرفين",
+      "center": "من النص"
     },
     "giftBox": "أضيفي علبة الهدية والكيس",
     "giftBoxPrice": "+{price}",
@@ -209,9 +210,9 @@
       "gold": "ذهبي",
       "silver": "فضي",
       "rose": "وردي",
-      "ringsLabel": "الحلقات",
-      "ringCenter": "حلقة واحدة",
-      "ringSides": "حلقتان",
+      "connectionLabel": "طريقة تعليق السنسال",
+      "sides": "من الطرفين",
+      "center": "من النص",
       "cta": "صمّميها"
     },
     "lira": {

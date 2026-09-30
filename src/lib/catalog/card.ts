@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { materials } from "./materials";
-import type { FontKey, MaterialKey, Product, ProductArt, RingStyle } from "./types";
+import type { FontKey, MaterialKey, Product, ProductArt, ChainConnection } from "./types";
 
 /** Just what a product card needs, in one language (keeps pages light). */
 export type CardProduct = {
@@ -16,7 +16,7 @@ export type CardProduct = {
   /** Personalizable pieces: the name drawn by default. */
   sample?: string;
   font?: FontKey;
-  rings?: RingStyle;
+  connection?: ChainConnection;
   art: ProductArt;
   media: { src: string; alt: string }[];
   categories: Product["categories"];
@@ -40,7 +40,7 @@ export function toCard(product: Product, locale: Locale): CardProduct {
     defaultMaterial: product.defaultMaterial,
     sample: p?.sample,
     font: p?.fonts[0],
-    rings: p ? (p.rings.includes("sides") ? "sides" : p.rings[0]) : undefined,
+    connection: p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined,
     art: product.art,
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
     categories: product.categories,

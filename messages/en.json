@@ -146,10 +146,11 @@
     "cm": "{value} cm",
     "usSize": "US {value}",
     "sizeGuide": "Size guide",
-    "ringsLabel": "Pendant ring",
-    "rings": {
-      "center": "One ring in the center",
-      "sides": "Two rings on the sides"
+    "connectionLabel": "Chain Connection",
+    "connectionHint": "Where the chain attaches to your name",
+    "connection": {
+      "sides": "Both Sides",
+      "center": "Center"
     },
     "giftBox": "Add Gift Box & Bag",
     "giftBoxPrice": "+{price}",
@@ -209,9 +210,9 @@
       "gold": "Gold",
       "silver": "Silver",
       "rose": "Rose",
-      "ringsLabel": "Rings",
-      "ringCenter": "One ring",
-      "ringSides": "Two rings",
+      "connectionLabel": "Chain connection",
+      "sides": "Both Sides",
+      "center": "Center",
       "cta": "Design it"
     },
     "lira": {

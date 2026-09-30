@@ -1,7 +1,8 @@
-import type { Review } from "./types";
+import type { Review, ReviewStats } from "./types";
 
-// SAMPLE reviews to lay out the pages. They must be replaced by real,
-// approved customer reviews (reviews table, brief §7) before launch.
+// SAMPLE reviews to lay out the pages (is_sample in the reviews table).
+// They show in development only; production shows real approved reviews,
+// entered from the admin (Instagram / WhatsApp reviews, website reviews).
 export const reviews: Review[] = [
   {
     id: "r1",
@@ -14,6 +15,7 @@ export const reviews: Review[] = [
       ar: "تماماً مثل المعاينة على الموقع. الذهب يلمع كثيراً ووصلت في علبة رائعة. أختي طلبت واحدة فوراً!",
     },
     date: "2026-09-12",
+    isSample: true,
   },
   {
     id: "r2",
@@ -26,6 +28,7 @@ export const reviews: Review[] = [
       ar: "اشتريت قلادة الليرة لأمي وبكت. تشبه الليرة القديمة فعلاً، على الوجهين.",
     },
     date: "2026-09-03",
+    isSample: true,
   },
   {
     id: "r3",
@@ -38,6 +41,7 @@ export const reviews: Review[] = [
       ar: "الخط العربي جميل وكل الحروف موصولة. وصلت خلال 3 أيام والدفع عند الاستلام.",
     },
     date: "2026-08-27",
+    isSample: true,
   },
   {
     id: "r4",
@@ -50,6 +54,7 @@ export const reviews: Review[] = [
       ar: "هذا طلبي الثاني. الذهب الوردي المفضل عندي، ألبسه كل يوم وما زال يلمع.",
     },
     date: "2026-08-19",
+    isSample: true,
   },
   {
     id: "r5",
@@ -62,6 +67,7 @@ export const reviews: Review[] = [
       ar: "ناعم وجميل جداً. اخترت 16 سم وجاء على المقاس تماماً.",
     },
     date: "2026-08-08",
+    isSample: true,
   },
   {
     id: "r6",
@@ -74,11 +80,27 @@ export const reviews: Review[] = [
       ar: "أرسلت قلادة الأرزة لبنت خالتي في كندا وأحبّتها كثيراً. الفريق على واتساب كان متعاوناً جداً.",
     },
     date: "2026-07-30",
+    isSample: true,
   },
 ];
 
-export function reviewsFor(slug: string): Review[] {
-  const own = reviews.filter((r) => r.productSlug === slug);
-  // Until each product has its own reviews, fill with the store's.
-  return own.length >= 3 ? own : [...own, ...reviews.filter((r) => r.productSlug !== slug)].slice(0, 4);
+/** Samples are for development only (Part A decision). */
+export const showSampleReviews = process.env.NODE_ENV !== "production";
+
+export function visibleReviews(): Review[] {
+  return reviews.filter((r) => showSampleReviews || !r.isSample);
+}
+
+/** Average and count of a product's visible reviews; null when it has none. */
+export function reviewStats(slug: string): ReviewStats | null {
+  const own = visibleReviews().filter((r) => r.productSlug === slug);
+  if (own.length === 0) return null;
+  return { rating: own.reduce((sum, r) => sum + r.rating, 0) / own.length, count: own.length };
+}
+
+/** The product's own reviews first, then other reviews to fill the section. */
+export function reviewsFor(slug: string, limit = 4): Review[] {
+  const visible = visibleReviews();
+  const own = visible.filter((r) => r.productSlug === slug);
+  return [...own, ...visible.filter((r) => r.productSlug !== slug)].slice(0, limit);
 }

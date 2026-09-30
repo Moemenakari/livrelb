@@ -23,7 +23,7 @@ import {
   getProduct,
   newArrivals,
   productsIn,
-  reviews,
+  visibleReviews,
   toCard,
   type CategorySlug,
 } from "@/lib/catalog";
@@ -66,6 +66,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const lira = productsIn("lira-collection").map((p) => toCard(p, locale));
   const best = bestSellers(8).map((p) => toCard(p, locale));
   const fresh = newArrivals(4).map((p) => toCard(p, locale));
+  const loved = visibleReviews().slice(0, 3);
 
   const steps = [
     { n: "01", key: "personalize", icon: PenLine },
@@ -177,7 +178,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                         art={category.art}
                         material={slug === "mens-jewelry" ? "silver" : "gold18"}
                         text={sample ?? category.artSample ?? "L"}
-                        rings="sides"
+                        connection="sides"
                         aspect="wide"
                         className="max-h-full max-w-md"
                       />
@@ -235,25 +236,27 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </div>
       </section>
 
-      {/* Loved by customers. */}
-      <section className="bg-blush/60">
-        <div className={`${inner} py-16 lg:py-24`}>
-          <SectionTitle title={t("reviews.title")} subtitle={t("reviews.subtitle")} />
-          <ul className={`lg:grid-cols-3 ${swipeRow}`}>
-            {reviews.slice(0, 3).map((r) => (
-              <li key={r.id} className="flex w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-auto">
-                <ReviewCard
-                  review={r}
-                  locale={locale}
-                  starsLabel={tCommon("stars", { rating: r.rating })}
-                  productName={getProduct(r.productSlug)?.name[locale]}
-                  className="flex-1"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {/* Loved by customers: approved reviews only (samples in development). */}
+      {loved.length > 0 && (
+        <section className="bg-blush/60">
+          <div className={`${inner} py-16 lg:py-24`}>
+            <SectionTitle title={t("reviews.title")} subtitle={t("reviews.subtitle")} />
+            <ul className={`lg:grid-cols-3 ${swipeRow}`}>
+              {loved.map((r) => (
+                <li key={r.id} className="flex w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-auto">
+                  <ReviewCard
+                    review={r}
+                    locale={locale}
+                    starsLabel={tCommon("stars", { rating: r.rating })}
+                    productName={r.productSlug ? getProduct(r.productSlug)?.name[locale] : undefined}
+                    className="flex-1"
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* Founder quote. */}
       <section>
@@ -338,7 +341,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                 art={{ kind: "name", variant: "necklace" }}
                 material="rose"
                 text="Forever"
-                rings="sides"
+                connection="sides"
                 aspect="square"
                 className="max-w-sm"
               />

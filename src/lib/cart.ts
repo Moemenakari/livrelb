@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { FontKey, MaterialKey, RingStyle } from "@/lib/catalog/types";
+import type { FontKey, MaterialKey, ChainConnection } from "@/lib/catalog/types";
 import { createLocalStore } from "./local-store";
 
 // Minimal bag so "Add to cart" works in the storefront phase. Checkout,
@@ -15,7 +15,7 @@ export type CartItem = {
   text?: string;
   font?: FontKey;
   size?: number;
-  rings?: RingStyle;
+  connection?: ChainConnection;
   giftBox: boolean;
   unitPrice: number;
   qty: number;
@@ -32,7 +32,7 @@ export function addToCart(item: Omit<CartItem, "id" | "qty">) {
       i.text === item.text &&
       i.font === item.font &&
       i.size === item.size &&
-      i.rings === item.rings &&
+      i.connection === item.connection &&
       i.giftBox === item.giftBox,
   );
   store.write(

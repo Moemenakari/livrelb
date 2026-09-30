@@ -8,7 +8,7 @@ export * from "./types";
 export { toCard, type CardProduct } from "./card";
 export { categories, getCategory, isCategorySlug, styleNames, styleSamples } from "./categories";
 export { allMaterials, fontNames, materials } from "./materials";
-export { reviews, reviewsFor } from "./reviews";
+export { reviewStats, reviewsFor, visibleReviews } from "./reviews";
 export { products };
 
 // Read helpers. Phase 2 turns these into Supabase queries with the same

@@ -78,7 +78,7 @@ export function CategoryBrowser({ products, styles, namePreview }: Props) {
                     material="gold18"
                     text={s.sample}
                     font={s.font}
-                    rings="center"
+                    connection="center"
                     aspect="square"
                     className="translate-y-[-8%] scale-[1.45]"
                   />

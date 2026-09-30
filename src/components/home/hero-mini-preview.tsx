@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
-import type { MaterialKey, RingStyle } from "@/lib/catalog/types";
+import type { MaterialKey, ChainConnection } from "@/lib/catalog/types";
 import { NAME_MAX_LENGTH, NamePreview } from "@/components/preview/name-preview";
 
 const metals: { key: MaterialKey; label: "gold" | "silver" | "rose"; swatch: string }[] = [
@@ -19,18 +19,18 @@ const on = "border-ink bg-ink text-white";
 const off = "border-line hover:border-muted";
 
 // Small "try your name" card in the hero (brief §8.1.2): type a name, pick
-// gold / silver / rose and one or two rings.
+// gold / silver / rose and where the chain attaches.
 export function HeroMiniPreview() {
   const t = useTranslations("home.mini");
   const id = useId();
   const [text, setText] = useState("");
   const [material, setMaterial] = useState<MaterialKey>("gold18");
-  const [rings, setRings] = useState<RingStyle>("sides");
+  const [connection, setConnection] = useState<ChainConnection>("sides");
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-line bg-background/90 p-4 shadow-[0_12px_40px_-20px_rgba(43,38,34,0.35)] backdrop-blur sm:flex-row sm:items-center sm:p-5">
       <div className="flex h-28 shrink-0 items-center overflow-hidden rounded-xl bg-surface sm:h-32 sm:w-48">
-        <NamePreview text={text} material={material} rings={rings} shine />
+        <NamePreview text={text} material={material} connection={connection} shine />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <label htmlFor={id} className="font-display text-xl leading-none">
@@ -64,21 +64,25 @@ export function HeroMiniPreview() {
               </button>
             ))}
           </div>
-          <div role="group" aria-label={t("ringsLabel")} className="flex gap-1.5">
-            {(["center", "sides"] as const).map((r) => (
+          <div role="group" aria-label={t("connectionLabel")} className="flex gap-1.5">
+            {(["sides", "center"] as const).map((r) => (
               <button
                 key={r}
                 type="button"
-                aria-pressed={rings === r}
-                onClick={() => setRings(r)}
-                className={`${toggle} ${rings === r ? on : off}`}
+                aria-pressed={connection === r}
+                onClick={() => setConnection(r)}
+                className={`${toggle} ${connection === r ? on : off}`}
               >
-                {r === "center" ? t("ringCenter") : t("ringSides")}
+                {t(r)}
               </button>
             ))}
           </div>
           <Link
-            href={productHref("cursive-name-necklace")}
+            // Carry the design over so the product page opens already filled.
+            href={{
+              pathname: productHref("cursive-name-necklace"),
+              query: { ...(text.trim() && { name: text.trim() }), material, connection },
+            }}
             className="ms-auto inline-flex items-center gap-1 text-sm font-medium text-gold-dark underline-offset-4 hover:underline"
           >
             {t("cta")}

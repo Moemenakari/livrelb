@@ -13,6 +13,7 @@ import {
   materials,
   products,
   relatedProducts,
+  reviewStats,
   reviewsFor,
   toCard,
 } from "@/lib/catalog";
@@ -63,8 +64,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     price: product.price,
     compareAtPrice: product.compareAtPrice,
     discount: discountPercent(product),
-    rating: product.rating,
-    reviewCount: product.reviewCount,
+    reviews: reviewStats(product.slug),
     materials: product.materials.map((key) => ({
       key,
       name: materials[key].name[locale],
@@ -76,7 +76,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       kind: p.kind,
       maxLength: p.maxLength,
       fonts: p.fonts.map((key) => ({ key, name: fontNames[key].en })),
-      rings: p.rings,
+      connections: p.connections,
     },
     size: product.size,
     art: product.art,
@@ -127,26 +127,45 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
 
       <RecentlyViewed title={t("recentlyViewed")} current={product.slug} candidates={candidates} />
 
-      <section id="reviews" className="scroll-mt-24 border-t border-line pt-14">
-        <div className="mb-10 flex flex-col items-center gap-2 text-center">
-          <h2 className="text-3xl">{t("reviewsTitle")}</h2>
-          <p className="font-display text-5xl text-gold-dark">{product.rating.toFixed(1)}</p>
-          <Stars rating={product.rating} label={tCommon("stars", { rating: product.rating })} className="size-5" />
-          <p className="text-sm text-muted">{t("reviewsSummary", { count: product.reviewCount })}</p>
-        </div>
-        <ul className="grid gap-4 md:grid-cols-2">
-          {reviews.map((r) => (
-            <li key={r.id} className="flex">
-              <ReviewCard
-                review={r}
-                locale={locale}
-                starsLabel={tCommon("stars", { rating: r.rating })}
-                className="flex-1"
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+      {reviews.length > 0 && (
+        <section id="reviews" className="scroll-mt-24 border-t border-line pt-14">
+          <div className="mb-10 flex flex-col items-center gap-2 text-center">
+            <h2 className="text-3xl">{t("reviewsTitle")}</h2>
+            {view.reviews && (
+              <>
+                <p className="font-display text-5xl text-gold-dark lining-nums">
+                  {view.reviews.rating.toFixed(1)}
+                </p>
+                <Stars
+                  rating={view.reviews.rating}
+                  label={tCommon("stars", { rating: view.reviews.rating.toFixed(1) })}
+                  className="size-5"
+                />
+                <p className="text-sm text-muted">
+                  {t("reviewsSummary", { count: view.reviews.count })}
+                </p>
+              </>
+            )}
+          </div>
+          <ul className="grid gap-4 md:grid-cols-2">
+            {reviews.map((r) => (
+              <li key={r.id} className="flex">
+                <ReviewCard
+                  review={r}
+                  locale={locale}
+                  starsLabel={tCommon("stars", { rating: r.rating })}
+                  productName={
+                    r.productSlug && r.productSlug !== product.slug
+                      ? getProduct(r.productSlug)?.name[locale]
+                      : undefined
+                  }
+                  className="flex-1"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

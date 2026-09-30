@@ -52,7 +52,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
       material={material}
       text={text}
       font={product.font}
-      rings={product.rings}
+      connection={product.connection}
       aspect="portrait"
       className={className}
     />

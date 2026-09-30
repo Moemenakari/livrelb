@@ -25,7 +25,8 @@ export type Material = {
 /** fonts table: our own display names, never the font file's name. */
 export type FontKey = "beirut" | "byblos" | "batroun";
 
-export type RingStyle = "center" | "sides";
+/** Where the chain attaches to the name: both ends, or one ring on top. */
+export type ChainConnection = "sides" | "center";
 
 /** product_options: sizes, per product type. */
 export type SizeOption = {
@@ -38,8 +39,8 @@ export type Personalization = {
   kind: "name" | "initial";
   maxLength: number;
   fonts: FontKey[];
-  /** Attachment choices (brief §8.3.6). Empty when not applicable. */
-  rings: RingStyle[];
+  /** Chain connection choices (brief §8.3.6). Empty when not applicable. */
+  connections: ChainConnection[];
   /** Name shown on the card and product art. */
   sample: string;
 };
@@ -97,8 +98,6 @@ export type Product = {
   size?: SizeOption;
   art: ProductArt;
   media: ProductMedia[];
-  rating: number;
-  reviewCount: number;
   /** Text for the "Size & Materials" tab. */
   details: Localized;
 };
@@ -119,10 +118,15 @@ export type Category = {
 
 export type Review = {
   id: string;
-  productSlug: string;
+  /** null = a review of the store, not one piece. */
+  productSlug: string | null;
   author: string;
   city: Localized;
   rating: number;
   text: Localized;
   date: string;
+  /** Placeholder review: shown in development only, never in production. */
+  isSample: boolean;
 };
+
+export type ReviewStats = { rating: number; count: number };

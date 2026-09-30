@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Check, Gift, MessageCircle, ShoppingBag, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { shipping } from "@/config/promo";
 import { whatsappMessageUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
-import type { FontKey, MaterialKey, ProductArt as Art, RingStyle, SizeOption } from "@/lib/catalog/types";
+import type {
+  ChainConnection,
+  FontKey,
+  MaterialKey,
+  ProductArt as Art,
+  ReviewStats,
+  SizeOption,
+} from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { useTrackView } from "@/lib/recently-viewed";
 import { scriptFamily } from "@/components/preview/script-fonts";
@@ -24,20 +31,22 @@ export type ProductViewData = {
   price: number;
   compareAtPrice?: number;
   discount?: number;
-  rating: number;
-  reviewCount: number;
+  /** Visible reviews of this piece; null hides the stars. */
+  reviews: ReviewStats | null;
   materials: { key: MaterialKey; name: string; swatch: string; priceModifier: number }[];
   defaultMaterial: MaterialKey;
   personalization?: {
     kind: "name" | "initial";
     maxLength: number;
     fonts: { key: FontKey; name: string }[];
-    rings: RingStyle[];
+    connections: ChainConnection[];
   };
   size?: SizeOption;
   art: Art;
   media: { src: string; alt: string }[];
 };
+
+const noSubscription = () => () => {};
 
 const optionCard =
   "rounded-lg border transition-colors focus-visible:outline-offset-2";
@@ -55,12 +64,31 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   const galleryRef = useRef<GalleryHandle>(null);
   const p = product.personalization;
 
-  const [material, setMaterial] = useState<MaterialKey>(product.defaultMaterial);
-  const [text, setText] = useState("");
+  // A design carried over in the URL (?name=Maya&material=rose&connection=center,
+  // from the homepage mini preview). Read after hydration so the static page
+  // HTML stays the same for everyone; the customer's own choices win.
+  const search = useSyncExternalStore(noSubscription, () => window.location.search, () => "");
+  const fromUrl = useMemo(() => {
+    const q = new URLSearchParams(search);
+    const material = q.get("material");
+    const connection = q.get("connection");
+    return {
+      text: p ? [...(q.get("name") ?? "")].slice(0, p.maxLength).join("") : "",
+      material: product.materials.find((m) => m.key === material)?.key,
+      connection: p?.connections.find((c) => c === connection),
+    };
+  }, [search, p, product.materials]);
+
+  const [materialChoice, setMaterial] = useState<MaterialKey | null>(null);
+  const [textChoice, setText] = useState<string | null>(null);
   const [font, setFont] = useState<FontKey | undefined>(p?.fonts[0]?.key);
-  const [rings, setRings] = useState<RingStyle | undefined>(
-    p ? (p.rings.includes("sides") ? "sides" : p.rings[0]) : undefined,
-  );
+  const [connectionChoice, setConnection] = useState<ChainConnection | null>(null);
+  const material = materialChoice ?? fromUrl.material ?? product.defaultMaterial;
+  const text = textChoice ?? fromUrl.text;
+  const connection =
+    connectionChoice ??
+    fromUrl.connection ??
+    (p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined);
   const [size, setSize] = useState<number | undefined>(product.size?.default);
   const [giftBox, setGiftBox] = useState(false);
   const [missingName, setMissingName] = useState(false);
@@ -97,7 +125,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       text: p ? text.trim() : undefined,
       font,
       size,
-      rings,
+      connection,
       giftBox,
       unitPrice: total,
     });
@@ -121,20 +149,25 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           art={product.art}
           media={product.media}
           personalizable={Boolean(p)}
-          state={{ material, text, font, rings }}
+          state={{ material, text, font, connection }}
         />
       </div>
 
       <div className="flex flex-col gap-7">
         <div className="flex flex-col gap-3">
           <h1 className="text-3xl lg:text-4xl">{product.name}</h1>
-          <a href="#reviews" className="flex items-center gap-2 text-sm text-muted hover:text-foreground">
-            <Stars rating={product.rating} label={tCommon("stars", { rating: product.rating })} />
-            <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
-            <span className="underline underline-offset-4">
-              {t("reviewsLink", { count: product.reviewCount })}
-            </span>
-          </a>
+          {product.reviews && (
+            <a href="#reviews" className="flex items-center gap-2 text-sm text-muted hover:text-foreground">
+              <Stars
+                rating={product.reviews.rating}
+                label={tCommon("stars", { rating: product.reviews.rating.toFixed(1) })}
+              />
+              <span className="font-medium text-foreground">{product.reviews.rating.toFixed(1)}</span>
+              <span className="underline underline-offset-4">
+                {t("reviewsLink", { count: product.reviews.count })}
+              </span>
+            </a>
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-2xl font-medium text-gold-dark">{formatPrice(unitPrice)}</span>
             {compareAt && <s className="text-lg text-muted">{formatPrice(compareAt)}</s>}
@@ -245,7 +278,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                   material={material}
                   text={text}
                   font={font}
-                  rings={rings}
+                  connection={connection}
                   aspect="wide"
                 />
               </div>
@@ -277,20 +310,23 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
         )}
 
-        {p && p.rings.length > 1 && (
+        {p && p.connections.length > 1 && (
           <fieldset className="flex min-w-0 flex-col gap-3">
-            <legend className="mb-3 text-sm font-medium">{t("ringsLabel")}</legend>
+            <legend className="mb-3 flex flex-col gap-0.5">
+              <span className="text-sm font-medium">{t("connectionLabel")}</span>
+              <span className="text-xs text-muted">{t("connectionHint")}</span>
+            </legend>
             <div className="grid grid-cols-2 gap-2">
-              {p.rings.map((r) => (
+              {p.connections.map((r) => (
                 <button
                   key={r}
                   type="button"
-                  aria-pressed={rings === r}
-                  onClick={() => design(setRings)(r)}
-                  className={`${optionCard} flex items-center gap-3 px-3 py-3 text-start text-[13px] leading-tight ${rings === r ? selected : unselected}`}
+                  aria-pressed={connection === r}
+                  onClick={() => design(setConnection)(r)}
+                  className={`${optionCard} flex items-center gap-3 px-3 py-3 text-start text-[13px] leading-tight ${connection === r ? selected : unselected}`}
                 >
-                  <RingIcon style={r} />
-                  {t(`rings.${r}`)}
+                  <ConnectionIcon style={r} />
+                  {t(`connection.${r}`)}
                 </button>
               ))}
             </div>
@@ -360,7 +396,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
 }
 
 // Tiny drawing of where the chain attaches.
-function RingIcon({ style }: { style: RingStyle }) {
+function ConnectionIcon({ style }: { style: ChainConnection }) {
   return (
     <svg viewBox="0 0 40 24" className="h-6 w-10 shrink-0 text-gold-dark" fill="none" stroke="currentColor" aria-hidden>
       {style === "center" ? (

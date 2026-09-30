@@ -1,9 +1,9 @@
 import { allMaterials } from "./materials";
 import type { Localized, Personalization, Product, SizeOption } from "./types";
 
-// SAMPLE catalog for building the storefront (restart brief). Prices,
-// ratings and review counts are placeholders [CONFIRM]. Phase 2 moves this
-// into the products tables; `media` stays empty until real photos exist.
+// SAMPLE catalog for building the storefront (restart brief), also the
+// fallback when Supabase is not configured. Star ratings come from the
+// reviews, never from here. `media` stays empty until real photos exist.
 
 const chain: SizeOption = { kind: "chain", values: [35, 40, 45, 50, 55], default: 45 };
 const bracelet: SizeOption = { kind: "bracelet", values: [15, 16, 17, 18, 19], default: 17 };
@@ -16,7 +16,7 @@ const nameNecklace = (
   kind: "name",
   maxLength: 10,
   fonts,
-  rings: ["center", "sides"],
+  connections: ["sides", "center"],
   sample,
 });
 
@@ -60,8 +60,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.9,
-    reviewCount: 214,
     details: nameDetails,
   },
   {
@@ -86,8 +84,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.9,
-    reviewCount: 167,
     details: nameDetails,
   },
   {
@@ -110,8 +106,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "coin", variant: "necklace" },
     media: [],
-    rating: 5,
-    reviewCount: 98,
     details: coinDetails,
   },
   {
@@ -131,12 +125,10 @@ export const products: Product[] = [
     isBestSeller: true,
     materials: plated,
     defaultMaterial: "rose",
-    personalization: { ...nameNecklace("Rami"), rings: [] },
+    personalization: { ...nameNecklace("Rami"), connections: [] },
     size: bracelet,
     art: { kind: "name", variant: "bracelet" },
     media: [],
-    rating: 4.8,
-    reviewCount: 121,
     details: nameDetails,
   },
   {
@@ -159,8 +151,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "cedar" },
     media: [],
-    rating: 4.9,
-    reviewCount: 143,
     details: simpleDetails,
   },
   {
@@ -185,14 +175,12 @@ export const products: Product[] = [
       kind: "initial",
       maxLength: 1,
       fonts: ["beirut"],
-      rings: ["center"],
+      connections: ["center"],
       sample: "M",
     },
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.8,
-    reviewCount: 88,
     details: nameDetails,
   },
   {
@@ -217,8 +205,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.8,
-    reviewCount: 36,
     details: nameDetails,
   },
   {
@@ -243,8 +229,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.7,
-    reviewCount: 54,
     details: nameDetails,
   },
   {
@@ -269,8 +253,6 @@ export const products: Product[] = [
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.9,
-    reviewCount: 41,
     details: nameDetails,
   },
   {
@@ -294,14 +276,12 @@ export const products: Product[] = [
       kind: "initial",
       maxLength: 1,
       fonts: ["beirut"],
-      rings: ["center"],
+      connections: ["center"],
       sample: "ن",
     },
     size: chain,
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.8,
-    reviewCount: 22,
     details: nameDetails,
   },
   {
@@ -319,12 +299,10 @@ export const products: Product[] = [
     categories: ["bracelets", "mens-jewelry"],
     materials: plated,
     defaultMaterial: "silver",
-    personalization: { ...nameNecklace("كريم"), rings: [] },
+    personalization: { ...nameNecklace("كريم"), connections: [] },
     size: bracelet,
     art: { kind: "name", variant: "bracelet" },
     media: [],
-    rating: 4.7,
-    reviewCount: 31,
     details: nameDetails,
   },
   {
@@ -346,8 +324,6 @@ export const products: Product[] = [
     size: bracelet,
     art: { kind: "coin", variant: "bracelet" },
     media: [],
-    rating: 4.9,
-    reviewCount: 47,
     details: coinDetails,
   },
   {
@@ -368,8 +344,6 @@ export const products: Product[] = [
     defaultMaterial: "gold18",
     art: { kind: "coin", variant: "earrings" },
     media: [],
-    rating: 4.8,
-    reviewCount: 19,
     details: coinDetails,
   },
   {
@@ -390,8 +364,6 @@ export const products: Product[] = [
     size: { kind: "chain", values: [50, 55, 60], default: 55 },
     art: { kind: "coin", variant: "necklace" },
     media: [],
-    rating: 4.9,
-    reviewCount: 27,
     details: coinDetails,
   },
   {
@@ -412,8 +384,6 @@ export const products: Product[] = [
     size: { kind: "chain", values: [50, 55, 60], default: 55 },
     art: { kind: "cedar" },
     media: [],
-    rating: 4.8,
-    reviewCount: 33,
     details: simpleDetails,
   },
   {
@@ -436,14 +406,12 @@ export const products: Product[] = [
       kind: "initial",
       maxLength: 1,
       fonts: ["beirut"],
-      rings: [],
+      connections: [],
       sample: "L",
     },
     size: ring,
     art: { kind: "ring", engraving: "initial" },
     media: [],
-    rating: 4.7,
-    reviewCount: 45,
     details: simpleDetails,
   },
   {
@@ -465,8 +433,6 @@ export const products: Product[] = [
     size: ring,
     art: { kind: "ring", engraving: "plain" },
     media: [],
-    rating: 4.6,
-    reviewCount: 28,
     details: simpleDetails,
   },
   {
@@ -489,8 +455,6 @@ export const products: Product[] = [
     defaultMaterial: "gold18",
     art: { kind: "hoops", pearl: false },
     media: [],
-    rating: 4.8,
-    reviewCount: 64,
     details: simpleDetails,
   },
   {
@@ -510,8 +474,6 @@ export const products: Product[] = [
     defaultMaterial: "gold18",
     art: { kind: "hoops", pearl: true },
     media: [],
-    rating: 4.9,
-    reviewCount: 39,
     details: simpleDetails,
   },
   {
@@ -534,8 +496,6 @@ export const products: Product[] = [
     size: { kind: "chain", values: [50, 55, 60], default: 55 },
     art: { kind: "name", variant: "necklace" },
     media: [],
-    rating: 4.8,
-    reviewCount: 24,
     details: nameDetails,
   },
 ];
