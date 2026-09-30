@@ -7,10 +7,10 @@ export const sampleSettings: StoreSettings = {
   deliveryFee: 4,
   freeShippingOver: 50,
   firstOrderFreeDelivery: true,
-  giftBoxPrice: 5,
-  // International format, digits only (961 + number). PLACEHOLDER [CONFIRM].
-  whatsappNumber: "96100000000",
-  instagramUrl: "https://www.instagram.com/",
+  // Not decided yet: empty hides every WhatsApp / Instagram button. Set from
+  // the admin later (WhatsApp: international digits, 961 + number).
+  whatsappNumber: "",
+  instagramUrl: "",
   announcements: [
     { en: "Design your name necklace", ar: "صمّمي قلادتكِ باسمكِ" },
     { en: "Free shipping over $50", ar: "توصيل مجاني للطلبات فوق 50 دولار" },

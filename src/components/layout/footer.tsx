@@ -12,6 +12,7 @@ const socialButton =
 
 // Near-black footer (restart brief) with the WhatsApp list signup: the
 // store never asks for email (brief §6), so the "newsletter" is WhatsApp.
+// WhatsApp and Instagram links are hidden while their setting is empty.
 export async function Footer() {
   const locale = await getLocale();
   const t = await getTranslations("footer");
@@ -43,23 +44,25 @@ export async function Footer() {
   return (
     <footer className="relative z-[1] bg-ink text-white/70">
       <div className="mx-auto max-w-7xl px-4 py-14 lg:px-8 lg:py-20">
-        <div className="flex flex-col gap-6 border-b border-white/10 pb-12 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-lg">
-            <h2 className="text-3xl text-white">{t("newsletterTitle")}</h2>
-            <p className="mt-2">{t("newsletterText")}</p>
+        {whatsappNumber && (
+          <div className="flex flex-col gap-6 border-b border-white/10 pb-12 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-lg">
+              <h2 className="text-3xl text-white">{t("newsletterTitle")}</h2>
+              <p className="mt-2">{t("newsletterText")}</p>
+            </div>
+            <a
+              href={whatsappUrl(whatsappNumber, tWhatsapp("join"))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 self-start rounded-full bg-white px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-gold hover:text-white lg:self-auto"
+            >
+              <WhatsAppIcon className="size-5 text-cedar" />
+              {t("newsletterCta")}
+            </a>
           </div>
-          <a
-            href={whatsappUrl(whatsappNumber, tWhatsapp("join"))}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2.5 self-start rounded-full bg-white px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-gold hover:text-white lg:self-auto"
-          >
-            <WhatsAppIcon className="size-5 text-cedar" />
-            {t("newsletterCta")}
-          </a>
-        </div>
+        )}
 
-        <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="mt-12 grid grid-cols-2 gap-x-6 first:mt-0 gap-y-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div className="col-span-2 flex flex-col items-start gap-5 lg:col-span-1">
             <Logo
               name={tCommon("brandName")}
@@ -68,21 +71,22 @@ export async function Footer() {
               onDark
             />
             <p className="max-w-xs">{t("about")}</p>
-            <div className="flex flex-wrap gap-3">
-              <a href={whatsappUrl(whatsappNumber)} target="_blank" rel="noopener noreferrer" className={socialButton}>
-                <WhatsAppIcon className="size-4" />
-                {t("whatsapp")}
-              </a>
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={socialButton}
-              >
-                <InstagramIcon className="size-4" />
-                {t("instagram")}
-              </a>
-            </div>
+            {(whatsappNumber || instagramUrl) && (
+              <div className="flex flex-wrap gap-3">
+                {whatsappNumber && (
+                  <a href={whatsappUrl(whatsappNumber)} target="_blank" rel="noopener noreferrer" className={socialButton}>
+                    <WhatsAppIcon className="size-4" />
+                    {t("whatsapp")}
+                  </a>
+                )}
+                {instagramUrl && (
+                  <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className={socialButton}>
+                    <InstagramIcon className="size-4" />
+                    {t("instagram")}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {columns.map(({ title, links }) => (

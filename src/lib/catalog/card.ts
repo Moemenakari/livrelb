@@ -31,7 +31,8 @@ export type CardProduct = {
   defaultMaterial: MaterialKey;
   /** Personalizable pieces: the name drawn by default. */
   sample?: string;
-  font?: FontKey;
+  /** Allowed fonts, the product's default first. */
+  fonts?: FontKey[];
   connection?: ChainConnection;
   art: ProductArt;
   media: { src: string; alt: string }[];
@@ -59,7 +60,7 @@ export function toCard(product: Product, locale: Locale): CardProduct {
     offers,
     defaultMaterial: main.material,
     sample: p?.sample,
-    font: p?.fonts[0],
+    fonts: p?.fonts,
     connection: p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined,
     art: product.art,
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),

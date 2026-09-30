@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { FontKey, MaterialKey, MetalTone, ChainConnection } from "@/lib/catalog/types";
 import { estimateInk, measureInk, type Ink, type Point } from "./measure-ink";
 import { MetalDefs, metalEdge, metalLight, toTone } from "./metal";
-import { fontScale, isArabic, scriptFamily, scriptWeight } from "./script-fonts";
+import { isArabic, scriptFace } from "./script-fonts";
 
 export const NAME_MAX_LENGTH = 10;
 
@@ -71,9 +71,10 @@ export function NamePreview({
   const shown = [...(text.trim() || t("placeholder"))].slice(0, NAME_MAX_LENGTH).join("");
   const arabic = isArabic(shown);
   const length = [...shown].length;
-  const fontSize = Math.round(baseFontSize(length) * fontScale[font] * (variant === "bracelet" ? 0.8 : 1));
-  const family = scriptFamily(font, arabic);
-  const fontCss = `${scriptWeight(arabic)} ${fontSize}px ${family}`;
+  const face = scriptFace(font, shown);
+  const fontSize = Math.round(baseFontSize(length) * face.scale * (variant === "bracelet" ? 0.8 : 1));
+  const family = face.family;
+  const fontCss = `${face.weight} ${fontSize}px ${family}`;
   // A bracelet always hangs from two side rings.
   const connectionStyle: ChainConnection = variant === "bracelet" ? "sides" : connection;
 
@@ -206,7 +207,7 @@ export function NamePreview({
           textAnchor="middle"
           direction={arabic ? "rtl" : "ltr"}
           fontSize={fontSize}
-          fontWeight={scriptWeight(arabic)}
+          fontWeight={face.weight}
           fill={`url(#${id}-fill)`}
           stroke={metalEdge[tone]}
           strokeWidth={1.3}
@@ -223,7 +224,7 @@ export function NamePreview({
           textAnchor="middle"
           direction={arabic ? "rtl" : "ltr"}
           fontSize={fontSize}
-          fontWeight={scriptWeight(arabic)}
+          fontWeight={face.weight}
           fill={`url(#${id}-shine)`}
           style={{ fontFamily: family }}
           pointerEvents="none"

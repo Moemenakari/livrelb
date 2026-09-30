@@ -2,12 +2,11 @@ import "server-only";
 import type { Json } from "@/lib/supabase/database.types";
 import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
 import { styleKeys } from "./categories";
-import { fontNames, materials } from "./materials";
+import { isFontKey, materials } from "./materials";
 import { reviews as sampleReviews, showSampleReviews } from "./reviews";
 import type {
   Catalog,
   Category,
-  FontKey,
   HeroOffer,
   Localized,
   MaterialKey,
@@ -24,7 +23,6 @@ import type {
 // file), so unknown keys are skipped rather than breaking a page.
 
 const isMaterialKey = (k: string | undefined): k is MaterialKey => Boolean(k && k in materials);
-const isFontKey = (k: string | undefined): k is FontKey => Boolean(k && k in fontNames);
 const isStyleKey = (k: string | null): k is StyleKey => Boolean(k && styleKeys.includes(k as StyleKey));
 const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order;
 const dollars = (cents: number) => cents / 100;
@@ -190,7 +188,6 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       deliveryFee: dollars(s.delivery_fee_cents),
       freeShippingOver: dollars(s.free_shipping_threshold_cents),
       firstOrderFreeDelivery: s.first_order_free_delivery,
-      giftBoxPrice: dollars(s.gift_box_price_cents),
       whatsappNumber: s.whatsapp_number,
       instagramUrl: s.instagram_url,
       announcements: Array.isArray(s.announcements)

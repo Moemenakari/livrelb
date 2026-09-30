@@ -42,7 +42,8 @@ erDiagram
 | --- | --- |
 | Staff | `staff` (owner + employees, login link, ref code), `staff_permissions` (owner switches permissions off) |
 | Catalog | `categories`, `products`, `product_materials` (each metal's price), `product_options` (chain / bracelet / ring sizes), `product_fonts`, `product_media`, `product_categories`, `materials`, `fonts` |
-| Content | `collections` + `collection_products` (seasons, gifts, free delivery), `promotions` (promo bar, hero offer, countdown), `reviews` (website / Instagram / WhatsApp, `is_approved`, `is_sample`), `site_settings` (delivery fee $4, free over $50, first order free, gift box, WhatsApp, announcements), `areas` |
+| Content | `collections` + `collection_products` (seasons, gifts, free delivery), `promotions` (promo bar, hero offer, countdown), `reviews` (website / Instagram / WhatsApp, `is_approved`, `is_sample`), `site_settings` (delivery fee $4, free over $50, first order free, WhatsApp, Instagram, announcements; an empty WhatsApp / Instagram hides those buttons), `areas` |
+| Metals & fonts | `materials`: Silver, Gold, Rose Gold at the product's base price, Double Gold Stainless Steel at 3× (prices stored per product in `product_materials`). `fonts`: 15 Google Fonts named after Lebanese places, `script` latin / arabic; `product_fonts` limits a product's fonts, the first is its default. The gift box is free with every order (no price). |
 | Sales | `customers`, `orders`, `order_items`, `order_adjustments`, `coupons`, `manual_entries`, `imported_orders`, `audit_log`, view `daily_sales` |
 
 Attribution (brief §5): `customers.referred_by_staff_id` is set once and kept

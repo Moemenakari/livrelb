@@ -72,10 +72,12 @@ export async function Navbar() {
                 <UserRound className="size-5" strokeWidth={1.5} aria-hidden />
                 {t("account")}
               </Link>
-              <a href={whatsappUrl(catalog.settings.whatsappNumber)} target="_blank" rel="noopener noreferrer" className={drawerLink}>
-                <WhatsAppIcon className="size-5 text-cedar" />
-                {tFooter("whatsapp")}
-              </a>
+              {catalog.settings.whatsappNumber && (
+                <a href={whatsappUrl(catalog.settings.whatsappNumber)} target="_blank" rel="noopener noreferrer" className={drawerLink}>
+                  <WhatsAppIcon className="size-5 text-cedar" />
+                  {tFooter("whatsapp")}
+                </a>
+              )}
               <LocaleSwitcher className="mt-2 flex items-center justify-center rounded-full border border-line bg-background py-2.5 text-sm transition-colors hover:border-gold" />
             </div>
           </MobileMenu>

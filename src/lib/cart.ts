@@ -16,12 +16,12 @@ export type CartItem = {
   font?: FontKey;
   size?: number;
   connection?: ChainConnection;
-  giftBox: boolean;
   unitPrice: number;
   qty: number;
 };
 
-const store = createLocalStore<CartItem[]>("livre:cart", []);
+// v2: metals and fonts changed (no 14K, no gift box option); older bags are dropped.
+const store = createLocalStore<CartItem[]>("livre:cart:v2", []);
 
 export function addToCart(item: Omit<CartItem, "id" | "qty">) {
   const items = store.read();
@@ -32,8 +32,7 @@ export function addToCart(item: Omit<CartItem, "id" | "qty">) {
       i.text === item.text &&
       i.font === item.font &&
       i.size === item.size &&
-      i.connection === item.connection &&
-      i.giftBox === item.giftBox,
+      i.connection === item.connection,
   );
   store.write(
     same

@@ -4,7 +4,7 @@ import { useId, type ReactNode } from "react";
 import type { FontKey, MaterialKey, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
 import { NamePreview, aspectHeight, type Aspect } from "@/components/preview/name-preview";
 import { MetalDefs, coinTint, metalEdge, toTone } from "@/components/preview/metal";
-import { scriptFamily } from "@/components/preview/script-fonts";
+import { scriptFace } from "@/components/preview/script-fonts";
 
 // Drawn stand-ins for product photos: every product shows its real shape in
 // the selected metal until the owner uploads photos (product.media).
@@ -45,7 +45,9 @@ export function ProductArt({
       />
     );
   }
-  return <ShapeArt art={art} material={material} text={text} aspect={aspect} className={className} />;
+  return (
+    <ShapeArt art={art} material={material} text={text} font={font} aspect={aspect} className={className} />
+  );
 }
 
 type Tone = ReturnType<typeof toTone>;
@@ -74,12 +76,14 @@ function ShapeArt({
   art,
   material,
   text,
+  font = "beirut",
   aspect,
   className,
 }: {
   art: Exclude<Art, { kind: "name" }>;
   material: MaterialKey;
   text: string;
+  font?: FontKey;
   aspect: Aspect;
   className: string;
 }) {
@@ -172,10 +176,11 @@ function ShapeArt({
                 x="200"
                 y={cy - 50}
                 textAnchor="middle"
-                fontSize="44"
+                fontSize={Math.round(44 * scriptFace(font, text || "L").scale)}
+                fontWeight={scriptFace(font, text || "L").weight}
                 fill={edge}
                 fillOpacity="0.85"
-                style={{ fontFamily: scriptFamily("beirut", false) }}
+                style={{ fontFamily: scriptFace(font, text || "L").family }}
               >
                 {text || "L"}
               </text>

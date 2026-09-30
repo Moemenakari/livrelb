@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
 import type { CardProduct } from "@/lib/catalog/card";
+import { defaultFontFor } from "@/lib/catalog/materials";
 import type { MaterialKey, MetalTone } from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { PhotoSlot } from "@/components/ui/photo-slot";
@@ -50,7 +51,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
       art={product.art}
       material={material}
       text={text}
-      font={product.font}
+      font={product.fonts && defaultFontFor(product.fonts, text)}
       connection={product.connection}
       aspect="portrait"
       className={className}

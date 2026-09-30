@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     rules: {
       "react/jsx-no-literals": [
         "error",
-        { noStrings: false, ignoreProps: true, allowedStrings: ["·", "/", "|", "✦"] },
+        { noStrings: false, ignoreProps: true, allowedStrings: ["·", "/", "|", "✦", "🎁"] },
       ],
     },
   },
@@ -23,6 +23,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cloudflare build output and the codebase graph.
+    ".open-next/**",
+    ".wrangler/**",
+    "graphify-out/**",
   ]),
 ]);
 

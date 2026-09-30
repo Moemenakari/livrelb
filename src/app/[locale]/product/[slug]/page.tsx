@@ -14,7 +14,7 @@ import {
   reviewsFor,
   toCard,
 } from "@/lib/catalog";
-import { fontNames } from "@/lib/catalog/materials";
+import { fonts } from "@/lib/catalog/materials";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductTabs } from "@/components/product/product-tabs";
@@ -65,7 +65,6 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     name: product.name[locale],
     summary: product.summary[locale],
     url: `${siteConfig.url}/${locale}${productHref(product.slug)}`,
-    giftBoxPrice: catalog.settings.giftBoxPrice,
     freeShippingOver: catalog.settings.freeShippingOver,
     whatsappNumber: catalog.settings.whatsappNumber,
     reviews: reviewStats(catalog, product.slug),
@@ -80,7 +79,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     personalization: p && {
       kind: p.kind,
       maxLength: p.maxLength,
-      fonts: p.fonts.map((key) => ({ key, name: fontNames[key].en })),
+      fonts: p.fonts.map((key) => ({ key, name: fonts[key].name[locale] })),
       connections: p.connections,
     },
     size: product.size,

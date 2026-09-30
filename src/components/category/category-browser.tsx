@@ -24,7 +24,7 @@ type Props = {
 const sorts: Sort[] = ["featured", "priceLow", "priceHigh", "newest"];
 const metals: Metal[] = ["all", "gold", "silver", "rose"];
 const metalSwatch: Record<MetalTone, string> = {
-  gold: materials.gold18.swatch,
+  gold: materials.gold.swatch,
   silver: materials.silver.swatch,
   rose: materials.rose.swatch,
 };
@@ -75,7 +75,7 @@ export function CategoryBrowser({ products, styles, namePreview }: Props) {
                 <StyleButton label={s.label} active={style === s.key} onClick={() => setStyle(s.key)}>
                   <ProductArt
                     art={{ kind: "name", variant: "necklace" }}
-                    material="gold18"
+                    material="gold"
                     text={s.sample}
                     font={s.font}
                     connection="center"

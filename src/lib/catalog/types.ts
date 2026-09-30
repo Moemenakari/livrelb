@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 export type Localized = Record<Locale, string>;
 
 /** materials table. */
-export type MaterialKey = "silver" | "gold18" | "rose" | "gold14" | "whiteGold14";
+export type MaterialKey = "silver" | "gold" | "rose" | "doubleGold";
 
 /** The three metal colors the previews and art can render. */
 export type MetalTone = "gold" | "silver" | "rose";
@@ -27,8 +27,28 @@ export type MaterialOffer = {
   compareAtPrice?: number;
 };
 
-/** fonts table: our own display names, never the font file's name. */
-export type FontKey = "beirut" | "byblos" | "batroun";
+/** fonts table: our own display names (Lebanese places), never the font file's name. */
+export type FontKey =
+  | "beirut"
+  | "byblos"
+  | "batroun"
+  | "tyre"
+  | "saida"
+  | "jounieh"
+  | "zahle"
+  | "ehden"
+  | "faraya"
+  | "bcharre"
+  | "baalbek"
+  | "anjar"
+  | "tripoli"
+  | "harissa"
+  | "deir-el-qamar";
+
+/** Which names a font is offered for: Arabic fonts only show for Arabic names. */
+export type FontScript = "latin" | "arabic";
+
+export type FontInfo = { name: Localized; script: FontScript };
 
 /** Where the chain attaches to the name: both ends, or one ring on top. */
 export type ChainConnection = "sides" | "center";
@@ -43,6 +63,7 @@ export type SizeOption = {
 export type Personalization = {
   kind: "name" | "initial";
   maxLength: number;
+  /** Fonts the customer may choose (product_fonts); the first is the default. */
   fonts: FontKey[];
   /** Chain connection choices (brief §8.3.6). Empty when not applicable. */
   connections: ChainConnection[];
@@ -133,8 +154,9 @@ export type StoreSettings = {
   deliveryFee: number;
   freeShippingOver: number;
   firstOrderFreeDelivery: boolean;
-  giftBoxPrice: number;
+  /** Empty until the owner sets it: every WhatsApp button is hidden. */
   whatsappNumber: string;
+  /** Empty until the owner sets it: the Instagram link is hidden. */
   instagramUrl: string;
   announcements: Localized[];
 };

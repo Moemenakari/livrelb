@@ -152,8 +152,6 @@
       "sides": "Both Sides",
       "center": "Center"
     },
-    "giftBox": "Add Gift Box & Bag",
-    "giftBoxPrice": "+{price}",
     "addToCart": "Add to cart",
     "added": "Added to your bag",
     "addedDetail": "{name} · {material}",
@@ -186,6 +184,9 @@
     },
     "braceletGuide": "Measure your wrist and add 1–2 cm for a comfortable fit.",
     "ringGuide": "Wrap a strip of paper around your finger, measure it and message us on WhatsApp: we'll tell you your size."
+  },
+  "giftBox": {
+    "free": "Special LIVRE gift box: <strong>FREE</strong> with every order"
   },
   "countdown": {
     "label": "Offer ends in",
@@ -274,7 +275,7 @@
       },
       "quality": {
         "title": "Quality materials",
-        "text": "Sterling silver, thick 18K plating and solid 14K gold."
+        "text": "Silver, gold and rose gold plating, and Double Gold Stainless Steel."
       },
       "trusted": {
         "title": "Trusted by Lebanese",

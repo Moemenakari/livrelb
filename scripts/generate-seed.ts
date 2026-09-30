@@ -7,7 +7,7 @@
 // are kept). Prices go in as USD cents; sample reviews as is_sample = true.
 import { writeFileSync } from "node:fs";
 import { categories } from "../src/lib/catalog/categories";
-import { allMaterials, fontNames, materials } from "../src/lib/catalog/materials";
+import { allFonts, allMaterials, fonts, materials } from "../src/lib/catalog/materials";
 import { products } from "../src/lib/catalog/products";
 import { reviews } from "../src/lib/catalog/reviews";
 import { sampleHeroOffer, samplePromo, sampleSettings } from "../src/lib/catalog/settings";
@@ -29,8 +29,24 @@ const cents = (dollars: number | undefined) =>
 const rows = (values: Value[][]) =>
   values.map((r) => `  (${r.map(sql).join(", ")})`).join(",\n");
 
-// Font files behind our font names (see src/components/preview/script-fonts.ts).
-const fontFamily = { beirut: "Satisfy", byblos: "Great Vibes", batroun: "Pacifico" };
+// Google Fonts behind our font names (see src/components/preview/script-fonts.ts).
+const fontFamily: Record<(typeof allFonts)[number], string> = {
+  beirut: "Great Vibes",
+  byblos: "Allura",
+  batroun: "Parisienne",
+  tyre: "Alex Brush",
+  saida: "Pinyon Script",
+  jounieh: "Dancing Script",
+  zahle: "Sacramento",
+  ehden: "Italianno",
+  faraya: "Pacifico",
+  bcharre: "Satisfy",
+  baalbek: "Cinzel",
+  anjar: "Playfair Display",
+  tripoli: "Aref Ruqaa",
+  harissa: "Reem Kufi",
+  "deir-el-qamar": "Amiri",
+};
 
 const areas = [
   ["beirut", "Beirut", "بيروت"],
@@ -57,8 +73,8 @@ on conflict (key) do nothing;
 `);
 
 add(`
-insert into public.fonts (key, name_en, name_ar, font_family, sort_order) values
-${rows(Object.entries(fontNames).map(([k, n], i) => [k, n.en, n.ar, fontFamily[k as keyof typeof fontFamily], i]))}
+insert into public.fonts (key, name_en, name_ar, font_family, script, sort_order) values
+${rows(allFonts.map((k, i) => [k, fonts[k].name.en, fonts[k].name.ar, fontFamily[k], fonts[k].script, i]))}
 on conflict (key) do nothing;
 `);
 
@@ -203,8 +219,8 @@ const s = sampleSettings;
 add(`
 insert into public.site_settings
   (id, delivery_fee_cents, free_shipping_threshold_cents, first_order_free_delivery,
-   gift_box_price_cents, whatsapp_number, instagram_url, announcements) values
-${rows([[1, cents(s.deliveryFee), cents(s.freeShippingOver), s.firstOrderFreeDelivery, cents(s.giftBoxPrice), s.whatsappNumber, s.instagramUrl, json(s.announcements)]])}
+   whatsapp_number, instagram_url, announcements) values
+${rows([[1, cents(s.deliveryFee), cents(s.freeShippingOver), s.firstOrderFreeDelivery, s.whatsappNumber, s.instagramUrl, json(s.announcements)]])}
 on conflict (id) do nothing;
 `);
 

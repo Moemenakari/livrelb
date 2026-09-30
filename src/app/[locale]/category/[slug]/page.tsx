@@ -39,7 +39,7 @@ export async function generateMetadata({
   };
 }
 
-const styleFont: Partial<Record<StyleKey, FontKey>> = { bold: "batroun", dainty: "byblos", twoFonts: "byblos" };
+const styleFont: Partial<Record<StyleKey, FontKey>> = { bold: "faraya", twoFonts: "byblos", arabic: "tripoli" };
 
 // Category page (brief §8.2, restart brief): trust strip, breadcrumbs,
 // centered title, round style thumbnails, product grid.

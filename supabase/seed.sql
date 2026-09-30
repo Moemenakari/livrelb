@@ -4,17 +4,28 @@
 begin;
 
 insert into public.materials (key, name_en, name_ar, tone, swatch, sort_order) values
-  ('silver', 'Sterling Silver', 'فضة إسترلينية', 'silver', '#c9ccd1', 0),
-  ('gold18', '18K Gold Plating', 'طلاء ذهب عيار 18', 'gold', '#d9b76e', 1),
-  ('rose', 'Rose Gold Plating', 'طلاء ذهب وردي', 'rose', '#e2a98f', 2),
-  ('gold14', '14K Gold', 'ذهب عيار 14', 'gold', '#c9a04f', 3),
-  ('whiteGold14', '14K White Gold', 'ذهب أبيض عيار 14', 'silver', '#e4e2dc', 4)
+  ('silver', 'Silver', 'فضة', 'silver', '#c9ccd1', 0),
+  ('gold', 'Gold', 'ذهب', 'gold', '#d9b76e', 1),
+  ('rose', 'Rose Gold', 'ذهب وردي', 'rose', '#e2a98f', 2),
+  ('doubleGold', 'Double Gold Stainless Steel', 'ستانلس ستيل بطلاء ذهب مزدوج', 'gold', '#c9a04f', 3)
 on conflict (key) do nothing;
 
-insert into public.fonts (key, name_en, name_ar, font_family, sort_order) values
-  ('beirut', 'Beirut', 'بيروت', 'Satisfy', 0),
-  ('byblos', 'Byblos', 'جبيل', 'Great Vibes', 1),
-  ('batroun', 'Batroun', 'البترون', 'Pacifico', 2)
+insert into public.fonts (key, name_en, name_ar, font_family, script, sort_order) values
+  ('beirut', 'Beirut', 'بيروت', 'Great Vibes', 'latin', 0),
+  ('byblos', 'Byblos', 'جبيل', 'Allura', 'latin', 1),
+  ('batroun', 'Batroun', 'البترون', 'Parisienne', 'latin', 2),
+  ('tyre', 'Tyre', 'صور', 'Alex Brush', 'latin', 3),
+  ('saida', 'Saida', 'صيدا', 'Pinyon Script', 'latin', 4),
+  ('jounieh', 'Jounieh', 'جونية', 'Dancing Script', 'latin', 5),
+  ('zahle', 'Zahle', 'زحلة', 'Sacramento', 'latin', 6),
+  ('ehden', 'Ehden', 'إهدن', 'Italianno', 'latin', 7),
+  ('faraya', 'Faraya', 'فاريا', 'Pacifico', 'latin', 8),
+  ('bcharre', 'Bcharre', 'بشري', 'Satisfy', 'latin', 9),
+  ('baalbek', 'Baalbek', 'بعلبك', 'Cinzel', 'latin', 10),
+  ('anjar', 'Anjar', 'عنجر', 'Playfair Display', 'latin', 11),
+  ('tripoli', 'Tripoli', 'طرابلس', 'Aref Ruqaa', 'arabic', 12),
+  ('harissa', 'Harissa', 'حريصا', 'Reem Kufi', 'arabic', 13),
+  ('deir-el-qamar', 'Deir el Qamar', 'دير القمر', 'Amiri', 'arabic', 14)
 on conflict (key) do nothing;
 
 insert into public.categories
@@ -27,7 +38,7 @@ insert into public.categories
   ('rings', 'Rings', 'خواتم', null, null, 'Initial signets and dainty stacking rings.', 'خواتم بالأحرف الأولى وخواتم ناعمة تُلبس معاً.', null, '{}'::text[], '{"kind":"ring","engraving":"initial"}'::jsonb, null, 4),
   ('earrings', 'Earrings', 'أقراط', null, null, 'Huggies, pearls and little Lira coins for every day.', 'حلقات صغيرة ولؤلؤ وليرات صغيرة لكل يوم.', null, '{}'::text[], '{"kind":"hoops","pearl":true}'::jsonb, null, 5),
   ('lira-collection', 'Lira Collection', 'مجموعة الليرة', null, null, 'Inspired by the 1975 Lebanese 1 Livre coin: the cedar on one side, the laurel wreath on the other. A piece of home to wear every day.', 'مستوحاة من ليرة لبنان المعدنية لعام 1975: الأرزة على وجه وإكليل الغار على الآخر. قطعة من الوطن تلبسينها كل يوم.', null, '{}'::text[], '{"kind":"coin","variant":"necklace"}'::jsonb, null, 6),
-  ('gifts', 'Gifts', 'هدايا', null, null, 'Personal gifts they''ll wear every day. Add our gift box and bag at checkout.', 'هدايا شخصية تُلبس كل يوم. أضيفي علبة الهدايا والكيس عند الطلب.', null, '{}'::text[], '{"kind":"name","variant":"necklace"}'::jsonb, 'Love', 7),
+  ('gifts', 'Gifts', 'هدايا', null, null, 'Personal gifts they''ll wear every day. Every order comes in our special LIVRE gift box, free.', 'هدايا شخصية تُلبس كل يوم. كل طلبية تصل في علبة هدية خاصة من LIVRE، مجاناً.', null, '{}'::text[], '{"kind":"name","variant":"necklace"}'::jsonb, 'Love', 7),
   ('bestsellers', 'Bestsellers', 'الأكثر مبيعاً', null, null, 'The pieces our customers order again and again.', 'القطع التي تطلبها زبوناتنا مرة بعد مرة.', 'bestsellers', '{}'::text[], '{"kind":"name","variant":"necklace"}'::jsonb, 'Nour', 8),
   ('new', 'New Arrivals', 'وصل حديثاً', 'New', 'جديد', 'Just landed: our newest designs.', 'وصلت للتو: أحدث تصاميمنا.', 'new', '{}'::text[], '{"kind":"hoops","pearl":false}'::jsonb, null, 9)
 on conflict (slug) do nothing;
@@ -45,154 +56,160 @@ insert into public.products
    max_length, sample_text, chain_connections, art, sort_order) values
   ('cursive-name-necklace', 'Cursive Name Necklace', 'قلادة الاسم بخط متصل', 'Your name in flowing handwriting, cut from one piece of metal.', 'اسمكِ بخط يد منساب، مقصوص من قطعة معدن واحدة.', 'Our most loved piece. Type any name or word up to 10 letters and we cut it in one flowing line, then polish it by hand. Wear it alone on a fine chain or layer it with your Lira coin. Every necklace is made to order in Lebanon and arrives in our signature box.', 'القطعة الأحب إلى زبوناتنا. اكتبي أي اسم أو كلمة حتى 10 أحرف ونقصّها بخط واحد منساب ثم نلمّعها يدوياً. البسيها وحدها على سلسلة ناعمة أو مع قلادة الليرة. كل قلادة تُصنع حسب الطلب في لبنان وتصلكِ في علبتنا الخاصة.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'cursive', true, false, 'name', 10, 'Maya', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 0),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'cursive', true, false, 'name', 10, 'Maya', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 0),
   ('arabic-name-necklace', 'Arabic Name Necklace', 'قلادة الاسم بالعربي', 'Your name in Arabic calligraphy, joined letter to letter.', 'اسمكِ بالخط العربي، حرفاً موصولاً بحرف.', 'Arabic letters were made to flow. We draw your name in a Ruqaa-inspired script so every letter joins the next, then cut and polish it by hand. A beautiful gift for anyone far from home.', 'الحروف العربية خُلقت لتنساب. نرسم اسمكِ بخط مستوحى من الرقعة فيتصل كل حرف بالذي يليه، ثم نقصّه ونلمّعه يدوياً. هدية جميلة لكل من هو بعيد عن الوطن.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'arabic', true, false, 'name', 10, 'ليلى', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 1),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'arabic', true, false, 'name', 10, 'ليلى', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 1),
   ('lira-coin-necklace', '1 Livre Coin Necklace', 'قلادة الليرة', 'The 1975 Lebanese Lira, recast as a pendant.', 'ليرة لبنان لعام 1975، بشكل ميدالية.', 'Our signature. The cedar and ''Banque du Liban'' on the front, the laurel wreath and ''1 Livre'' on the back, just like the coin in your teta''s drawer. Wear either side.', 'قطعتنا المميزة. الأرزة و«مصرف لبنان» على الوجه، وإكليل الغار و«١ ليرة» على الظهر، تماماً مثل الليرة في جارور التيتا. البسيها على أي وجه.', 'Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.
 Chain: 1.5 mm cable chain.
-Stainless steel core with 18K gold or silver plating. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
+Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
 السلسلة: 1.5 ملم.
-أساس من الستانلس ستيل مطلي بذهب عيار 18 أو فضة. مقاوم للماء.', 'active', null, true, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"necklace"}'::jsonb, 2),
+أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.', 'active', null, true, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"necklace"}'::jsonb, 2),
   ('name-bracelet', 'Cursive Name Bracelet', 'سوار الاسم بخط متصل', 'A name on your wrist, on a fine chain.', 'اسم على معصمكِ، على سلسلة ناعمة.', 'The same flowing script as our name necklace, sized for the wrist. Adjustable chain, two rings on the sides so the name always sits straight.', 'نفس الخط المنساب لقلادة الاسم، على مقاس المعصم. سلسلة قابلة للتعديل وحلقتان على الجانبين ليبقى الاسم مستقيماً.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', null, true, false, 'name', 10, 'Rami', '{}'::public.chain_connection[], '{"kind":"name","variant":"bracelet"}'::jsonb, 3),
-  ('cedar-necklace', 'Cedar Necklace', 'قلادة الأرزة', 'A little cedar to keep Lebanon close.', 'أرزة صغيرة تبقي لبنان قريباً.', 'A dainty cedar pendant on a fine chain. Our patriotic best seller, and the gift we send most to Lebanese abroad.', 'ميدالية أرزة ناعمة على سلسلة رفيعة. الأكثر مبيعاً من قطعنا الوطنية، والهدية التي نرسلها أكثر للبنانيين في الخارج.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, true, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"cedar"}'::jsonb, 4),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', null, true, false, 'name', 10, 'Rami', '{}'::public.chain_connection[], '{"kind":"name","variant":"bracelet"}'::jsonb, 3),
+  ('cedar-necklace', 'Cedar Necklace', 'قلادة الأرزة', 'A little cedar to keep Lebanon close.', 'أرزة صغيرة تبقي لبنان قريباً.', 'A dainty cedar pendant on a fine chain. Our patriotic best seller, and the gift we send most to Lebanese abroad.', 'ميدالية أرزة ناعمة على سلسلة رفيعة. الأكثر مبيعاً من قطعنا الوطنية، والهدية التي نرسلها أكثر للبنانيين في الخارج.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, true, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"cedar"}'::jsonb, 4),
   ('initial-necklace', 'Script Initial Necklace', 'قلادة الحرف', 'One letter, big meaning.', 'حرف واحد، ومعنى كبير.', 'Your initial, or the initial of someone you love, in our cursive script. Small enough for every day, easy to layer.', 'حرفكِ الأول أو حرف من تحبين، بخطنا المتصل. صغيرة لكل يوم وسهلة التنسيق مع قلادات أخرى.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'initial', true, false, 'initial', 1, 'M', '{center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 5),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'initial', true, false, 'initial', 1, 'M', '{center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 5),
   ('bold-name-necklace', 'Bold Name Necklace', 'قلادة الاسم العريضة', 'Thick, rounded letters that stand out.', 'أحرف عريضة ومستديرة تلفت النظر.', 'For the girl who wants her name seen. Rounded, bold script cut thicker than our classic pieces, still light enough to wear all day.', 'لمن تريد أن يُرى اسمها. خط عريض ومستدير أسمك من قطعنا الكلاسيكية، وخفيف بما يكفي لتلبسيه طوال اليوم.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'bold', false, true, 'name', 10, 'Jana', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 6),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'bold', false, true, 'name', 10, 'Jana', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 6),
   ('dainty-name-necklace', 'Dainty Name Necklace', 'قلادة الاسم الناعمة', 'Fine, elegant script for a minimal look.', 'خط رفيع وأنيق لإطلالة بسيطة.', 'Our finest script, with long elegant swirls. Barely-there and perfect for layering with a coin or cedar.', 'أرفع خطوطنا، بانحناءات طويلة وأنيقة. ناعمة جداً ومثالية مع قلادة الليرة أو الأرزة.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'dainty', true, false, 'name', 10, 'Rita', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 7),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'dainty', true, false, 'name', 10, 'Rita', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 7),
   ('choose-your-font-name-necklace', 'Choose-Your-Font Name Necklace', 'قلادة الاسم بخط تختارينه', 'Three scripts, one name: pick the one that feels like you.', 'ثلاثة خطوط لاسم واحد: اختاري الذي يشبهكِ.', 'Can''t decide? Preview your name in Beirut, Byblos and Batroun, our three signature scripts, and choose your favorite.', 'محتارة؟ شاهدي اسمكِ بخطوطنا الثلاثة بيروت وجبيل والبترون، واختاري المفضل.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'twoFonts', false, true, 'name', 10, 'Sarah', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 8),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'twoFonts', false, true, 'name', 10, 'Sarah', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 8),
   ('arabic-letter-necklace', 'Arabic Letter Necklace', 'قلادة الحرف العربي', 'A single Arabic letter in calligraphy.', 'حرف عربي واحد بخط جميل.', 'One Arabic letter, drawn in calligraphy and cut by hand. Minimal, meaningful and easy to layer.', 'حرف عربي واحد، مرسوم بالخط ومقصوص يدوياً. بسيطة وذات معنى وسهلة التنسيق.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'initial', false, true, 'initial', 1, 'ن', '{center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 9),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'initial', false, true, 'initial', 1, 'ن', '{center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 9),
   ('arabic-name-bracelet', 'Arabic Name Bracelet', 'سوار الاسم بالعربي', 'An Arabic name on a fine chain bracelet.', 'اسم بالعربي على سوار ناعم.', 'Our Arabic calligraphy name, sized for the wrist. Lovely for him or her.', 'اسم بالخط العربي على مقاس المعصم. جميل له أو لها.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', null, false, false, 'name', 10, 'كريم', '{}'::public.chain_connection[], '{"kind":"name","variant":"bracelet"}'::jsonb, 10),
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', null, false, false, 'name', 10, 'كريم', '{}'::public.chain_connection[], '{"kind":"name","variant":"bracelet"}'::jsonb, 10),
   ('lira-coin-bracelet', 'Lira Coin Bracelet', 'سوار الليرة', 'A mini Lira coin on a fine chain.', 'ليرة صغيرة على سلسلة ناعمة.', 'The 1 Livre coin in miniature, centered on a delicate bracelet. Pairs perfectly with the coin necklace.', 'ليرة لبنانية مصغّرة في وسط سوار ناعم. تتناسق تماماً مع قلادة الليرة.', 'Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.
 Chain: 1.5 mm cable chain.
-Stainless steel core with 18K gold or silver plating. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
+Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
 السلسلة: 1.5 ملم.
-أساس من الستانلس ستيل مطلي بذهب عيار 18 أو فضة. مقاوم للماء.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"bracelet"}'::jsonb, 11),
+أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"bracelet"}'::jsonb, 11),
   ('lira-coin-earrings', 'Lira Coin Earrings', 'أقراط الليرة', 'Two little Lira coins that catch the light.', 'ليرتان صغيرتان تلمعان مع كل حركة.', 'Tiny 1 Livre coins on fine hooks, cedar side out. Light, playful and very Lebanese.', 'ليرات صغيرة على خطافات رفيعة، والأرزة إلى الخارج. خفيفة ومرحة ولبنانية جداً.', 'Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.
 Chain: 1.5 mm cable chain.
-Stainless steel core with 18K gold or silver plating. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
+Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
 السلسلة: 1.5 ملم.
-أساس من الستانلس ستيل مطلي بذهب عيار 18 أو فضة. مقاوم للماء.', 'active', null, false, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"earrings"}'::jsonb, 12),
+أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.', 'active', null, false, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"earrings"}'::jsonb, 12),
   ('mens-lira-pendant', 'Men''s Lira Pendant', 'ميدالية الليرة للرجال', 'A larger Lira coin on a stronger chain.', 'ليرة أكبر على سلسلة أمتن.', 'The 1975 Lira at full size on a 2 mm chain. Made to be worn every day.', 'ليرة 1975 بحجمها الكامل على سلسلة 2 ملم. مصنوعة لتُلبس كل يوم.', 'Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.
 Chain: 1.5 mm cable chain.
-Stainless steel core with 18K gold or silver plating. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
+Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.', 'ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.
 السلسلة: 1.5 ملم.
-أساس من الستانلس ستيل مطلي بذهب عيار 18 أو فضة. مقاوم للماء.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"necklace"}'::jsonb, 13),
-  ('mens-cedar-pendant', 'Men''s Cedar Pendant', 'ميدالية الأرزة للرجال', 'A bold cedar for him.', 'أرزة عريضة له.', 'A larger, heavier cedar on a 2 mm chain. Simple, strong and proudly Lebanese.', 'أرزة أكبر وأثقل على سلسلة 2 ملم. بسيطة وقوية ولبنانية بفخر.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"cedar"}'::jsonb, 14),
-  ('initial-signet-ring', 'Initial Signet Ring', 'خاتم الحرف', 'Your initial engraved on a polished signet.', 'حرفكِ محفور على خاتم مصقول.', 'A modern signet with one engraved initial in our cursive script. Stack it or wear it alone.', 'خاتم عصري بحرف واحد محفور بخطنا المتصل. البسيه وحده أو مع خواتم أخرى.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, 'initial', 1, 'L', '{}'::public.chain_connection[], '{"kind":"ring","engraving":"initial"}'::jsonb, 15),
-  ('dainty-stacking-ring', 'Dainty Stacking Ring', 'خاتم ناعم', 'A thin band to stack and mix.', 'حلقة رفيعة للتنسيق.', 'A 1.2 mm polished band. Wear one, or three in mixed metals.', 'حلقة مصقولة بعرض 1.2 ملم. البسي واحدة أو ثلاثاً بألوان مختلفة.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"ring","engraving":"plain"}'::jsonb, 16),
-  ('mini-huggie-hoops', 'Mini Huggie Hoops', 'أقراط حلق صغيرة', 'Small hoops that hug the lobe.', 'حلقات صغيرة تلتف حول الأذن.', 'Everyday huggies with a secure click closure. Comfortable enough to sleep in.', 'حلقات يومية بقفل آمن. مريحة لدرجة أنكِ تنامين بها.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, true, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"hoops","pearl":false}'::jsonb, 17),
-  ('pearl-drop-earrings', 'Pearl Drop Earrings', 'أقراط اللؤلؤ', 'A freshwater pearl on a mini hoop.', 'لؤلؤة طبيعية على حلقة صغيرة.', 'A soft freshwater pearl hanging from a mini hoop. Elegant for weddings, easy for every day.', 'لؤلؤة ناعمة معلقة بحلقة صغيرة. أنيقة للأعراس وسهلة لكل يوم.', 'Sterling silver 925, plain or plated with 18K gold or rose gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بذهب عيار 18 أو ذهب وردي. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"hoops","pearl":true}'::jsonb, 18),
+أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"coin","variant":"necklace"}'::jsonb, 13),
+  ('mens-cedar-pendant', 'Men''s Cedar Pendant', 'ميدالية الأرزة للرجال', 'A bold cedar for him.', 'أرزة عريضة له.', 'A larger, heavier cedar on a 2 mm chain. Simple, strong and proudly Lebanese.', 'أرزة أكبر وأثقل على سلسلة 2 ملم. بسيطة وقوية ولبنانية بفخر.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"cedar"}'::jsonb, 14),
+  ('initial-signet-ring', 'Initial Signet Ring', 'خاتم الحرف', 'Your initial engraved on a polished signet.', 'حرفكِ محفور على خاتم مصقول.', 'A modern signet with one engraved initial in our cursive script. Stack it or wear it alone.', 'خاتم عصري بحرف واحد محفور بخطنا المتصل. البسيه وحده أو مع خواتم أخرى.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, 'initial', 1, 'L', '{}'::public.chain_connection[], '{"kind":"ring","engraving":"initial"}'::jsonb, 15),
+  ('dainty-stacking-ring', 'Dainty Stacking Ring', 'خاتم ناعم', 'A thin band to stack and mix.', 'حلقة رفيعة للتنسيق.', 'A 1.2 mm polished band. Wear one, or three in mixed metals.', 'حلقة مصقولة بعرض 1.2 ملم. البسي واحدة أو ثلاثاً بألوان مختلفة.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"ring","engraving":"plain"}'::jsonb, 16),
+  ('mini-huggie-hoops', 'Mini Huggie Hoops', 'أقراط حلق صغيرة', 'Small hoops that hug the lobe.', 'حلقات صغيرة تلتف حول الأذن.', 'Everyday huggies with a secure click closure. Comfortable enough to sleep in.', 'حلقات يومية بقفل آمن. مريحة لدرجة أنكِ تنامين بها.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, true, true, null, null, null, '{}'::public.chain_connection[], '{"kind":"hoops","pearl":false}'::jsonb, 17),
+  ('pearl-drop-earrings', 'Pearl Drop Earrings', 'أقراط اللؤلؤ', 'A freshwater pearl on a mini hoop.', 'لؤلؤة طبيعية على حلقة صغيرة.', 'A soft freshwater pearl hanging from a mini hoop. Elegant for weddings, easy for every day.', 'لؤلؤة ناعمة معلقة بحلقة صغيرة. أنيقة للأعراس وسهلة لكل يوم.', 'Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.', 'فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.', 'active', null, false, false, null, null, null, '{}'::public.chain_connection[], '{"kind":"hoops","pearl":true}'::jsonb, 18),
   ('mens-arabic-name-necklace', 'Men''s Arabic Name Chain', 'سلسلة الاسم بالعربي للرجال', 'A bold Arabic name on a stronger chain.', 'اسم بالعربي بخط عريض على سلسلة أمتن.', 'His name in Arabic calligraphy, cut thicker and hung on a 2 mm chain.', 'اسمه بالخط العربي، مقصوص بسماكة أكبر على سلسلة 2 ملم.', 'Pendant height: about 1.5 cm for capital letters, width depends on the name.
 Chain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.
-Sterling silver 925. Plated pieces are coated with a thick layer of 18K gold or rose gold. 14K pieces are solid gold.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
+Silver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.', 'ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.
 السلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.
-فضة إسترلينية 925. القطع المطلية مغطاة بطبقة سميكة من ذهب عيار 18 أو ذهب وردي. قطع عيار 14 ذهب خالص.', 'active', 'arabic', false, false, 'name', 10, 'علي', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 19)
+الفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.', 'active', 'arabic', false, false, 'name', 10, 'علي', '{sides,center}'::public.chain_connection[], '{"kind":"name","variant":"necklace"}'::jsonb, 19)
 on conflict (slug) do nothing;
 
 insert into public.product_materials
   (product_id, material_id, price_cents, compare_at_price_cents, is_default, sort_order)
 select p.id, m.id, v.price, v.compare_at, v.is_default, v.sort
 from (values
-  ('cursive-name-necklace', 'silver', 3900, 5300, false, 0),
-  ('cursive-name-necklace', 'gold18', 4400, 5800, true, 1),
+  ('cursive-name-necklace', 'silver', 4400, 5800, false, 0),
+  ('cursive-name-necklace', 'gold', 4400, 5800, true, 1),
   ('cursive-name-necklace', 'rose', 4400, 5800, false, 2),
-  ('cursive-name-necklace', 'gold14', 21900, 23300, false, 3),
-  ('cursive-name-necklace', 'whiteGold14', 21900, 23300, false, 4),
-  ('arabic-name-necklace', 'silver', 3900, 5200, false, 0),
-  ('arabic-name-necklace', 'gold18', 4400, 5700, true, 1),
+  ('cursive-name-necklace', 'doubleGold', 13200, 17400, false, 3),
+  ('arabic-name-necklace', 'silver', 4400, 5700, false, 0),
+  ('arabic-name-necklace', 'gold', 4400, 5700, true, 1),
   ('arabic-name-necklace', 'rose', 4400, 5700, false, 2),
-  ('arabic-name-necklace', 'gold14', 21900, 23200, false, 3),
-  ('arabic-name-necklace', 'whiteGold14', 21900, 23200, false, 4),
-  ('lira-coin-necklace', 'silver', 4900, 6500, false, 0),
-  ('lira-coin-necklace', 'gold18', 5400, 7000, true, 1),
-  ('name-bracelet', 'silver', 2900, 3900, false, 0),
-  ('name-bracelet', 'gold18', 3400, 4400, false, 1),
+  ('arabic-name-necklace', 'doubleGold', 13200, 17100, false, 3),
+  ('lira-coin-necklace', 'silver', 5400, 7000, false, 0),
+  ('lira-coin-necklace', 'gold', 5400, 7000, true, 1),
+  ('lira-coin-necklace', 'doubleGold', 16200, 21000, false, 2),
+  ('name-bracelet', 'silver', 3400, 4400, false, 0),
+  ('name-bracelet', 'gold', 3400, 4400, false, 1),
   ('name-bracelet', 'rose', 3400, 4400, true, 2),
-  ('cedar-necklace', 'silver', 2900, 3800, false, 0),
-  ('cedar-necklace', 'gold18', 3400, 4300, true, 1),
+  ('name-bracelet', 'doubleGold', 10200, 13200, false, 3),
+  ('cedar-necklace', 'silver', 3400, 4300, false, 0),
+  ('cedar-necklace', 'gold', 3400, 4300, true, 1),
   ('cedar-necklace', 'rose', 3400, 4300, false, 2),
-  ('initial-necklace', 'silver', 2500, 3200, false, 0),
-  ('initial-necklace', 'gold18', 3000, 3700, true, 1),
+  ('cedar-necklace', 'doubleGold', 10200, 12900, false, 3),
+  ('initial-necklace', 'silver', 3000, 3700, false, 0),
+  ('initial-necklace', 'gold', 3000, 3700, true, 1),
   ('initial-necklace', 'rose', 3000, 3700, false, 2),
-  ('initial-necklace', 'gold14', 20500, 21200, false, 3),
-  ('initial-necklace', 'whiteGold14', 20500, 21200, false, 4),
-  ('bold-name-necklace', 'silver', 4200, 5500, false, 0),
-  ('bold-name-necklace', 'gold18', 4700, 6000, true, 1),
+  ('initial-necklace', 'doubleGold', 9000, 11100, false, 3),
+  ('bold-name-necklace', 'silver', 4700, 6000, false, 0),
+  ('bold-name-necklace', 'gold', 4700, 6000, true, 1),
   ('bold-name-necklace', 'rose', 4700, 6000, false, 2),
-  ('bold-name-necklace', 'gold14', 22200, 23500, false, 3),
-  ('bold-name-necklace', 'whiteGold14', 22200, 23500, false, 4),
-  ('dainty-name-necklace', 'silver', 3500, 4500, true, 0),
-  ('dainty-name-necklace', 'gold18', 4000, 5000, false, 1),
+  ('bold-name-necklace', 'doubleGold', 14100, 18000, false, 3),
+  ('dainty-name-necklace', 'silver', 4000, 5000, true, 0),
+  ('dainty-name-necklace', 'gold', 4000, 5000, false, 1),
   ('dainty-name-necklace', 'rose', 4000, 5000, false, 2),
-  ('dainty-name-necklace', 'gold14', 21500, 22500, false, 3),
-  ('dainty-name-necklace', 'whiteGold14', 21500, 22500, false, 4),
-  ('choose-your-font-name-necklace', 'silver', 4500, 5900, false, 0),
-  ('choose-your-font-name-necklace', 'gold18', 5000, 6400, false, 1),
+  ('dainty-name-necklace', 'doubleGold', 12000, 15000, false, 3),
+  ('choose-your-font-name-necklace', 'silver', 5000, 6400, false, 0),
+  ('choose-your-font-name-necklace', 'gold', 5000, 6400, false, 1),
   ('choose-your-font-name-necklace', 'rose', 5000, 6400, true, 2),
-  ('choose-your-font-name-necklace', 'gold14', 22500, 23900, false, 3),
-  ('choose-your-font-name-necklace', 'whiteGold14', 22500, 23900, false, 4),
-  ('arabic-letter-necklace', 'silver', 2500, null::integer, false, 0),
-  ('arabic-letter-necklace', 'gold18', 3000, null::integer, true, 1),
+  ('choose-your-font-name-necklace', 'doubleGold', 15000, 19200, false, 3),
+  ('arabic-letter-necklace', 'silver', 3000, null::integer, false, 0),
+  ('arabic-letter-necklace', 'gold', 3000, null::integer, true, 1),
   ('arabic-letter-necklace', 'rose', 3000, null::integer, false, 2),
-  ('arabic-letter-necklace', 'gold14', 20500, null::integer, false, 3),
-  ('arabic-letter-necklace', 'whiteGold14', 20500, null::integer, false, 4),
-  ('arabic-name-bracelet', 'silver', 3200, null::integer, true, 0),
-  ('arabic-name-bracelet', 'gold18', 3700, null::integer, false, 1),
+  ('arabic-letter-necklace', 'doubleGold', 9000, null::integer, false, 3),
+  ('arabic-name-bracelet', 'silver', 3700, null::integer, true, 0),
+  ('arabic-name-bracelet', 'gold', 3700, null::integer, false, 1),
   ('arabic-name-bracelet', 'rose', 3700, null::integer, false, 2),
-  ('lira-coin-bracelet', 'silver', 3500, 4500, false, 0),
-  ('lira-coin-bracelet', 'gold18', 4000, 5000, true, 1),
-  ('lira-coin-earrings', 'silver', 3200, null::integer, false, 0),
-  ('lira-coin-earrings', 'gold18', 3700, null::integer, true, 1),
-  ('mens-lira-pendant', 'silver', 5500, null::integer, true, 0),
-  ('mens-lira-pendant', 'gold18', 6000, null::integer, false, 1),
-  ('mens-cedar-pendant', 'silver', 4500, null::integer, true, 0),
-  ('mens-cedar-pendant', 'gold18', 5000, null::integer, false, 1),
-  ('initial-signet-ring', 'silver', 3500, 4500, false, 0),
-  ('initial-signet-ring', 'gold18', 4000, 5000, true, 1),
+  ('arabic-name-bracelet', 'doubleGold', 11100, null::integer, false, 3),
+  ('lira-coin-bracelet', 'silver', 4000, 5000, false, 0),
+  ('lira-coin-bracelet', 'gold', 4000, 5000, true, 1),
+  ('lira-coin-bracelet', 'doubleGold', 12000, 15000, false, 2),
+  ('lira-coin-earrings', 'silver', 3700, null::integer, false, 0),
+  ('lira-coin-earrings', 'gold', 3700, null::integer, true, 1),
+  ('lira-coin-earrings', 'doubleGold', 11100, null::integer, false, 2),
+  ('mens-lira-pendant', 'silver', 6000, null::integer, true, 0),
+  ('mens-lira-pendant', 'gold', 6000, null::integer, false, 1),
+  ('mens-lira-pendant', 'doubleGold', 18000, null::integer, false, 2),
+  ('mens-cedar-pendant', 'silver', 5000, null::integer, true, 0),
+  ('mens-cedar-pendant', 'gold', 5000, null::integer, false, 1),
+  ('mens-cedar-pendant', 'doubleGold', 15000, null::integer, false, 2),
+  ('initial-signet-ring', 'silver', 4000, 5000, false, 0),
+  ('initial-signet-ring', 'gold', 4000, 5000, true, 1),
   ('initial-signet-ring', 'rose', 4000, 5000, false, 2),
-  ('dainty-stacking-ring', 'silver', 1900, null::integer, false, 0),
-  ('dainty-stacking-ring', 'gold18', 2400, null::integer, false, 1),
+  ('initial-signet-ring', 'doubleGold', 12000, 15000, false, 3),
+  ('dainty-stacking-ring', 'silver', 2400, null::integer, false, 0),
+  ('dainty-stacking-ring', 'gold', 2400, null::integer, false, 1),
   ('dainty-stacking-ring', 'rose', 2400, null::integer, true, 2),
-  ('mini-huggie-hoops', 'silver', 2500, 3200, false, 0),
-  ('mini-huggie-hoops', 'gold18', 3000, 3700, true, 1),
+  ('dainty-stacking-ring', 'doubleGold', 7200, null::integer, false, 3),
+  ('mini-huggie-hoops', 'silver', 3000, 3700, false, 0),
+  ('mini-huggie-hoops', 'gold', 3000, 3700, true, 1),
   ('mini-huggie-hoops', 'rose', 3000, 3700, false, 2),
-  ('pearl-drop-earrings', 'silver', 3200, null::integer, false, 0),
-  ('pearl-drop-earrings', 'gold18', 3700, null::integer, true, 1),
+  ('mini-huggie-hoops', 'doubleGold', 9000, 11100, false, 3),
+  ('pearl-drop-earrings', 'silver', 3700, null::integer, false, 0),
+  ('pearl-drop-earrings', 'gold', 3700, null::integer, true, 1),
   ('pearl-drop-earrings', 'rose', 3700, null::integer, false, 2),
-  ('mens-arabic-name-necklace', 'silver', 4900, null::integer, true, 0),
-  ('mens-arabic-name-necklace', 'gold18', 5400, null::integer, false, 1)
+  ('pearl-drop-earrings', 'doubleGold', 11100, null::integer, false, 3),
+  ('mens-arabic-name-necklace', 'silver', 5400, null::integer, true, 0),
+  ('mens-arabic-name-necklace', 'gold', 5400, null::integer, false, 1),
+  ('mens-arabic-name-necklace', 'doubleGold', 16200, null::integer, false, 2)
 ) as v (slug, material, price, compare_at, is_default, sort)
 join public.products p on p.slug = v.slug
 join public.materials m on m.key = v.material
@@ -288,18 +305,130 @@ insert into public.product_fonts (product_id, font_id, sort_order)
 select p.id, f.id, v.sort
 from (values
   ('cursive-name-necklace', 'beirut', 0),
-  ('arabic-name-necklace', 'beirut', 0),
+  ('cursive-name-necklace', 'byblos', 1),
+  ('cursive-name-necklace', 'batroun', 2),
+  ('cursive-name-necklace', 'tyre', 3),
+  ('cursive-name-necklace', 'saida', 4),
+  ('cursive-name-necklace', 'jounieh', 5),
+  ('cursive-name-necklace', 'zahle', 6),
+  ('cursive-name-necklace', 'ehden', 7),
+  ('cursive-name-necklace', 'faraya', 8),
+  ('cursive-name-necklace', 'bcharre', 9),
+  ('cursive-name-necklace', 'baalbek', 10),
+  ('cursive-name-necklace', 'anjar', 11),
+  ('cursive-name-necklace', 'tripoli', 12),
+  ('cursive-name-necklace', 'harissa', 13),
+  ('cursive-name-necklace', 'deir-el-qamar', 14),
+  ('arabic-name-necklace', 'tripoli', 0),
+  ('arabic-name-necklace', 'beirut', 1),
+  ('arabic-name-necklace', 'byblos', 2),
+  ('arabic-name-necklace', 'batroun', 3),
+  ('arabic-name-necklace', 'tyre', 4),
+  ('arabic-name-necklace', 'saida', 5),
+  ('arabic-name-necklace', 'jounieh', 6),
+  ('arabic-name-necklace', 'zahle', 7),
+  ('arabic-name-necklace', 'ehden', 8),
+  ('arabic-name-necklace', 'faraya', 9),
+  ('arabic-name-necklace', 'bcharre', 10),
+  ('arabic-name-necklace', 'baalbek', 11),
+  ('arabic-name-necklace', 'anjar', 12),
+  ('arabic-name-necklace', 'harissa', 13),
+  ('arabic-name-necklace', 'deir-el-qamar', 14),
   ('name-bracelet', 'beirut', 0),
+  ('name-bracelet', 'byblos', 1),
+  ('name-bracelet', 'batroun', 2),
+  ('name-bracelet', 'tyre', 3),
+  ('name-bracelet', 'saida', 4),
+  ('name-bracelet', 'jounieh', 5),
+  ('name-bracelet', 'zahle', 6),
+  ('name-bracelet', 'ehden', 7),
+  ('name-bracelet', 'faraya', 8),
+  ('name-bracelet', 'bcharre', 9),
+  ('name-bracelet', 'baalbek', 10),
+  ('name-bracelet', 'anjar', 11),
+  ('name-bracelet', 'tripoli', 12),
+  ('name-bracelet', 'harissa', 13),
+  ('name-bracelet', 'deir-el-qamar', 14),
   ('initial-necklace', 'beirut', 0),
-  ('bold-name-necklace', 'batroun', 0),
-  ('dainty-name-necklace', 'byblos', 0),
+  ('bold-name-necklace', 'faraya', 0),
+  ('bold-name-necklace', 'beirut', 1),
+  ('bold-name-necklace', 'byblos', 2),
+  ('bold-name-necklace', 'batroun', 3),
+  ('bold-name-necklace', 'tyre', 4),
+  ('bold-name-necklace', 'saida', 5),
+  ('bold-name-necklace', 'jounieh', 6),
+  ('bold-name-necklace', 'zahle', 7),
+  ('bold-name-necklace', 'ehden', 8),
+  ('bold-name-necklace', 'bcharre', 9),
+  ('bold-name-necklace', 'baalbek', 10),
+  ('bold-name-necklace', 'anjar', 11),
+  ('bold-name-necklace', 'tripoli', 12),
+  ('bold-name-necklace', 'harissa', 13),
+  ('bold-name-necklace', 'deir-el-qamar', 14),
+  ('dainty-name-necklace', 'beirut', 0),
+  ('dainty-name-necklace', 'byblos', 1),
+  ('dainty-name-necklace', 'batroun', 2),
+  ('dainty-name-necklace', 'tyre', 3),
+  ('dainty-name-necklace', 'saida', 4),
+  ('dainty-name-necklace', 'jounieh', 5),
+  ('dainty-name-necklace', 'zahle', 6),
+  ('dainty-name-necklace', 'ehden', 7),
+  ('dainty-name-necklace', 'faraya', 8),
+  ('dainty-name-necklace', 'bcharre', 9),
+  ('dainty-name-necklace', 'baalbek', 10),
+  ('dainty-name-necklace', 'anjar', 11),
+  ('dainty-name-necklace', 'tripoli', 12),
+  ('dainty-name-necklace', 'harissa', 13),
+  ('dainty-name-necklace', 'deir-el-qamar', 14),
   ('choose-your-font-name-necklace', 'beirut', 0),
   ('choose-your-font-name-necklace', 'byblos', 1),
   ('choose-your-font-name-necklace', 'batroun', 2),
-  ('arabic-letter-necklace', 'beirut', 0),
-  ('arabic-name-bracelet', 'beirut', 0),
+  ('choose-your-font-name-necklace', 'tyre', 3),
+  ('choose-your-font-name-necklace', 'saida', 4),
+  ('choose-your-font-name-necklace', 'jounieh', 5),
+  ('choose-your-font-name-necklace', 'zahle', 6),
+  ('choose-your-font-name-necklace', 'ehden', 7),
+  ('choose-your-font-name-necklace', 'faraya', 8),
+  ('choose-your-font-name-necklace', 'bcharre', 9),
+  ('choose-your-font-name-necklace', 'baalbek', 10),
+  ('choose-your-font-name-necklace', 'anjar', 11),
+  ('choose-your-font-name-necklace', 'tripoli', 12),
+  ('choose-your-font-name-necklace', 'harissa', 13),
+  ('choose-your-font-name-necklace', 'deir-el-qamar', 14),
+  ('arabic-letter-necklace', 'tripoli', 0),
+  ('arabic-letter-necklace', 'harissa', 1),
+  ('arabic-letter-necklace', 'deir-el-qamar', 2),
+  ('arabic-name-bracelet', 'tripoli', 0),
+  ('arabic-name-bracelet', 'beirut', 1),
+  ('arabic-name-bracelet', 'byblos', 2),
+  ('arabic-name-bracelet', 'batroun', 3),
+  ('arabic-name-bracelet', 'tyre', 4),
+  ('arabic-name-bracelet', 'saida', 5),
+  ('arabic-name-bracelet', 'jounieh', 6),
+  ('arabic-name-bracelet', 'zahle', 7),
+  ('arabic-name-bracelet', 'ehden', 8),
+  ('arabic-name-bracelet', 'faraya', 9),
+  ('arabic-name-bracelet', 'bcharre', 10),
+  ('arabic-name-bracelet', 'baalbek', 11),
+  ('arabic-name-bracelet', 'anjar', 12),
+  ('arabic-name-bracelet', 'harissa', 13),
+  ('arabic-name-bracelet', 'deir-el-qamar', 14),
   ('initial-signet-ring', 'beirut', 0),
-  ('mens-arabic-name-necklace', 'beirut', 0)
+  ('mens-arabic-name-necklace', 'tripoli', 0),
+  ('mens-arabic-name-necklace', 'beirut', 1),
+  ('mens-arabic-name-necklace', 'byblos', 2),
+  ('mens-arabic-name-necklace', 'batroun', 3),
+  ('mens-arabic-name-necklace', 'tyre', 4),
+  ('mens-arabic-name-necklace', 'saida', 5),
+  ('mens-arabic-name-necklace', 'jounieh', 6),
+  ('mens-arabic-name-necklace', 'zahle', 7),
+  ('mens-arabic-name-necklace', 'ehden', 8),
+  ('mens-arabic-name-necklace', 'faraya', 9),
+  ('mens-arabic-name-necklace', 'bcharre', 10),
+  ('mens-arabic-name-necklace', 'baalbek', 11),
+  ('mens-arabic-name-necklace', 'anjar', 12),
+  ('mens-arabic-name-necklace', 'harissa', 13),
+  ('mens-arabic-name-necklace', 'deir-el-qamar', 14)
 ) as v (slug, font, sort)
 join public.products p on p.slug = v.slug
 join public.fonts f on f.key = v.font
@@ -368,8 +497,8 @@ on conflict (slug) do nothing;
 
 insert into public.site_settings
   (id, delivery_fee_cents, free_shipping_threshold_cents, first_order_free_delivery,
-   gift_box_price_cents, whatsapp_number, instagram_url, announcements) values
-  (1, 400, 5000, true, 500, '96100000000', 'https://www.instagram.com/', '[{"en":"Design your name necklace","ar":"صمّمي قلادتكِ باسمكِ"},{"en":"Free shipping over $50","ar":"توصيل مجاني للطلبات فوق 50 دولار"},{"en":"Excellent ★★★★★ quality — loved by our customers","ar":"جودة ممتازة ★★★★★ — تحبّها زبوناتنا"}]'::jsonb)
+   whatsapp_number, instagram_url, announcements) values
+  (1, 400, 5000, true, '', '', '[{"en":"Design your name necklace","ar":"صمّمي قلادتكِ باسمكِ"},{"en":"Free shipping over $50","ar":"توصيل مجاني للطلبات فوق 50 دولار"},{"en":"Excellent ★★★★★ quality — loved by our customers","ar":"جودة ممتازة ★★★★★ — تحبّها زبوناتنا"}]'::jsonb)
 on conflict (id) do nothing;
 
 insert into public.promotions (placement, code, percent, ends_at, sort_order)

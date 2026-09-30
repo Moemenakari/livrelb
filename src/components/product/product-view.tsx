@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Check, Gift, MessageCircle, ShoppingBag, Truck } from "lucide-react";
+import { Check, MessageCircle, ShoppingBag, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
+import { defaultFontFor, textScript } from "@/lib/catalog/materials";
 import type {
   ChainConnection,
   FontKey,
@@ -15,9 +16,10 @@ import type {
 } from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { useTrackView } from "@/lib/recently-viewed";
-import { scriptFamily } from "@/components/preview/script-fonts";
 import { Stars } from "@/components/ui/stars";
 import { primaryButton } from "@/components/ui/styles";
+import { FontPicker } from "./font-picker";
+import { GiftBoxNote } from "./gift-box-note";
 import { ProductArt } from "./product-art";
 import { ProductGallery, type GalleryHandle } from "./product-gallery";
 import { SizeGuide } from "./size-guide";
@@ -27,8 +29,7 @@ export type ProductViewData = {
   name: string;
   summary: string;
   url: string;
-  /** Shop rules from site_settings (USD) and the WhatsApp number. */
-  giftBoxPrice: number;
+  /** Shop rules from site_settings (USD) and the WhatsApp number (empty hides the button). */
   freeShippingOver: number;
   whatsappNumber: string;
   /** Visible reviews of this piece; null hides the stars. */
@@ -45,6 +46,7 @@ export type ProductViewData = {
   personalization?: {
     kind: "name" | "initial";
     maxLength: number;
+    /** Allowed fonts (the product's default first), named in the page language. */
     fonts: { key: FontKey; name: string }[];
     connections: ChainConnection[];
   };
@@ -61,11 +63,12 @@ const selected = "border-gold bg-gold/5 ring-1 ring-gold";
 const unselected = "border-line hover:border-muted";
 
 // Gallery + configurator for the product page (brief §8.3, restart brief):
-// material cards, name input with live preview, chain length, ring option,
-// gift box, add to cart.
+// material cards, font picker, name input with live preview, chain length,
+// ring option, the free gift box, add to cart.
 export function ProductView({ product, children }: { product: ProductViewData; children?: ReactNode }) {
   const t = useTranslations("product");
   const tCommon = useTranslations("common");
+  const tPreview = useTranslations("namePreview");
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<GalleryHandle>(null);
@@ -88,16 +91,22 @@ export function ProductView({ product, children }: { product: ProductViewData; c
 
   const [materialChoice, setMaterial] = useState<MaterialKey | null>(null);
   const [textChoice, setText] = useState<string | null>(null);
-  const [font, setFont] = useState<FontKey | undefined>(p?.fonts[0]?.key);
+  // One font choice per script: an Arabic name keeps its Arabic font and a
+  // Latin name its Latin font while the customer edits.
+  const fontKeys = useMemo(() => p?.fonts.map((f) => f.key) ?? [], [p]);
+  const [fontChoice, setFontChoice] = useState<{ latin?: FontKey; arabic?: FontKey }>({});
   const [connectionChoice, setConnection] = useState<ChainConnection | null>(null);
   const material = materialChoice ?? fromUrl.material ?? product.defaultMaterial;
   const text = textChoice ?? fromUrl.text;
+  // What the preview writes: the name, or the placeholder name when empty.
+  const previewText = text.trim() || tPreview("placeholder");
+  const script = textScript(previewText);
+  const font = fontChoice[script] ?? defaultFontFor(fontKeys, previewText);
   const connection =
     connectionChoice ??
     fromUrl.connection ??
     (p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined);
   const [size, setSize] = useState<number | undefined>(product.size?.default);
-  const [giftBox, setGiftBox] = useState(false);
   const [missingName, setMissingName] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -113,7 +122,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   const unitPrice = current.price;
   const compareAt = current.compareAtPrice;
   const discount = compareAt ? Math.round((1 - unitPrice / compareAt) * 100) : undefined;
-  const total = unitPrice + (giftBox ? product.giftBoxPrice : 0);
 
   // Every design change brings the live preview slide back into view.
   const design = <T,>(set: (v: T) => void) => (value: T) => {
@@ -131,11 +139,10 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       slug: product.slug,
       material,
       text: p ? text.trim() : undefined,
-      font,
+      font: p ? font : undefined,
       size,
       connection,
-      giftBox,
-      unitPrice: total,
+      unitPrice,
     });
     setToast(
       t("addedDetail", {
@@ -195,7 +202,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
             <span aria-hidden className="text-muted">·</span>
             <span className="text-muted">{current.name}</span>
           </legend>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-4 gap-2">
             {product.materials.map((m) => (
               <button
                 key={m.key}
@@ -214,7 +221,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                   }}
                 />
                 <span className="text-[12px] leading-tight">{m.name}</span>
-                <span className="text-[12px] font-medium text-gold-dark">
+                <span className="mt-auto text-[12px] font-medium text-gold-dark">
                   {formatPrice(m.price)}
                 </span>
               </button>
@@ -224,23 +231,20 @@ export function ProductView({ product, children }: { product: ProductViewData; c
         </div>
 
         {p && p.fonts.length > 1 && (
-          <fieldset className="flex min-w-0 flex-col gap-3">
-            <legend className="mb-3 text-sm font-medium">{t("chooseFont")}</legend>
-            <div className="flex flex-wrap gap-2">
-              {p.fonts.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  aria-pressed={font === f.key}
-                  onClick={() => design(setFont)(f.key)}
-                  className={`${optionCard} px-4 py-1.5 text-2xl ${font === f.key ? selected : unselected}`}
-                  style={{ fontFamily: scriptFamily(f.key, false) }}
-                >
-                  <span lang="en">{f.name}</span>
-                </button>
-              ))}
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">{t("chooseFont")}</span>
+              <span aria-hidden className="text-muted">·</span>
+              <span className="text-muted">{p.fonts.find((f) => f.key === font)?.name}</span>
             </div>
-          </fieldset>
+            <FontPicker
+              fonts={p.fonts}
+              value={font}
+              text={previewText}
+              label={t("chooseFont")}
+              onChange={(key) => design(setFontChoice)({ ...fontChoice, [script]: key })}
+            />
+          </div>
         )}
 
         {p && (
@@ -341,28 +345,14 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </fieldset>
         )}
 
-        <label
-          className={`${optionCard} flex cursor-pointer items-center gap-3 px-4 py-3.5 ${giftBox ? selected : unselected}`}
-        >
-          <input
-            type="checkbox"
-            checked={giftBox}
-            onChange={(e) => setGiftBox(e.target.checked)}
-            className="size-4 accent-[var(--gold)]"
-          />
-          <Gift className="size-5 text-gold-dark" strokeWidth={1.5} aria-hidden />
-          <span className="flex-1 text-sm">{t("giftBox")}</span>
-          <span className="text-sm font-medium text-gold-dark">
-            {t("giftBoxPrice", { price: formatPrice(product.giftBoxPrice) })}
-          </span>
-        </label>
+        <GiftBoxNote />
 
         <div className="flex flex-col gap-3">
           <button type="button" onClick={onAdd} className={`${primaryButton} w-full py-4 text-base`}>
             <ShoppingBag className="size-5" strokeWidth={1.5} aria-hidden />
             {t("addToCart")}
             <span aria-hidden>·</span>
-            {formatPrice(total)}
+            {formatPrice(unitPrice)}
           </button>
           <ul className="flex flex-col gap-1.5 text-[13px] text-muted">
             <li className="flex items-center gap-2">
@@ -374,18 +364,20 @@ export function ProductView({ product, children }: { product: ProductViewData; c
               {t("freeShippingNote", { amount: formatPrice(product.freeShippingOver) })}
             </li>
           </ul>
-          <a
-            href={whatsappUrl(
-              product.whatsappNumber,
-              t("whatsappMessage", { product: product.name, url: product.url }),
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full border border-line py-3 text-sm transition-colors hover:border-cedar hover:text-cedar"
-          >
-            <MessageCircle className="size-4.5 text-cedar" strokeWidth={1.5} aria-hidden />
-            {t("whatsapp")}
-          </a>
+          {product.whatsappNumber && (
+            <a
+              href={whatsappUrl(
+                product.whatsappNumber,
+                t("whatsappMessage", { product: product.name, url: product.url }),
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-full border border-line py-3 text-sm transition-colors hover:border-cedar hover:text-cedar"
+            >
+              <MessageCircle className="size-4.5 text-cedar" strokeWidth={1.5} aria-hidden />
+              {t("whatsapp")}
+            </a>
+          )}
         </div>
 
         {children}

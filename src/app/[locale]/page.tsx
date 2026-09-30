@@ -135,7 +135,9 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
               </Link>
             </div>
             <div className="w-full max-w-xl text-start">
-              <HeroMiniPreview />
+              <HeroMiniPreview
+                fonts={findProduct(catalog, "cursive-name-necklace")?.personalization?.fonts ?? ["beirut"]}
+              />
             </div>
           </div>
         </div>
@@ -186,7 +188,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                     <div className="flex flex-1 items-center justify-center overflow-hidden px-[8%] transition-transform duration-500 group-hover:scale-105">
                       <ProductArt
                         art={category.art}
-                        material={slug === "mens-jewelry" ? "silver" : "gold18"}
+                        material={slug === "mens-jewelry" ? "silver" : "gold"}
                         text={sample ?? category.artSample ?? "L"}
                         connection="sides"
                         aspect="wide"

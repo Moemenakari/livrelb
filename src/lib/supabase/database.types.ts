@@ -419,6 +419,7 @@ export type Database = {
           name_ar: string
           name_en: string
           preview_image_url: string | null
+          script: string
           sort_order: number
           updated_at: string
         }
@@ -432,6 +433,7 @@ export type Database = {
           name_ar: string
           name_en: string
           preview_image_url?: string | null
+          script?: string
           sort_order?: number
           updated_at?: string
         }
@@ -445,6 +447,7 @@ export type Database = {
           name_ar?: string
           name_en?: string
           preview_image_url?: string | null
+          script?: string
           sort_order?: number
           updated_at?: string
         }
@@ -672,7 +675,6 @@ export type Database = {
           custom_text: string | null
           font_id: string | null
           font_name: string | null
-          gift_box: boolean
           id: string
           line_total_cents: number | null
           material_id: string | null
@@ -694,7 +696,6 @@ export type Database = {
           custom_text?: string | null
           font_id?: string | null
           font_name?: string | null
-          gift_box?: boolean
           id?: string
           line_total_cents?: number | null
           material_id?: string | null
@@ -716,7 +717,6 @@ export type Database = {
           custom_text?: string | null
           font_id?: string | null
           font_name?: string | null
-          gift_box?: boolean
           id?: string
           line_total_cents?: number | null
           material_id?: string | null
@@ -782,6 +782,7 @@ export type Database = {
           notes: string | null
           number: number
           payment_method: Database["public"]["Enums"]["payment_method"]
+          request_id: string | null
           phone: string
           staff_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -810,6 +811,7 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          request_id?: string | null
           phone: string
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -838,6 +840,7 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          request_id?: string | null
           phone?: string
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -1336,7 +1339,6 @@ export type Database = {
           delivery_fee_cents: number
           first_order_free_delivery: boolean
           free_shipping_threshold_cents: number
-          gift_box_price_cents: number
           id: number
           instagram_url: string
           shipping_info_ar: string
@@ -1353,7 +1355,6 @@ export type Database = {
           delivery_fee_cents?: number
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
-          gift_box_price_cents?: number
           id?: number
           instagram_url?: string
           shipping_info_ar?: string
@@ -1370,7 +1371,6 @@ export type Database = {
           delivery_fee_cents?: number
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
-          gift_box_price_cents?: number
           id?: number
           instagram_url?: string
           shipping_info_ar?: string
@@ -1497,6 +1497,16 @@ export type Database = {
           p_notes?: string
           p_payment_method?: Database["public"]["Enums"]["payment_method"]
           p_ref_code?: string
+          p_request_id?: string
+        }
+        Returns: Json
+      }
+      quote_order: {
+        Args: {
+          p_area?: string
+          p_coupon_code?: string
+          p_items: Json
+          p_phone?: string
         }
         Returns: Json
       }

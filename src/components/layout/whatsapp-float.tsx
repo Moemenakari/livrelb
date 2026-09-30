@@ -4,9 +4,11 @@ import { getCatalog } from "@/lib/catalog";
 import { WhatsAppIcon } from "@/components/icons/brand-icons";
 
 // Floating WhatsApp button (restart brief), bottom corner on the end side.
+// Hidden until the owner sets the WhatsApp number (site_settings).
 export async function WhatsAppFloat() {
   const t = await getTranslations("whatsapp");
   const { settings } = await getCatalog();
+  if (!settings.whatsappNumber) return null;
 
   return (
     <a

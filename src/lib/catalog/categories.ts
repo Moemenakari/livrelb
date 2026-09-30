@@ -73,8 +73,8 @@ export const categories: Category[] = [
     slug: "gifts",
     name: { en: "Gifts", ar: "هدايا" },
     description: {
-      en: "Personal gifts they'll wear every day. Add our gift box and bag at checkout.",
-      ar: "هدايا شخصية تُلبس كل يوم. أضيفي علبة الهدايا والكيس عند الطلب.",
+      en: "Personal gifts they'll wear every day. Every order comes in our special LIVRE gift box, free.",
+      ar: "هدايا شخصية تُلبس كل يوم. كل طلبية تصل في علبة هدية خاصة من LIVRE، مجاناً.",
     },
     art: { kind: "name", variant: "necklace" },
     artSample: "Love",
