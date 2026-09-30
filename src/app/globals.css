@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
+/*
+ * Brand tokens (PROJECT_BRIEF §2): a light, soft jewelry-boutique theme.
+ * Change a value here and every Tailwind class that uses it follows:
+ * bg-background, bg-surface, bg-beige, bg-blush, text-foreground,
+ * text-muted, border-line, bg-gold, text-gold-dark, bg-cedar...
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --surface: #faf7f2; /* ivory sections */
+  --beige: #efe6d8; /* alternating sections */
+  --blush: #f6e9e6; /* small soft highlights */
+  --text: #2b2622;
+  --muted: #7a7068;
+  --line: #e8e1d8;
+  --gold: #b08d57; /* buttons, prices, small details */
+  --cedar: #2f5d3a; /* promo bar, badges, logo cedar */
+  /* Warm near-black. Only for small badges (SALE / BEST SELLER), primary
+     buttons and the footer (restart brief), never page sections. */
+  --ink: #1f1a17;
+
+  /* Derived: --gold is 3.1:1 on white, too light for small text.
+     This shade is 4.9:1 and still reads as gold. */
+  --gold-dark: #8a6a3b;
+
+  /* Sale price, discount pill and savings (Phase 4 "buy on the website"). */
+  --sale: #d0342c;
+}
+
+/* Font stacks. Each Latin font's generated fallback is a local font that
+   also has Arabic glyphs, so Arabic text must list its Arabic font first or
+   it never reaches it. Hence one stack per language (element lang attr). */
+:root,
+:lang(en) {
+  --serif-stack: var(--font-cormorant), var(--font-naskh), ui-serif, Georgia, serif;
+  --sans-stack: var(--font-jost), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
+:lang(ar) {
+  --serif-stack: var(--font-naskh), var(--font-cormorant), ui-serif, Georgia, serif;
+  --sans-stack: var(--font-plex-arabic), var(--font-jost), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-beige: var(--beige);
+  --color-blush: var(--blush);
+  --color-foreground: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
+  --color-cedar: var(--cedar);
+  --color-ink: var(--ink);
+  --color-sale: var(--sale);
+
+  /* Font variables come from src/app/fonts.ts */
+  --font-display: var(--serif-stack);
+  --font-sans: var(--sans-stack);
+  --font-logo: var(--font-cormorant), ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-marquee-rtl: marquee-rtl 35s linear infinite;
+  --animate-drawer-in: drawer-in 250ms ease-out;
+  --animate-drawer-in-rtl: drawer-in-rtl 250ms ease-out;
+  --animate-fade-in: fade-in 250ms ease-out;
+  --animate-rise-in: rise-in 300ms ease-out;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes marquee-rtl {
+    to {
+      transform: translateX(50%);
+    }
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes drawer-in-rtl {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Horizontal swipe rows without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Wide spacing for small capitals. Letter-spacing breaks Arabic letter
+   joining, so it is switched off on Arabic text. */
+@utility tracking-caps {
+  letter-spacing: 0.16em;
+  &:lang(ar) {
+    letter-spacing: 0;
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  /* No page scrolling behind an open modal (mobile menu). */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-background font-sans text-base/[1.6] text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-medium;
+    line-height: 1.2;
+  }
+
+  /* Naskh has tall ascenders and deep descenders. */
+  :lang(ar):is(h1, h2, h3) {
+    line-height: 1.6;
+  }
+
+  ::selection {
+    background: var(--blush);
+    color: var(--text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
 }

@@ -5,6 +5,22 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // All UI text comes from messages/*.json (PROJECT_BRIEF §11):
+    // flag plain text written directly inside JSX.
+    files: ["src/**/*.tsx"],
+    rules: {
+      "react/jsx-no-literals": [
+        "error",
+        { noStrings: false, ignoreProps: true, allowedStrings: ["·", "/", "|", "✦", "🎁"] },
+      ],
+    },
+  },
+  {
+    // The admin (/admin) is English only (brief §8.5, Phase 4): no message files.
+    files: ["src/app/admin/**/*.tsx", "src/components/admin/**/*.tsx"],
+    rules: { "react/jsx-no-literals": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -12,6 +28,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cloudflare build output and the codebase graph.
+    ".open-next/**",
+    ".wrangler/**",
+    "graphify-out/**",
   ]),
 ]);
 
