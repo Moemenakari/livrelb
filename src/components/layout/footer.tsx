@@ -2,8 +2,8 @@ import { Banknote, Smartphone } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { categoryHref, helpLinks, navCategories, policyLinks } from "@/config/navigation";
-import { siteConfig, whatsappMessageUrl, whatsappUrl } from "@/config/site";
-import { getCategory } from "@/lib/catalog";
+import { whatsappUrl } from "@/config/site";
+import { findCategory, getCatalog } from "@/lib/catalog";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
 import { Logo } from "./logo";
 
@@ -19,14 +19,16 @@ export async function Footer() {
   const tCommon = await getTranslations("common");
   const tPay = await getTranslations("payment");
   const tWhatsapp = await getTranslations("whatsapp");
+  const catalog = await getCatalog();
+  const { whatsappNumber, instagramUrl } = catalog.settings;
 
   const columns = [
     {
       title: t("shop"),
-      links: navCategories.slice(0, 7).map((slug) => ({
-        href: categoryHref(slug),
-        label: getCategory(slug)!.name[locale],
-      })),
+      links: navCategories.slice(0, 7).flatMap((slug) => {
+        const category = findCategory(catalog, slug);
+        return category ? [{ href: categoryHref(slug), label: category.name[locale] }] : [];
+      }),
     },
     {
       title: t("help"),
@@ -47,7 +49,7 @@ export async function Footer() {
             <p className="mt-2">{t("newsletterText")}</p>
           </div>
           <a
-            href={whatsappMessageUrl(tWhatsapp("join"))}
+            href={whatsappUrl(whatsappNumber, tWhatsapp("join"))}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2.5 self-start rounded-full bg-white px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-gold hover:text-white lg:self-auto"
@@ -67,12 +69,12 @@ export async function Footer() {
             />
             <p className="max-w-xs">{t("about")}</p>
             <div className="flex flex-wrap gap-3">
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={socialButton}>
+              <a href={whatsappUrl(whatsappNumber)} target="_blank" rel="noopener noreferrer" className={socialButton}>
                 <WhatsAppIcon className="size-4" />
                 {t("whatsapp")}
               </a>
               <a
-                href={siteConfig.instagramUrl}
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={socialButton}

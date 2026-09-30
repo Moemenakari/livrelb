@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { categoryHref, navCategories } from "@/config/navigation";
 import { whatsappUrl } from "@/config/site";
-import { getCategory } from "@/lib/catalog";
+import { findCategory, getCatalog } from "@/lib/catalog";
 import { WhatsAppIcon } from "@/components/icons/brand-icons";
 import { CartButton } from "./cart-button";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -26,8 +26,10 @@ export async function Navbar() {
   const tFooter = await getTranslations("footer");
 
   const brand = tCommon("brandName");
-  const links = navCategories.map((slug) => {
-    const category = getCategory(slug)!;
+  const catalog = await getCatalog();
+  const links = navCategories.flatMap((slug) => {
+    const category = findCategory(catalog, slug);
+    if (!category) return [];
     return {
       href: categoryHref(slug),
       label: (category.navName ?? category.name)[locale],
@@ -70,7 +72,7 @@ export async function Navbar() {
                 <UserRound className="size-5" strokeWidth={1.5} aria-hidden />
                 {t("account")}
               </Link>
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={drawerLink}>
+              <a href={whatsappUrl(catalog.settings.whatsappNumber)} target="_blank" rel="noopener noreferrer" className={drawerLink}>
                 <WhatsAppIcon className="size-5 text-cedar" />
                 {tFooter("whatsapp")}
               </a>

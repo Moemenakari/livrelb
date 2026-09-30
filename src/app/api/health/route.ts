@@ -1,13 +1,14 @@
+import { getCatalog } from "@/lib/catalog";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
-// GET /api/health: checks that the Supabase env vars are set and that the
-// project answers. Useful right after filling in .env.local or on Vercel.
+// GET /api/health: are the Supabase env vars set, does the project answer,
+// and where does the storefront catalog come from (supabase or static)?
 export async function GET() {
   let env;
   try {
     env = getSupabaseEnv();
   } catch {
-    return Response.json({ supabase: "not_configured" }, { status: 503 });
+    return Response.json({ supabase: "not_configured", catalog: "static" }, { status: 503 });
   }
 
   try {
@@ -15,11 +16,20 @@ export async function GET() {
       headers: { apikey: env.publishableKey },
       cache: "no-store",
     });
+    if (!res.ok) {
+      return Response.json({ supabase: `error_${res.status}` }, { status: 502 });
+    }
+    const catalog = await getCatalog();
+    return Response.json({
+      supabase: "ok",
+      catalog: catalog.source,
+      products: catalog.products.length,
+      categories: catalog.categories.length,
+    });
+  } catch (error) {
     return Response.json(
-      { supabase: res.ok ? "ok" : `error_${res.status}` },
-      { status: res.ok ? 200 : 502 },
+      { supabase: "error", message: error instanceof Error ? error.message : "unknown" },
+      { status: 502 },
     );
-  } catch {
-    return Response.json({ supabase: "unreachable" }, { status: 502 });
   }
 }

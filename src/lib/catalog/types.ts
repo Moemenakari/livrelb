@@ -18,8 +18,13 @@ export type Material = {
   tone: MetalTone;
   /** Swatch color for material dots and cards. */
   swatch: string;
-  /** Added to the product price. */
-  priceModifier: number;
+};
+
+/** product_materials: a metal a product comes in, with its own price (USD). */
+export type MaterialOffer = {
+  material: MaterialKey;
+  price: number;
+  compareAtPrice?: number;
 };
 
 /** fonts table: our own display names, never the font file's name. */
@@ -59,17 +64,8 @@ export type ProductArt =
 /** product_media: real photos. Empty array = generated art + placeholders. */
 export type ProductMedia = { src: string; alt: Localized };
 
-export type CategorySlug =
-  | "name-necklaces"
-  | "necklaces"
-  | "bracelets"
-  | "mens-jewelry"
-  | "rings"
-  | "earrings"
-  | "lira-collection"
-  | "gifts"
-  | "bestsellers"
-  | "new";
+/** Category slugs come from the database, so any string. */
+export type CategorySlug = string;
 
 /** Style groups shown as round thumbnails on a category page. */
 export type StyleKey =
@@ -86,13 +82,12 @@ export type Product = {
   /** One or two lines for the top of the product page. */
   summary: Localized;
   description: Localized;
-  price: number;
-  compareAtPrice?: number;
   categories: CategorySlug[];
   style?: StyleKey;
   isBestSeller?: boolean;
   isNew?: boolean;
-  materials: MaterialKey[];
+  /** Metals offered, in display order, each with its price. */
+  offers: MaterialOffer[];
   defaultMaterial: MaterialKey;
   personalization?: Personalization;
   size?: SizeOption;
@@ -109,6 +104,8 @@ export type Category = {
   navName?: Localized;
   description: Localized;
   parent?: CategorySlug;
+  /** Lists products by flag instead of by link (bestsellers, new arrivals). */
+  rule?: "bestsellers" | "new";
   /** Round style thumbnails on the category page. */
   styles?: StyleKey[];
   /** Art for the category tile until a photo exists. */
@@ -130,3 +127,41 @@ export type Review = {
 };
 
 export type ReviewStats = { rating: number; count: number };
+
+/** site_settings: shop rules shown in the storefront (USD). */
+export type StoreSettings = {
+  deliveryFee: number;
+  freeShippingOver: number;
+  firstOrderFreeDelivery: boolean;
+  giftBoxPrice: number;
+  whatsappNumber: string;
+  instagramUrl: string;
+  announcements: Localized[];
+};
+
+/** promotions (promo_bar): the code in the promo bar and hero sub-line. */
+export type StorePromo = {
+  code: string;
+  percent: number;
+  /** ISO date; null = no countdown. */
+  endsAt: string | null;
+};
+
+/** promotions (hero): the first-order offer headline. */
+export type HeroOffer = {
+  percent: number;
+  endsAt: string | null;
+};
+
+/** Everything the storefront reads, from Supabase or the sample files. */
+export type Catalog = {
+  products: Product[];
+  categories: Category[];
+  /** Reviews the visitor may see (samples only in development). */
+  reviews: Review[];
+  settings: StoreSettings;
+  /** null when no promo code is running. */
+  promo: StorePromo | null;
+  heroOffer: HeroOffer | null;
+  source: "supabase" | "static";
+};

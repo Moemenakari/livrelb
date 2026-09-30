@@ -199,6 +199,7 @@
     "hero": {
       "eyebrow": "Welcome to LIVRE",
       "title": "{percent}% OFF your first order",
+      "titleDefault": "Personalized jewelry, made in Lebanon",
       "subtitle": "{percent}% off any order with code",
       "cta": "Design your necklace",
       "ctaSecondary": "Shop bestsellers"

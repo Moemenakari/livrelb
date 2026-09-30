@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 
 // Time left until a promotion ends (brief §8.1.2: end time set in admin,
-// config/promo.ts for now). Shows dashes on the server so hydration matches,
+// the promotions table). Shows dashes on the server so hydration matches,
 // then ticks every second.
 
 function subscribe(onTick: () => void) {

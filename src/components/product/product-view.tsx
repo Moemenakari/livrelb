@@ -3,8 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Check, Gift, MessageCircle, ShoppingBag, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { shipping } from "@/config/promo";
-import { whatsappMessageUrl } from "@/config/site";
+import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
 import type {
   ChainConnection,
@@ -28,12 +27,20 @@ export type ProductViewData = {
   name: string;
   summary: string;
   url: string;
-  price: number;
-  compareAtPrice?: number;
-  discount?: number;
+  /** Shop rules from site_settings (USD) and the WhatsApp number. */
+  giftBoxPrice: number;
+  freeShippingOver: number;
+  whatsappNumber: string;
   /** Visible reviews of this piece; null hides the stars. */
   reviews: ReviewStats | null;
-  materials: { key: MaterialKey; name: string; swatch: string; priceModifier: number }[];
+  /** Metals offered, each with its own price (product_materials). */
+  materials: {
+    key: MaterialKey;
+    name: string;
+    swatch: string;
+    price: number;
+    compareAtPrice?: number;
+  }[];
   defaultMaterial: MaterialKey;
   personalization?: {
     kind: "name" | "initial";
@@ -102,10 +109,11 @@ export function ProductView({ product, children }: { product: ProductViewData; c
     return () => clearTimeout(id);
   }, [toast]);
 
-  const current = product.materials.find((m) => m.key === material)!;
-  const unitPrice = product.price + current.priceModifier;
-  const compareAt = product.compareAtPrice ? product.compareAtPrice + current.priceModifier : undefined;
-  const total = unitPrice + (giftBox ? shipping.giftBoxPrice : 0);
+  const current = product.materials.find((m) => m.key === material) ?? product.materials[0];
+  const unitPrice = current.price;
+  const compareAt = current.compareAtPrice;
+  const discount = compareAt ? Math.round((1 - unitPrice / compareAt) * 100) : undefined;
+  const total = unitPrice + (giftBox ? product.giftBoxPrice : 0);
 
   // Every design change brings the live preview slide back into view.
   const design = <T,>(set: (v: T) => void) => (value: T) => {
@@ -171,9 +179,9 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-2xl font-medium text-gold-dark">{formatPrice(unitPrice)}</span>
             {compareAt && <s className="text-lg text-muted">{formatPrice(compareAt)}</s>}
-            {product.discount && (
+            {discount && (
               <span className="rounded-full bg-cedar px-2.5 py-1 text-xs font-medium tracking-wide text-white rtl:tracking-normal">
-                {t("off", { percent: product.discount })}
+                {t("off", { percent: discount })}
               </span>
             )}
           </div>
@@ -207,7 +215,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                 />
                 <span className="text-[12px] leading-tight">{m.name}</span>
                 <span className="text-[12px] font-medium text-gold-dark">
-                  {formatPrice(product.price + m.priceModifier)}
+                  {formatPrice(m.price)}
                 </span>
               </button>
             ))}
@@ -345,7 +353,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           <Gift className="size-5 text-gold-dark" strokeWidth={1.5} aria-hidden />
           <span className="flex-1 text-sm">{t("giftBox")}</span>
           <span className="text-sm font-medium text-gold-dark">
-            {t("giftBoxPrice", { price: formatPrice(shipping.giftBoxPrice) })}
+            {t("giftBoxPrice", { price: formatPrice(product.giftBoxPrice) })}
           </span>
         </label>
 
@@ -363,11 +371,14 @@ export function ProductView({ product, children }: { product: ProductViewData; c
             </li>
             <li className="flex items-center gap-2">
               <Check className="size-4 text-cedar" strokeWidth={1.5} aria-hidden />
-              {t("freeShippingNote", { amount: formatPrice(shipping.freeOver) })}
+              {t("freeShippingNote", { amount: formatPrice(product.freeShippingOver) })}
             </li>
           </ul>
           <a
-            href={whatsappMessageUrl(t("whatsappMessage", { product: product.name, url: product.url }))}
+            href={whatsappUrl(
+              product.whatsappNumber,
+              t("whatsappMessage", { product: product.name, url: product.url }),
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-full border border-line py-3 text-sm transition-colors hover:border-cedar hover:text-cedar"

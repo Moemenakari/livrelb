@@ -1,15 +1,11 @@
-// Contact channels. PLACEHOLDERS until the owner confirms them; the WhatsApp
-// number later moves to site_settings (admin-editable).
+// Public site address. Shop contacts (WhatsApp number, Instagram) live in
+// site_settings, editable from the admin.
 export const siteConfig = {
-  // International format, digits only (961 + number).
-  whatsappNumber: "96100000000",
-  instagramUrl: "https://www.instagram.com/",
   url: "https://livrelb.com",
 };
 
-export const whatsappUrl = `https://wa.me/${siteConfig.whatsappNumber}`;
-
-/** WhatsApp chat link with a prefilled message. */
-export function whatsappMessageUrl(message: string): string {
-  return `${whatsappUrl}?text=${encodeURIComponent(message)}`;
+/** WhatsApp chat link (digits-only number: 961...), optionally prefilled. */
+export function whatsappUrl(number: string, message?: string): string {
+  const base = `https://wa.me/${number.replace(/\D/g, "")}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

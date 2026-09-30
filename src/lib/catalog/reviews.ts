@@ -1,4 +1,4 @@
-import type { Review, ReviewStats } from "./types";
+import type { Review } from "./types";
 
 // SAMPLE reviews to lay out the pages (is_sample in the reviews table).
 // They show in development only; production shows real approved reviews,
@@ -84,23 +84,5 @@ export const reviews: Review[] = [
   },
 ];
 
-/** Samples are for development only (Part A decision). */
+/** Sample reviews show in development only, never in production. */
 export const showSampleReviews = process.env.NODE_ENV !== "production";
-
-export function visibleReviews(): Review[] {
-  return reviews.filter((r) => showSampleReviews || !r.isSample);
-}
-
-/** Average and count of a product's visible reviews; null when it has none. */
-export function reviewStats(slug: string): ReviewStats | null {
-  const own = visibleReviews().filter((r) => r.productSlug === slug);
-  if (own.length === 0) return null;
-  return { rating: own.reduce((sum, r) => sum + r.rating, 0) / own.length, count: own.length };
-}
-
-/** The product's own reviews first, then other reviews to fill the section. */
-export function reviewsFor(slug: string, limit = 4): Review[] {
-  const visible = visibleReviews();
-  const own = visible.filter((r) => r.productSlug === slug);
-  return [...own, ...visible.filter((r) => r.productSlug !== slug)].slice(0, limit);
-}

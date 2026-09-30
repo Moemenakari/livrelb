@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
 import type { CardProduct } from "@/lib/catalog/card";
-import { materials } from "@/lib/catalog/materials";
 import type { MaterialKey, MetalTone } from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { PhotoSlot } from "@/components/ui/photo-slot";
@@ -34,16 +33,16 @@ export function ProductCard({ product, previewText, preferredTone, className = "
   const locale = useLocale();
   const [material, setMaterial] = useState<MaterialKey>(
     () =>
-      (preferredTone && product.materials.find((m) => materials[m].tone === preferredTone)) ||
+      (preferredTone && product.offers.find((o) => o.tone === preferredTone)?.material) ||
       product.defaultMaterial,
   );
   const [slide, setSlide] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const href = productHref(product.slug);
 
-  const extra = product.priceModifiers[material] ?? 0;
-  const price = product.price + extra;
-  const compareAt = product.compareAtPrice ? product.compareAtPrice + extra : undefined;
+  const offer = product.offers.find((o) => o.material === material) ?? product.offers[0];
+  const price = offer.price;
+  const compareAt = offer.compareAtPrice;
   const text = previewText?.trim() || product.sample || "";
 
   const art = (className: string) => (
@@ -164,17 +163,17 @@ export function ProductCard({ product, previewText, preferredTone, className = "
         )}
       </div>
 
-      {product.materials.length > 1 && (
+      {product.offers.length > 1 && (
         <div className="flex gap-2 px-0.5">
-          {product.materials.map((key) => (
+          {product.offers.map((o) => (
             <button
-              key={key}
+              key={o.material}
               type="button"
-              aria-label={t("showMaterial", { material: materials[key].name[locale] })}
-              aria-pressed={material === key}
-              onClick={() => setMaterial(key)}
-              style={{ backgroundColor: materials[key].swatch }}
-              className={`size-4 rounded-full border border-black/10 transition-shadow ${material === key ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
+              aria-label={t("showMaterial", { material: o.name })}
+              aria-pressed={material === o.material}
+              onClick={() => setMaterial(o.material)}
+              style={{ backgroundColor: o.swatch }}
+              className={`size-4 rounded-full border border-black/10 transition-shadow ${material === o.material ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
             />
           ))}
         </div>

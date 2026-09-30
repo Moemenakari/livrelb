@@ -1,4 +1,4 @@
-import type { Category, CategorySlug, Localized, StyleKey } from "./types";
+import type { Category, Localized, StyleKey } from "./types";
 
 // categories table (brief §7). Order = navbar order (restart brief).
 export const categories: Category[] = [
@@ -86,6 +86,7 @@ export const categories: Category[] = [
       en: "The pieces our customers order again and again.",
       ar: "القطع التي تطلبها زبوناتنا مرة بعد مرة.",
     },
+    rule: "bestsellers",
     art: { kind: "name", variant: "necklace" },
     artSample: "Nour",
   },
@@ -97,6 +98,7 @@ export const categories: Category[] = [
       en: "Just landed: our newest designs.",
       ar: "وصلت للتو: أحدث تصاميمنا.",
     },
+    rule: "new",
     art: { kind: "hoops", pearl: false },
   },
 ];
@@ -120,10 +122,4 @@ export const styleSamples: Record<StyleKey, string> = {
   twoFonts: "Sarah",
 };
 
-export function getCategory(slug: string): Category | undefined {
-  return categories.find((c) => c.slug === slug);
-}
-
-export function isCategorySlug(slug: string): slug is CategorySlug {
-  return categories.some((c) => c.slug === slug);
-}
+export const styleKeys = Object.keys(styleNames) as StyleKey[];

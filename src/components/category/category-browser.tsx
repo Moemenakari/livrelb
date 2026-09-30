@@ -43,7 +43,7 @@ export function CategoryBrowser({ products, styles, namePreview }: Props) {
     const list = products.filter(
       (p) =>
         (style === "all" || p.style === style) &&
-        (metal === "all" || p.materials.some((m) => materials[m].tone === metal)),
+        (metal === "all" || p.offers.some((o) => o.tone === metal)),
     );
     if (sort === "priceLow") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "priceHigh") return [...list].sort((a, b) => b.price - a.price);

@@ -4,9 +4,9 @@ import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { categoryHref } from "@/config/navigation";
 import {
-  categories,
   categoryTrail,
-  getCategory,
+  findCategory,
+  getCatalog,
   productsIn,
   styleNames,
   styleSamples,
@@ -18,7 +18,12 @@ import { CategoryBrowser } from "@/components/category/category-browser";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { TrustStrip } from "@/components/ui/trust-strip";
 
-export function generateStaticParams() {
+// Built at deploy time, refreshed hourly and whenever the admin saves
+// (revalidateTag("catalog")). New categories render on first visit.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const { categories } = await getCatalog();
   return categories.map(({ slug }) => ({ slug }));
 }
 
@@ -26,7 +31,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/[locale]/category/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
-  const category = getCategory(slug);
+  const category = findCategory(await getCatalog(), slug);
   if (!category || (locale !== "en" && locale !== "ar")) return {};
   return {
     title: category.name[locale],
@@ -41,12 +46,13 @@ const styleFont: Partial<Record<StyleKey, FontKey>> = { bold: "batroun", dainty:
 export default async function CategoryPage({ params }: PageProps<"/[locale]/category/[slug]">) {
   const locale = await resolveLocale(params);
   const { slug } = await params;
-  const category = getCategory(slug);
+  const catalog = await getCatalog();
+  const category = findCategory(catalog, slug);
   if (!category) notFound();
 
   const t = await getTranslations("category");
-  const products = productsIn(category.slug).map((p) => toCard(p, locale));
-  const trail = categoryTrail(category.slug);
+  const products = productsIn(catalog, category.slug).map((p) => toCard(p, locale));
+  const trail = categoryTrail(catalog, category.slug);
   const styles = (category.styles ?? []).map((key) => ({
     key,
     label: styleNames[key][locale],

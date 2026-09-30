@@ -3,20 +3,18 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { categoryHref, productHref } from "@/config/navigation";
-import { shipping } from "@/config/promo";
 import { siteConfig } from "@/config/site";
 import {
   categoryTrail,
-  discountPercent,
-  fontNames,
-  getProduct,
+  findProduct,
+  getCatalog,
   materials,
-  products,
   relatedProducts,
   reviewStats,
   reviewsFor,
   toCard,
 } from "@/lib/catalog";
+import { fontNames } from "@/lib/catalog/materials";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductTabs } from "@/components/product/product-tabs";
@@ -27,7 +25,12 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Stars } from "@/components/ui/stars";
 import { swipeRow } from "@/components/ui/styles";
 
-export function generateStaticParams() {
+// Built at deploy time, refreshed hourly and whenever the admin saves
+// (revalidateTag("catalog")). New products render on first visit.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const { products } = await getCatalog();
   return products.map(({ slug }) => ({ slug }));
 }
 
@@ -35,7 +38,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/[locale]/product/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
-  const product = getProduct(slug);
+  const product = findProduct(await getCatalog(), slug);
   if (!product || (locale !== "en" && locale !== "ar")) return {};
   return {
     title: product.name[locale],
@@ -47,13 +50,14 @@ export async function generateMetadata({
 export default async function ProductPage({ params }: PageProps<"/[locale]/product/[slug]">) {
   const locale = await resolveLocale(params);
   const { slug } = await params;
-  const product = getProduct(slug);
+  const catalog = await getCatalog();
+  const product = findProduct(catalog, slug);
   if (!product) notFound();
 
   const t = await getTranslations("product");
   const tCategory = await getTranslations("category");
   const tCommon = await getTranslations("common");
-  const trail = categoryTrail(product.categories[0]);
+  const trail = categoryTrail(catalog, product.categories[0]);
   const p = product.personalization;
 
   const view: ProductViewData = {
@@ -61,15 +65,16 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     name: product.name[locale],
     summary: product.summary[locale],
     url: `${siteConfig.url}/${locale}${productHref(product.slug)}`,
-    price: product.price,
-    compareAtPrice: product.compareAtPrice,
-    discount: discountPercent(product),
-    reviews: reviewStats(product.slug),
-    materials: product.materials.map((key) => ({
-      key,
-      name: materials[key].name[locale],
-      swatch: materials[key].swatch,
-      priceModifier: materials[key].priceModifier,
+    giftBoxPrice: catalog.settings.giftBoxPrice,
+    freeShippingOver: catalog.settings.freeShippingOver,
+    whatsappNumber: catalog.settings.whatsappNumber,
+    reviews: reviewStats(catalog, product.slug),
+    materials: product.offers.map((o) => ({
+      key: o.material,
+      name: materials[o.material].name[locale],
+      swatch: materials[o.material].swatch,
+      price: o.price,
+      compareAtPrice: o.compareAtPrice,
     })),
     defaultMaterial: product.defaultMaterial,
     personalization: p && {
@@ -83,9 +88,9 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
   };
 
-  const related = relatedProducts(product, 4).map((r) => toCard(r, locale));
-  const candidates = products.filter((c) => c.slug !== product.slug).map((c) => toCard(c, locale));
-  const reviews = reviewsFor(product.slug);
+  const related = relatedProducts(catalog, product, 4).map((r) => toCard(r, locale));
+  const candidates = catalog.products.filter((c) => c.slug !== product.slug).map((c) => toCard(c, locale));
+  const reviews = reviewsFor(catalog, product.slug);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 pt-5 pb-20 lg:gap-20 lg:px-8">
@@ -107,7 +112,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
               {
                 key: "shipping",
                 label: t("tabs.shipping"),
-                text: t("shippingText", { amount: formatPrice(shipping.freeOver) }),
+                text: t("shippingText", { amount: formatPrice(catalog.settings.freeShippingOver) }),
               },
             ]}
           />
@@ -156,7 +161,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
                   starsLabel={tCommon("stars", { rating: r.rating })}
                   productName={
                     r.productSlug && r.productSlug !== product.slug
-                      ? getProduct(r.productSlug)?.name[locale]
+                      ? findProduct(catalog, r.productSlug)?.name[locale]
                       : undefined
                   }
                   className="flex-1"

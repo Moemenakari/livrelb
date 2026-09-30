@@ -1,17 +1,33 @@
 import type { Locale } from "@/i18n/routing";
 import { materials } from "./materials";
-import type { FontKey, MaterialKey, Product, ProductArt, ChainConnection } from "./types";
+import type {
+  ChainConnection,
+  FontKey,
+  MaterialKey,
+  MetalTone,
+  Product,
+  ProductArt,
+} from "./types";
+
+/** A metal on a card: what the dot shows and what it costs. */
+export type CardOffer = {
+  material: MaterialKey;
+  name: string;
+  swatch: string;
+  tone: MetalTone;
+  price: number;
+  compareAtPrice?: number;
+};
 
 /** Just what a product card needs, in one language (keeps pages light). */
 export type CardProduct = {
   slug: string;
   name: string;
+  /** Default metal's price, for sorting. */
   price: number;
-  compareAtPrice?: number;
-  priceModifiers: Partial<Record<MaterialKey, number>>;
   isBestSeller: boolean;
   isNew: boolean;
-  materials: MaterialKey[];
+  offers: CardOffer[];
   defaultMaterial: MaterialKey;
   /** Personalizable pieces: the name drawn by default. */
   sample?: string;
@@ -23,21 +39,25 @@ export type CardProduct = {
   style?: Product["style"];
 };
 
-
 export function toCard(product: Product, locale: Locale): CardProduct {
   const p = product.personalization;
+  const offers = product.offers.map((o) => ({
+    material: o.material,
+    name: materials[o.material].name[locale],
+    swatch: materials[o.material].swatch,
+    tone: materials[o.material].tone,
+    price: o.price,
+    compareAtPrice: o.compareAtPrice,
+  }));
+  const main = offers.find((o) => o.material === product.defaultMaterial) ?? offers[0];
   return {
     slug: product.slug,
     name: product.name[locale],
-    price: product.price,
-    compareAtPrice: product.compareAtPrice,
-    priceModifiers: Object.fromEntries(
-      product.materials.map((m) => [m, materials[m].priceModifier]),
-    ),
+    price: main.price,
     isBestSeller: Boolean(product.isBestSeller),
     isNew: Boolean(product.isNew),
-    materials: product.materials,
-    defaultMaterial: product.defaultMaterial,
+    offers,
+    defaultMaterial: main.material,
     sample: p?.sample,
     font: p?.fonts[0],
     connection: p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined,

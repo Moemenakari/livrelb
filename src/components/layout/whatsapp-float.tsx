@@ -1,14 +1,16 @@
 import { getTranslations } from "next-intl/server";
 import { whatsappUrl } from "@/config/site";
+import { getCatalog } from "@/lib/catalog";
 import { WhatsAppIcon } from "@/components/icons/brand-icons";
 
 // Floating WhatsApp button (restart brief), bottom corner on the end side.
 export async function WhatsAppFloat() {
   const t = await getTranslations("whatsapp");
+  const { settings } = await getCatalog();
 
   return (
     <a
-      href={whatsappUrl}
+      href={whatsappUrl(settings.whatsappNumber)}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t("float")}

@@ -1,11 +1,13 @@
 import { getTranslations } from "next-intl/server";
-import { promo } from "@/config/promo";
+import { getCatalog } from "@/lib/catalog";
 import { CopyCode } from "./copy-code";
 
-// Cedar bar under the header (restart brief). Values from config/promo.ts
-// until the promotions table exists.
+// Cedar bar under the header (restart brief): the active promo_bar
+// promotion. Hidden when no code is running.
 export async function PromoBar() {
   const t = await getTranslations("promo");
+  const { promo } = await getCatalog();
+  if (!promo) return null;
 
   return (
     <aside aria-label={t("label")} className="relative z-[1] bg-cedar text-white">

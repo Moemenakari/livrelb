@@ -1,14 +1,17 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { announcements } from "@/config/announcements";
+import { getCatalog } from "@/lib/catalog";
 
-// Thin announcement line above the header (restart brief). The track holds
+// Thin announcement line above the header (restart brief), texts from
+// site_settings.announcements. The track holds
 // two identical copies and slides by exactly one copy, so the loop is
 // seamless. It scrolls the other way in RTL, pauses on hover, and turns into
 // static wrapped text for reduced motion.
 export async function AnnouncementBar() {
   const locale = await getLocale();
   const t = await getTranslations("announcements");
-  const items = announcements.map((item) => item[locale]);
+  const { settings } = await getCatalog();
+  const items = settings.announcements.map((item) => item[locale]);
+  if (items.length === 0) return null;
 
   const copy = (hidden: boolean) => (
     <ul

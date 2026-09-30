@@ -16,14 +16,13 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { categoryHref, productHref } from "@/config/navigation";
-import { promo } from "@/config/promo";
 import {
   bestSellers,
-  getCategory,
-  getProduct,
+  findCategory,
+  findProduct,
+  getCatalog,
   newArrivals,
   productsIn,
-  visibleReviews,
   toCard,
   type CategorySlug,
 } from "@/lib/catalog";
@@ -55,6 +54,9 @@ const mosaic: { slug: CategorySlug; tile: string; tone: string; sample?: string 
   { slug: "gifts", tile: "col-span-2 aspect-[2/1] lg:aspect-auto", tone: "bg-surface", sample: "Love" },
 ];
 
+// Rebuilt hourly and whenever the admin saves (revalidateTag("catalog")).
+export const revalidate = 3600;
+
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const locale = await resolveLocale(params);
   const t = await getTranslations("home");
@@ -63,10 +65,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const tPay = await getTranslations("payment");
   const tPlaceholders = await getTranslations("placeholders");
 
-  const lira = productsIn("lira-collection").map((p) => toCard(p, locale));
-  const best = bestSellers(8).map((p) => toCard(p, locale));
-  const fresh = newArrivals(4).map((p) => toCard(p, locale));
-  const loved = visibleReviews().slice(0, 3);
+  const catalog = await getCatalog();
+  const { promo, heroOffer } = catalog;
+  const lira = productsIn(catalog, "lira-collection").map((p) => toCard(p, locale));
+  const best = bestSellers(catalog, 8).map((p) => toCard(p, locale));
+  const fresh = newArrivals(catalog, 4).map((p) => toCard(p, locale));
+  const loved = catalog.reviews.slice(0, 3);
+  const endsAt = heroOffer?.endsAt ?? promo?.endsAt ?? null;
 
   const steps = [
     { n: "01", key: "personalize", icon: PenLine },
@@ -105,18 +110,22 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <div className="flex flex-col items-center gap-5 text-center lg:items-start lg:text-start">
             <p className={eyebrow}>{t("hero.eyebrow")}</p>
             <p className="font-display text-5xl leading-[1.05] font-medium lining-nums sm:text-6xl lg:text-7xl">
-              {t("hero.title", { percent: promo.firstOrderPercent })}
+              {heroOffer
+                ? t("hero.title", { percent: heroOffer.percent })
+                : t("hero.titleDefault")}
             </p>
-            <p className="flex flex-wrap items-center justify-center gap-2 text-lg text-foreground/80 lg:justify-start">
-              {t("hero.subtitle", { percent: promo.percent })}
-              <CopyCode
-                code={promo.code}
-                copyLabel={tPromo("copy", { code: promo.code })}
-                copiedLabel={tPromo("copied")}
-                className="border-ink text-ink hover:bg-ink/5"
-              />
-            </p>
-            <Countdown endsAt={promo.endsAt} className="items-center lg:items-start" />
+            {promo && (
+              <p className="flex flex-wrap items-center justify-center gap-2 text-lg text-foreground/80 lg:justify-start">
+                {t("hero.subtitle", { percent: promo.percent })}
+                <CopyCode
+                  code={promo.code}
+                  copyLabel={tPromo("copy", { code: promo.code })}
+                  copiedLabel={tPromo("copied")}
+                  className="border-ink text-ink hover:bg-ink/5"
+                />
+              </p>
+            )}
+            {endsAt && <Countdown endsAt={endsAt} className="items-center lg:items-start" />}
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <Link href={productHref("cursive-name-necklace")} className={primaryButton}>
                 {t("hero.cta")}
@@ -166,7 +175,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <SectionTitle title={t("shopByStyle.title")} subtitle={t("shopByStyle.subtitle")} />
           <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-[repeat(3,15rem)] lg:gap-4">
             {mosaic.map(({ slug, tile, tone, sample }) => {
-              const category = getCategory(slug)!;
+              const category = findCategory(catalog, slug);
+              if (!category) return null;
               return (
                 <li key={slug} className={tile}>
                   <Link
@@ -248,7 +258,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                     review={r}
                     locale={locale}
                     starsLabel={tCommon("stars", { rating: r.rating })}
-                    productName={r.productSlug ? getProduct(r.productSlug)?.name[locale] : undefined}
+                    productName={r.productSlug ? findProduct(catalog, r.productSlug)?.name[locale] : undefined}
                     className="flex-1"
                   />
                 </li>

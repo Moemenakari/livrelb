@@ -1,4 +1,4 @@
-import type { CategorySlug } from "@/lib/catalog";
+import type { CategorySlug } from "@/lib/catalog/types";
 
 // Navbar and mobile menu order (restart brief). Labels come from the
 // category data (navName, else name).
