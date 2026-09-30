@@ -49,3 +49,6 @@ next-env.d.ts
 /.wrangler
 .dev.vars*
 !.dev.vars.example
+
+# graphify (local knowledge graph)
+/graphify-out
