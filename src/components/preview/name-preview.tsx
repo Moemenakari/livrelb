@@ -24,10 +24,10 @@ type Props = {
   className?: string;
 };
 
-export type Aspect = "wide" | "square" | "portrait";
+export type Aspect = "strip" | "wide" | "square" | "portrait";
 
 /** viewBox height per frame shape (width is always 400). */
-export const aspectHeight: Record<Aspect, number> = { wide: 300, square: 400, portrait: 500 };
+export const aspectHeight: Record<Aspect, number> = { strip: 200, wide: 300, square: 400, portrait: 500 };
 
 function layoutFor(variant: "necklace" | "bracelet", aspect: Aspect) {
   const h = aspectHeight[aspect];

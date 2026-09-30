@@ -9,10 +9,9 @@ import { defaultFontFor } from "@/lib/catalog/materials";
 import type { ChainConnection, FontKey, MaterialKey } from "@/lib/catalog/types";
 import { NAME_MAX_LENGTH, NamePreview } from "@/components/preview/name-preview";
 
-const metals: { key: MaterialKey; label: "gold" | "silver" | "rose"; swatch: string }[] = [
+const metals: { key: MaterialKey; label: "gold" | "silver"; swatch: string }[] = [
   { key: "gold", label: "gold", swatch: "#d9b76e" },
   { key: "silver", label: "silver", swatch: "#c9ccd1" },
-  { key: "rose", label: "rose", swatch: "#e2a98f" },
 ];
 
 const toggle = "rounded-full border px-3 py-1.5 text-xs transition-colors";
@@ -23,7 +22,7 @@ const off = "border-line hover:border-muted";
 const PRODUCT = "cursive-name-necklace";
 
 // Small "try your name" card in the hero (brief §8.1.2): type a name, pick
-// gold / silver / rose and where the chain attaches.
+// gold / silver and where the chain attaches.
 export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
   const t = useTranslations("home.mini");
   const id = useId();
@@ -33,12 +32,13 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-line bg-background/90 p-4 shadow-[0_12px_40px_-20px_rgba(43,38,34,0.35)] backdrop-blur sm:flex-row sm:items-center sm:p-5">
-      <div className="flex h-28 shrink-0 items-center overflow-hidden rounded-xl bg-surface sm:h-32 sm:w-48">
+      <div className="flex shrink-0 items-center overflow-hidden rounded-xl bg-surface sm:w-52">
         <NamePreview
           text={text}
           material={material}
           font={defaultFontFor(fonts, text)}
           connection={connection}
+          aspect="strip"
           shine
         />
       </div>

@@ -2,6 +2,7 @@
 
 import type { CardProduct } from "@/lib/catalog/card";
 import { useRecentlyViewed } from "@/lib/recently-viewed";
+import { ScrollRow } from "@/components/ui/scroll-row";
 import { swipeRow } from "@/components/ui/styles";
 import { ProductCard } from "./product-card";
 
@@ -28,13 +29,13 @@ export function RecentlyViewed({
   return (
     <section className="border-t border-line pt-14">
       <h2 className="mb-8 text-center text-3xl">{title}</h2>
-      <ul className={`lg:grid-cols-4 ${swipeRow}`}>
+      <ScrollRow as="ul" gridFromLg className={`lg:grid-cols-4 ${swipeRow}`}>
         {items.map((p) => (
           <li key={p.slug} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-auto">
             <ProductCard product={p} />
           </li>
         ))}
-      </ul>
+      </ScrollRow>
     </section>
   );
 }

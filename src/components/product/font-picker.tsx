@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { fonts as fontInfo, isArabic } from "@/lib/catalog/materials";
 import type { FontKey } from "@/lib/catalog/types";
 import { scriptFace } from "@/components/preview/script-fonts";
+import { ScrollRow } from "@/components/ui/scroll-row";
 
 type Props = {
   /** Fonts this product allows, with their name in the page language. */
@@ -21,7 +22,7 @@ type Props = {
 // The fonts download only once the row is near the screen: until then the
 // cards show the name in the page font.
 export function FontPicker({ fonts, value, text, onChange, label }: Props) {
-  const rowRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -48,8 +49,8 @@ export function FontPicker({ fonts, value, text, onChange, label }: Props) {
   }, [arabic]);
 
   return (
-    <div
-      ref={rowRef}
+    <ScrollRow
+      innerRef={rowRef}
       role="radiogroup"
       aria-label={label}
       className="no-scrollbar -mx-4 flex snap-x gap-2 overflow-x-auto px-4 py-1 sm:mx-0 sm:px-0"
@@ -88,6 +89,6 @@ export function FontPicker({ fonts, value, text, onChange, label }: Props) {
           </button>
         );
       })}
-    </div>
+    </ScrollRow>
   );
 }

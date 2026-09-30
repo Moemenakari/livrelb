@@ -10,7 +10,7 @@
   --bg: #ffffff;
   --surface: #faf7f2; /* ivory sections */
   --beige: #efe6d8; /* alternating sections */
-  --blush: #f6e9e6; /* small soft highlights */
+  --blush: #f1efeb; /* soft silver-ivory highlights (no pink: palette is gold + silver) */
   --text: #2b2622;
   --muted: #7a7068;
   --line: #e8e1d8;
@@ -25,7 +25,7 @@
   --gold-dark: #8a6a3b;
 
   /* Sale price, discount pill and savings (Phase 4 "buy on the website"). */
-  --sale: #d0342c;
+  --sale: #8a6a3b; /* gold, not red: the palette is gold + silver */
 }
 
 /* Font stacks. Each Latin font's generated fallback is a local font that

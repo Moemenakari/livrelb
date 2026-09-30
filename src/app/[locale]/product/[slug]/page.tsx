@@ -25,6 +25,7 @@ import { RecentlyViewed } from "@/components/product/recently-viewed";
 import { ReviewCard } from "@/components/product/review-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Stars } from "@/components/ui/stars";
+import { ScrollRow } from "@/components/ui/scroll-row";
 import { swipeRow } from "@/components/ui/styles";
 
 // Built at deploy time, refreshed hourly and whenever the admin saves
@@ -167,13 +168,13 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
 
       <section className="border-t border-line pt-14">
         <h2 className="mb-8 text-center text-3xl">{t("youMayAlsoLike")}</h2>
-        <ul className={`lg:grid-cols-4 ${swipeRow}`}>
+        <ScrollRow as="ul" gridFromLg className={`lg:grid-cols-4 ${swipeRow}`}>
           {related.map((r) => (
             <li key={r.slug} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-auto">
               <ProductCard product={r} />
             </li>
           ))}
-        </ul>
+        </ScrollRow>
       </section>
 
       <RecentlyViewed title={t("recentlyViewed")} current={product.slug} candidates={candidates} />

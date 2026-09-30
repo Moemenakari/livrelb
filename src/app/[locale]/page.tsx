@@ -35,7 +35,7 @@ import { CopyCode } from "@/components/layout/copy-code";
 import { ProductArt } from "@/components/product/product-art";
 import { ProductCard } from "@/components/product/product-card";
 import { ReviewCard } from "@/components/product/review-card";
-import { PhotoSlot } from "@/components/ui/photo-slot";
+import { ScrollRow } from "@/components/ui/scroll-row";
 import { eyebrow, primaryButton, secondaryButton, swipeRow } from "@/components/ui/styles";
 
 // Homepage (brief §8.1, restart brief). The 3D Lira coin lives in a fixed
@@ -63,7 +63,6 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const tCommon = await getTranslations("common");
   const tPromo = await getTranslations("promo");
   const tPay = await getTranslations("payment");
-  const tPlaceholders = await getTranslations("placeholders");
 
   const catalog = await getCatalog();
   const { promo, heroOffer } = catalog;
@@ -161,13 +160,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
               </Link>
             </div>
           </div>
-          <ul className={`mt-12 lg:grid-cols-4 ${swipeRow}`}>
+          <ScrollRow as="ul" gridFromLg className={`mt-12 lg:grid-cols-4 ${swipeRow}`}>
             {lira.map((p) => (
               <li key={p.slug} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-auto">
                 <ProductCard product={p} />
               </li>
             ))}
-          </ul>
+          </ScrollRow>
         </div>
       </section>
 
@@ -253,7 +252,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <section className="bg-blush/60">
           <div className={`${inner} py-16 lg:py-24`}>
             <SectionTitle title={t("reviews.title")} subtitle={t("reviews.subtitle")} />
-            <ul className={`lg:grid-cols-3 ${swipeRow}`}>
+            <ScrollRow as="ul" gridFromLg className={`lg:grid-cols-3 ${swipeRow}`}>
               {loved.map((r) => (
                 <li key={r.id} className="flex w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-auto">
                   <ReviewCard
@@ -265,36 +264,22 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                   />
                 </li>
               ))}
-            </ul>
+            </ScrollRow>
           </div>
         </section>
       )}
-
-      {/* Founder quote. */}
-      <section>
-        <figure className={`${inner} flex max-w-3xl flex-col items-center gap-6 py-16 text-center lg:py-24`}>
-          <PhotoSlot label={tPlaceholders("founder")} tone="blush" className="size-24 rounded-full" />
-          <blockquote className="font-display text-2xl leading-snug italic lg:text-4xl">
-            {t("founder.quote")}
-          </blockquote>
-          <figcaption className="flex flex-col gap-1">
-            <span className="font-display text-xl">{t("founder.name")}</span>
-            <span className="text-sm text-muted">{t("founder.role")}</span>
-          </figcaption>
-        </figure>
-      </section>
 
       {/* New arrivals. */}
       <section data-coin-cover className={`${cover} bg-background`}>
         <div className="mx-auto max-w-7xl px-4 pb-16 lg:px-8 lg:pb-24">
           <SectionTitle title={t("newArrivals.title")} subtitle={t("newArrivals.subtitle")} />
-          <ul className={`lg:grid-cols-4 ${swipeRow}`}>
+          <ScrollRow as="ul" gridFromLg className={`lg:grid-cols-4 ${swipeRow}`}>
             {fresh.map((p) => (
               <li key={p.slug} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-auto">
                 <ProductCard product={p} />
               </li>
             ))}
-          </ul>
+          </ScrollRow>
           <div className="mt-12 flex justify-center">
             <Link href={categoryHref("new")} className={secondaryButton}>
               {t("newArrivals.cta")}
@@ -351,7 +336,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <div className="flex items-center justify-center self-stretch bg-surface/70 px-8 py-6">
               <ProductArt
                 art={{ kind: "name", variant: "necklace" }}
-                material="rose"
+                material="gold"
                 text="Forever"
                 connection="sides"
                 aspect="square"
