@@ -6,18 +6,21 @@ import { Environment, Lightformer, PerformanceMonitor, useTexture } from "@react
 import * as THREE from "three";
 import { coinFrame, type AnchorBox } from "./coin-path";
 import { COIN_TEXTURES } from "./coin-assets";
+import { coinDrag, settleDrag } from "./coin-drag";
 
 // The 3D 1975 Lebanese 1 Livre coin (brief §2, restart brief): a thin metal
 // body with a raised lip and beaded rim, both faces textured from the real
 // photo with bump maps so the relief catches the light, shining in a studio
-// environment. Intro: fast spin with a light sweep, then it slows down and
-// follows the scroll path in coin-path.ts.
+// environment. Intro: a playful spin with a light sweep that overshoots a
+// little and settles with a soft wobble, then it follows the scroll path in
+// coin-path.ts. Visitors can drag it to spin it (coin-drag.ts).
 
 type Anchors = { hero: AnchorBox | null; lira: AnchorBox | null };
 
-const INTRO_SECONDS = 2.2;
 const INTRO_TURNS = 3;
+const INTRO_SECONDS = 1.9;
 const IDLE_SPEED = 0.3; // rad/s after the intro
+const IDLE_FROM = 1.7; // s: idle rotation ramps in from here
 const SCROLL_SPIN = 0.0035; // rad per scrolled px
 
 // Coin proportions, radius 1. The flat field ends where the lip rises.
@@ -35,7 +38,20 @@ const tones = {
   gold: { face: [1.35, 1.1, 0.7], rim: "#d8b46a" },
 } as const;
 
-const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+/**
+ * Intro spin angle over INTRO_SECONDS: fast at first, slowing down, then a
+ * slight overshoot (about 14 degrees) and back (ease-out-back). Rest angle =
+ * whole turns, so it lands on the cedar face.
+ */
+const introAngle = (t: number) => {
+  const u = clamp01(t / INTRO_SECONDS) - 1;
+  return INTRO_TURNS * Math.PI * 2 * (1 + 1.6 * u ** 3 + 0.6 * u ** 2);
+};
+
+/** Soft wobble as it settles, decaying to nothing. */
+const settleWobble = (t: number) =>
+  t < 1.4 ? 0 : 0.16 * Math.exp(-2.8 * (t - 1.4)) * Math.sin(10 * (t - 1.4));
+
 const easeOutBack = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
@@ -133,6 +149,8 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
   const beads = useRef<THREE.InstancedMesh>(null);
   const sweep = useRef<THREE.PointLight>(null);
   const elapsed = useRef(0);
+  const idleAngle = useRef(0);
+  const faceMaterials = useRef<THREE.MeshStandardMaterial[]>([]);
 
   const [front, back, frontBump, backBump] = useTexture(COIN_TEXTURES);
 
@@ -195,7 +213,8 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
     g.visible = true;
     // Animation time advances at most 1/30 s per frame: the first frames
     // stall on shader compilation, and a wall clock would skip the intro.
-    elapsed.current += Math.min(delta, 1 / 30);
+    const dt = Math.min(delta, 1 / 30);
+    elapsed.current += dt;
     const t = elapsed.current;
 
     const { width: vw, height: vh } = state.size;
@@ -207,23 +226,27 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
     g.position.set((f.x - vw / 2) * unit, -(f.y - vh / 2) * unit, 0);
     g.scale.setScalar(radius);
 
-    const intro = clamp01(t / INTRO_SECONDS);
-    g.rotation.y =
-      INTRO_TURNS * Math.PI * 2 * easeOutCubic(intro) +
-      Math.max(0, t - INTRO_SECONDS) * IDLE_SPEED +
-      window.scrollY * SCROLL_SPIN;
-    g.rotation.x = 0.12 * Math.sin(t * 0.6);
-    g.rotation.z = 0.05 * Math.sin(t * 0.45);
+    idleAngle.current += IDLE_SPEED * clamp01((t - IDLE_FROM) / 1.2) * dt;
+    settleDrag(dt);
+    g.rotation.y = introAngle(t) + idleAngle.current + window.scrollY * SCROLL_SPIN + coinDrag.offset;
+    const wobble = settleWobble(t);
+    g.rotation.x = 0.12 * Math.sin(t * 0.6) + wobble;
+    g.rotation.z = 0.05 * Math.sin(t * 0.45) - wobble * 0.5;
+
+    coinDrag.screen = { x: f.x, y: f.y, radius: f.size / 2, visible: f.opacity > 0.5 };
 
     state.gl.domElement.style.opacity = String(f.opacity * clamp01(t / 0.35));
 
-    // Light sweep across the face during the intro.
+    // Light sweep across the face during the intro, with the reflections
+    // briefly brighter so the metal flashes.
+    const k = clamp01((t - 0.1) / 1.7);
+    const flash = Math.sin(k * Math.PI);
     const light = sweep.current;
     if (light) {
-      const k = clamp01((t - 0.2) / 1.7);
-      light.position.set(g.position.x + (k * 2 - 1) * radius * 2.2, g.position.y + radius * 0.8, radius * 1.4);
-      light.intensity = Math.sin(k * Math.PI) * 45 * radius * radius;
+      light.position.set(g.position.x + (k * 2 - 1) * radius * 2.4, g.position.y + radius * 0.8, radius * 1.3);
+      light.intensity = flash * 80 * radius * radius;
     }
+    for (const m of faceMaterials.current) m.envMapIntensity = 1.2 + 0.7 * flash;
   });
 
   const faceColor = useMemo(() => new THREE.Color(...tones[tone].face), [tone]);
@@ -244,10 +267,24 @@ function Coin({ anchors, tone }: { anchors: RefObject<Anchors>; tone: keyof type
             <meshStandardMaterial color={tones[tone].rim} metalness={1} roughness={0.22} side={THREE.DoubleSide} />
           </mesh>
           <mesh geometry={face} position-y={HALF_T} rotation-x={-Math.PI / 2}>
-            <meshStandardMaterial map={front} bumpMap={frontBump} {...faceProps} />
+            <meshStandardMaterial
+              ref={(m) => {
+                if (m) faceMaterials.current[0] = m;
+              }}
+              map={front}
+              bumpMap={frontBump}
+              {...faceProps}
+            />
           </mesh>
           <mesh geometry={face} position-y={-HALF_T} rotation-x={Math.PI / 2}>
-            <meshStandardMaterial map={back} bumpMap={backBump} {...faceProps} />
+            <meshStandardMaterial
+              ref={(m) => {
+                if (m) faceMaterials.current[1] = m;
+              }}
+              map={back}
+              bumpMap={backBump}
+              {...faceProps}
+            />
           </mesh>
           <instancedMesh ref={beads} args={[bead, undefined, BEADS * 2]}>
             <meshStandardMaterial color={tones[tone].rim} metalness={1} roughness={0.25} />

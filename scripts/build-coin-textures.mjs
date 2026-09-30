@@ -8,6 +8,7 @@
 //   front.webp, back.webp            color maps (inside the raised lip)
 //   front-bump.webp, back-bump.webp  height maps for the relief
 //   coin.webp                        static fallback (whole coin, transparent)
+//   coin-sm.webp                     small coin for the scroll wheel on every page
 import { mkdirSync } from "node:fs";
 import sharp from "sharp";
 
@@ -114,13 +115,13 @@ async function bumpMap(face, name) {
     .toFile(`${OUT}${name}-bump.webp`);
 }
 
-async function fallback(face) {
-  const img = await crop(face, face.r, FALLBACK_SIZE);
+async function fallback(face, size, name) {
+  const img = await crop(face, face.r, size);
   await img
     .ensureAlpha()
-    .composite([{ input: circleMask(FALLBACK_SIZE, 1), blend: "dest-in" }])
+    .composite([{ input: circleMask(size, 1), blend: "dest-in" }])
     .webp({ quality: 80 })
-    .toFile(`${OUT}coin.webp`);
+    .toFile(`${OUT}${name}.webp`);
 }
 
 const meta = await sharp(SRC).metadata();
@@ -132,5 +133,6 @@ await colorMap(front, "front");
 await colorMap(back, "back");
 await bumpMap(front, "front");
 await bumpMap(back, "back");
-await fallback(front);
+await fallback(front, FALLBACK_SIZE, "coin");
+await fallback(front, 160, "coin-sm");
 console.log(`Coin textures written to ${OUT}`);
