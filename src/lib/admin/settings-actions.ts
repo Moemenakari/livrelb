@@ -18,11 +18,17 @@ export type SettingsInput = {
   instagram: string;
   pointsEnabled: boolean;
   pointsPerDollar: string;
+  pointsStepDollars: string;
+  rewardPercent: string;
+  rewardDays: string;
   pointsPerReview: string;
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
   whishOnline: boolean;
+  cardOnline: boolean;
+  metaPixelId: string;
+  ga4Id: string;
 };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -49,6 +55,10 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
     if (instagram && !/^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._/-]+$/.test(instagram)) {
       throw new AdminError("Instagram: the full link, e.g. https://instagram.com/livrelb.");
     }
+    const metaPixelId = str(input.metaPixelId, 20).replace(/\s/g, "");
+    if (metaPixelId && !/^\d{10,20}$/.test(metaPixelId)) throw new AdminError("Meta Pixel ID: digits only (10 to 20).");
+    const ga4Id = str(input.ga4Id, 20).replace(/\s/g, "").toUpperCase();
+    if (ga4Id && !/^G-[A-Z0-9]{4,20}$/.test(ga4Id)) throw new AdminError("GA4 ID: looks like G-XXXXXXXXXX.");
     const announcements = (input.announcements ?? [])
       .map((a) => ({ en: str(a.en, 160), ar: str(a.ar, 160) }))
       .filter((a) => a.en || a.ar);
@@ -75,7 +85,13 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
         points_redeem_cents: centsOf(input.redeemDollars, "Their value"),
         announcements,
+        points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
+        reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
+        reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
         whish_online_enabled: Boolean(input.whishOnline),
+        card_online_enabled: Boolean(input.cardOnline),
+        meta_pixel_id: metaPixelId,
+        ga4_id: ga4Id,
       })
       .eq("id", 1);
     if (error) throw error;

@@ -37,11 +37,17 @@ export default async function SettingsPage() {
           instagram: s.instagram_url,
           pointsEnabled: s.points_enabled,
           pointsPerDollar: String(s.points_per_dollar),
+          pointsStepDollars: d(s.points_step_cents),
+          rewardPercent: String(s.reward_coupon_percent),
+          rewardDays: String(s.reward_coupon_days),
           pointsPerReview: String(s.points_per_review),
           redeemPoints: String(s.points_redeem_points),
           redeemDollars: d(s.points_redeem_cents),
           announcements,
           whishOnline: s.whish_online_enabled,
+          cardOnline: s.card_online_enabled,
+          metaPixelId: s.meta_pixel_id,
+          ga4Id: s.ga4_id,
         }}
       />
     </>

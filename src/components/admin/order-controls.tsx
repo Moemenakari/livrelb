@@ -67,7 +67,6 @@ export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, st
               <button type="button" disabled={pending} onClick={() => act(() => setOrderStatus(orderId, next))} className={buttonClass}>
                 {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
                 Mark as {statusLabels[next]}
-                {next === "confirmed" && <span className="text-xs font-normal text-white/70">(gives points)</span>}
               </button>
             )}
             <select
@@ -76,7 +75,7 @@ export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, st
               disabled={pending}
               onChange={(e) => {
                 const value = e.target.value as AdminOrderStatus;
-                if (value === "cancelled" && !confirm("Cancel this order? Its LIVRE Points will be removed.")) return;
+                if (value === "cancelled" && !confirm("Cancel this order? Approved LIVRE Points will be removed.")) return;
                 act(() => setOrderStatus(orderId, value));
               }}
               className={inputClass}

@@ -97,9 +97,22 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
             <input id="st-rd" type="number" min="0" step="0.01" value={s.redeemDollars} onChange={(e) => set("redeemDollars", e.target.value)} className={inputClass} />
           </Field>
         </div>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <Field label="Points count per full ($)" hint="Every full step of this amount earns points." htmlFor="st-step">
+            <input id="st-step" type="number" min="1" step="1" value={s.pointsStepDollars} onChange={(e) => set("pointsStepDollars", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Reward coupon (%)" htmlFor="st-rcp">
+            <input id="st-rcp" type="number" min="1" max="100" value={s.rewardPercent} onChange={(e) => set("rewardPercent", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Coupon lasts (days)" htmlFor="st-rcd">
+            <input id="st-rcd" type="number" min="1" max="365" value={s.rewardDays} onChange={(e) => set("rewardDays", e.target.value)} className={inputClass} />
+          </Field>
+        </div>
         <p className="mt-2 text-xs text-muted">
-          Example: a ${10} order gives {Number(s.pointsPerDollar) * 10} points = ${(Number(s.pointsPerDollar) * 10 * pointValue).toFixed(2)} off next time. Points are given when an order is
-          Confirmed and removed if it&apos;s Cancelled.
+          Example: every ${s.pointsStepDollars} paid gives {Number(s.pointsPerDollar) * Number(s.pointsStepDollars)} points = $
+          {(Number(s.pointsPerDollar) * Number(s.pointsStepDollars) * pointValue).toFixed(2)} off next time. After the order is Delivered, a
+          team member approves the points on the order page and gets a message to send with a {s.rewardPercent}% coupon for {s.rewardDays} days.
+          Cancelling an order removes its points.
         </p>
       </Card>
 
@@ -122,6 +135,26 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
             </li>
           ))}
         </ul>
+      </Card>
+
+      <Card title="Visa / Mastercard online">
+        <Toggle
+          label="Let customers pay by card on the website"
+          hint="Hidden until the bank's card gateway keys (CARD_GATEWAY_*) are added on the server."
+          checked={s.cardOnline}
+          onChange={(v) => set("cardOnline", v)}
+        />
+      </Card>
+
+      <Card title="Analytics (off while empty)">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Meta Pixel ID" hint="Digits only. Loads only after the visitor accepts cookies." htmlFor="st-pixel">
+            <input id="st-pixel" inputMode="numeric" value={s.metaPixelId} onChange={(e) => set("metaPixelId", e.target.value)} className={inputClass} dir="ltr" />
+          </Field>
+          <Field label="Google Analytics 4 ID" hint="Looks like G-XXXXXXXXXX." htmlFor="st-ga">
+            <input id="st-ga" value={s.ga4Id} onChange={(e) => set("ga4Id", e.target.value)} className={inputClass} dir="ltr" />
+          </Field>
+        </div>
       </Card>
 
       <Card title="Online payment (Whish with OTP)">

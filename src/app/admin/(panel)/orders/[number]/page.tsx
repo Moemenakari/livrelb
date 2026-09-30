@@ -10,6 +10,7 @@ import type { MaterialKey } from "@/lib/catalog/types";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPreview } from "@/components/admin/admin-preview";
 import { OrderControls } from "@/components/admin/order-controls";
+import { PointsApprovalCard } from "@/components/admin/points-approval";
 import { Badge, Card, NoAccess, PageHeader } from "@/components/admin/ui";
 
 export async function generateMetadata({ params }: PageProps<"/admin/orders/[number]">): Promise<Metadata> {
@@ -46,11 +47,15 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
 
   const [names, { data: settings }, { data: points }, { data: customer }] = await Promise.all([
     staffNames(),
-    db.from("site_settings").select("whatsapp_number").eq("id", 1).maybeSingle(),
+    db.from("site_settings").select("whatsapp_number, points_step_cents, points_per_dollar").eq("id", 1).maybeSingle(),
     db.from("points_ledger").select("delta, reason").eq("order_id", order.id),
     db.from("customers").select("id, referred_by_staff_id").eq("id", order.customer_id).maybeSingle(),
   ]);
   const earned = (points ?? []).filter((p) => p.reason === "order").reduce((s, p) => s + p.delta, 0);
+
+  const step = settings?.points_step_cents ?? 2000;
+  const wouldEarn =
+    (Math.floor(Math.max(order.subtotal_cents - order.discount_cents - order.points_discount_cents, 0) / step) * step * (settings?.points_per_dollar ?? 10)) / 100;
 
   const itemsText = order.order_items
     .map((i) => `${i.qty}× ${i.product_name}${i.custom_text ? ` "${i.custom_text}"` : ""} (${i.material_name}${i.font_name ? `, ${i.font_name}` : ""}${i.size_value ? `, ${i.size_value} cm` : ""})`)
@@ -146,7 +151,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
             </dl>
             <p className="mt-3 text-xs text-muted">
               LIVRE Points:{" "}
-              {earned > 0 ? `${earned} given to the customer.` : order.status === "cancelled" ? "none (cancelled)." : "given when the order is confirmed."}
+              {earned > 0 ? `${earned} given to the customer.` : order.status === "cancelled" ? "none (cancelled)." : "given after delivery, when staff approve them."}
             </p>
           </Card>
         </div>
@@ -161,6 +166,15 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
             staffId={order.staff_id}
             staffOptions={names.filter((s) => s.isActive || s.id === order.staff_id).map((s) => ({ id: s.id, name: s.name }))}
             whatsapp={settings?.whatsapp_number ? { phone: order.phone, text: whatsappText } : null}
+          />
+
+          <PointsApprovalCard
+            orderId={order.id}
+            status={order.status}
+            approvedPoints={earned}
+            wouldEarn={wouldEarn}
+            canEdit={can(staff, "orders.edit")}
+            customer={{ name: order.customer_name, phone: order.phone, orderNumber: order.number }}
           />
 
           <Card title="Customer">

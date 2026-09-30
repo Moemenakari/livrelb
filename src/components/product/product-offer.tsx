@@ -31,7 +31,8 @@ const LOW_STOCK = 10;
 /** Points a price earns and what they are worth (same rule as the database). */
 export function pointsFor(price: number, rules: PointsRules): { points: number; value: number } {
   if (!rules.enabled) return { points: 0, value: 0 };
-  const points = Math.floor(Math.round(price * 100) * rules.perDollar / 100);
+  const step = rules.stepDollars;
+  const points = Math.floor(price / step) * step * rules.perDollar;
   return { points, value: (points / rules.redeemPoints) * rules.redeemValue };
 }
 

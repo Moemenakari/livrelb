@@ -66,3 +66,75 @@ export async function reassignOrder(orderId: string, staffId: string | null): Pr
     refresh();
   });
 }
+
+export type PointsApproval = {
+  points: number;
+  balance: number;
+  couponCode: string;
+  couponPercent: number;
+  couponEndsAt: string;
+  customerName: string;
+  customerPhone: string;
+  orderNumber: number;
+};
+
+/**
+ * Staff approve an order's LIVRE Points after delivery (approve_order_points):
+ * once per order, per $20, and it makes a one-use reward coupon. The result
+ * feeds the "thank you" message.
+ */
+export async function approveOrderPoints(orderId: string): Promise<ActionResult<PointsApproval>> {
+  return run(async () => {
+    const { db } = await authorize("orders.edit");
+    const { data, error } = await db.rpc("approve_order_points", { p_order_id: uuid(orderId) });
+    if (error) {
+      if (/already approved|Delivered|under the points step|Not allowed/.test(error.message)) {
+        throw new AdminError(error.message);
+      }
+      throw error;
+    }
+    const r = data as Record<string, string | number>;
+    refresh();
+    return {
+      points: Number(r.points),
+      balance: Number(r.balance),
+      couponCode: String(r.coupon_code),
+      couponPercent: Number(r.coupon_percent),
+      couponEndsAt: String(r.coupon_ends_at),
+      customerName: String(r.customer_name),
+      customerPhone: String(r.customer_phone),
+      orderNumber: Number(r.order_number),
+    };
+  });
+}
+
+/** A line on the customer's tracking page (note from staff, shown to the customer). */
+export async function addTrackingNote(orderId: string, en: string, ar: string): Promise<ActionResult> {
+  return run(async () => {
+    const titleEn = en.trim().slice(0, 140);
+    const titleAr = ar.trim().slice(0, 140) || titleEn;
+    if (!titleEn) throw new AdminError("Write the update for the customer.");
+    const { db, staff } = await authorize("orders.edit");
+    const { error } = await db.from("order_events").insert({
+      order_id: uuid(orderId),
+      title_en: titleEn,
+      title_ar: titleAr,
+      created_by: staff.id,
+    });
+    if (error) throw error;
+    refresh();
+  });
+}
+
+/** Courier name and tracking number shown on the customer's tracking page. */
+export async function saveShipping(orderId: string, carrier: string, trackingNumber: string): Promise<ActionResult> {
+  return run(async () => {
+    const { db } = await authorize("orders.edit");
+    const { error } = await db
+      .from("orders")
+      .update({ carrier: carrier.trim().slice(0, 60) || null, tracking_number: trackingNumber.trim().slice(0, 60) || null })
+      .eq("id", uuid(orderId));
+    if (error) throw error;
+    refresh();
+  });
+}

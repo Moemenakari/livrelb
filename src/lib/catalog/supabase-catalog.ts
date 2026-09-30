@@ -241,6 +241,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       points: {
         enabled: s.points_enabled,
         perDollar: s.points_per_dollar,
+        stepDollars: dollars(s.points_step_cents),
         perReview: s.points_per_review,
         redeemPoints: s.points_redeem_points,
         redeemValue: dollars(s.points_redeem_cents),

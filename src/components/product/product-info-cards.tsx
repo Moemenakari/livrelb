@@ -106,7 +106,8 @@ export function ProductInfoCards({ data }: { data: InfoCardsData }) {
           <p className="font-medium">{t("points.title")}</p>
           <p className="text-muted">
             {t("points.line", {
-              perDollar: p.perDollar,
+              step: formatPrice(p.stepDollars),
+              perStep: p.stepDollars * p.perDollar,
               redeem: p.redeemPoints,
               value: formatPrice(p.redeemValue),
               review: p.perReview,

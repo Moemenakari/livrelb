@@ -196,6 +196,8 @@ export type PointsRules = {
   enabled: boolean;
   /** Points per $1 paid. */
   perDollar: number;
+  /** Points count per full step of this many dollars ($20). */
+  stepDollars: number;
   /** Points for an approved review. */
   perReview: number;
   /** redeemPoints points = redeemValue dollars off. */

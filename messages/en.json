@@ -231,8 +231,8 @@
     },
     "points": {
       "title": "LIVRE Points",
-      "line": "Every $1 = {perDollar} points · {redeem} points = {value} off · Review = +{review} points",
-      "detail": "Points are added when we confirm your order. Use them at checkout: every {redeem} points take {value} off. See your balance on the Track my order page."
+      "line": "Every {step} you spend = {perStep} points · {redeem} points = {value} off · Review = +{review} points",
+      "detail": "Points are added after your order is delivered. Use them at checkout: every {redeem} points take {value} off. See your balance on the Track my order page."
     },
     "gift": {
       "detail": "Every piece ships in our LIVRE gift box with a pouch, ready to give. No extra cost."
@@ -413,7 +413,7 @@
     "items": "Items",
     "discounts": "Discounts (sale + code)",
     "saved": "You saved {amount} on this order",
-    "pointsEarnConfirmed": "You'll earn {points} points when your order is confirmed"
+    "pointsEarnConfirmed": "You'll earn {points} points after your order is delivered"
   },
   "checkout": {
     "title": "Checkout",
@@ -485,7 +485,7 @@
     "track": "Track my order",
     "continue": "Continue shopping",
     "locked": "To see this order, track it with the phone number it was placed with.",
-    "pointsToEarn": "You'll earn {points} LIVRE Points when your order is confirmed.",
+    "pointsToEarn": "You'll earn {points} LIVRE Points after your order is delivered.",
     "pointsEarned": "This order earned you {points} LIVRE Points."
   },
   "orderStatus": {

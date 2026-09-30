@@ -159,6 +159,56 @@ export type Database = {
           },
         ]
       }
+      charm_requests: {
+        Row: {
+          created_at: string
+          handled_by: string | null
+          id: string
+          image_url: string | null
+          letters: string | null
+          metal: Database["public"]["Enums"]["metal_tone"]
+          name: string
+          note: string | null
+          phone: string
+          shapes: string[]
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          handled_by?: string | null
+          id?: string
+          image_url?: string | null
+          letters?: string | null
+          metal?: Database["public"]["Enums"]["metal_tone"]
+          name: string
+          note?: string | null
+          phone: string
+          shapes?: string[]
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          handled_by?: string | null
+          id?: string
+          image_url?: string | null
+          letters?: string | null
+          metal?: Database["public"]["Enums"]["metal_tone"]
+          name?: string
+          note?: string | null
+          phone?: string
+          shapes?: string[]
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charm_requests_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_products: {
         Row: {
           collection_id: string
@@ -667,6 +717,57 @@ export type Database = {
           },
         ]
       }
+      order_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note_ar: string | null
+          note_en: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"] | null
+          title_ar: string
+          title_en: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note_ar?: string | null
+          note_en?: string | null
+          order_id: string
+          status?: Database["public"]["Enums"]["order_status"] | null
+          title_ar: string
+          title_en: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note_ar?: string | null
+          note_en?: string | null
+          order_id?: string
+          status?: Database["public"]["Enums"]["order_status"] | null
+          title_ar?: string
+          title_en?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           chain_connection:
@@ -771,6 +872,7 @@ export type Database = {
           attribution_source:
             | Database["public"]["Enums"]["attribution_source"]
             | null
+          carrier: string | null
           coupon_code: string | null
           coupon_id: string | null
           created_at: string
@@ -784,6 +886,8 @@ export type Database = {
           number: number
           payment_method: Database["public"]["Enums"]["payment_method"]
           phone: string
+          points_approved_at: string | null
+          points_approved_by: string | null
           points_discount_cents: number
           points_used: number
           request_id: string | null
@@ -791,6 +895,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
           total_cents: number
+          tracking_number: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -802,6 +907,7 @@ export type Database = {
           attribution_source?:
             | Database["public"]["Enums"]["attribution_source"]
             | null
+          carrier?: string | null
           coupon_code?: string | null
           coupon_id?: string | null
           created_at?: string
@@ -815,6 +921,8 @@ export type Database = {
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
           phone: string
+          points_approved_at?: string | null
+          points_approved_by?: string | null
           points_discount_cents?: number
           points_used?: number
           request_id?: string | null
@@ -822,6 +930,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
           total_cents: number
+          tracking_number?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -833,6 +942,7 @@ export type Database = {
           attribution_source?:
             | Database["public"]["Enums"]["attribution_source"]
             | null
+          carrier?: string | null
           coupon_code?: string | null
           coupon_id?: string | null
           created_at?: string
@@ -846,6 +956,8 @@ export type Database = {
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
           phone?: string
+          points_approved_at?: string | null
+          points_approved_by?: string | null
           points_discount_cents?: number
           points_used?: number
           request_id?: string | null
@@ -853,6 +965,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
           total_cents?: number
+          tracking_number?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -876,6 +989,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_points_approved_by_fkey"
+            columns: ["points_approved_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
           {
@@ -1323,6 +1443,9 @@ export type Database = {
           headline_en: string | null
           id: string
           is_active: boolean
+          link_url: string | null
+          media_type: Database["public"]["Enums"]["media_type"] | null
+          media_url: string | null
           percent: number | null
           placement: string
           sort_order: number
@@ -1339,6 +1462,9 @@ export type Database = {
           headline_en?: string | null
           id?: string
           is_active?: boolean
+          link_url?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
+          media_url?: string | null
           percent?: number | null
           placement: string
           sort_order?: number
@@ -1355,6 +1481,9 @@ export type Database = {
           headline_en?: string | null
           id?: string
           is_active?: boolean
+          link_url?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
+          media_url?: string | null
           percent?: number | null
           placement?: string
           sort_order?: number
@@ -1492,6 +1621,7 @@ export type Database = {
       site_settings: {
         Row: {
           announcements: Json
+          card_online_enabled: boolean
           created_at: string
           delivery_days_max: number
           delivery_days_min: number
@@ -1500,13 +1630,18 @@ export type Database = {
           delivery_time_en: string
           first_order_free_delivery: boolean
           free_shipping_threshold_cents: number
+          ga4_id: string
           id: number
           instagram_url: string
+          meta_pixel_id: string
           points_enabled: boolean
           points_per_dollar: number
           points_per_review: number
           points_redeem_cents: number
           points_redeem_points: number
+          points_step_cents: number
+          reward_coupon_days: number
+          reward_coupon_percent: number
           shipping_info_ar: string
           shipping_info_en: string
           updated_at: string
@@ -1516,6 +1651,7 @@ export type Database = {
         }
         Insert: {
           announcements?: Json
+          card_online_enabled?: boolean
           created_at?: string
           delivery_days_max?: number
           delivery_days_min?: number
@@ -1524,13 +1660,18 @@ export type Database = {
           delivery_time_en?: string
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
+          ga4_id?: string
           id?: number
           instagram_url?: string
+          meta_pixel_id?: string
           points_enabled?: boolean
           points_per_dollar?: number
           points_per_review?: number
           points_redeem_cents?: number
           points_redeem_points?: number
+          points_step_cents?: number
+          reward_coupon_days?: number
+          reward_coupon_percent?: number
           shipping_info_ar?: string
           shipping_info_en?: string
           updated_at?: string
@@ -1540,6 +1681,7 @@ export type Database = {
         }
         Update: {
           announcements?: Json
+          card_online_enabled?: boolean
           created_at?: string
           delivery_days_max?: number
           delivery_days_min?: number
@@ -1548,13 +1690,18 @@ export type Database = {
           delivery_time_en?: string
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
+          ga4_id?: string
           id?: number
           instagram_url?: string
+          meta_pixel_id?: string
           points_enabled?: boolean
           points_per_dollar?: number
           points_per_review?: number
           points_redeem_cents?: number
           points_redeem_points?: number
+          points_step_cents?: number
+          reward_coupon_days?: number
+          reward_coupon_percent?: number
           shipping_info_ar?: string
           shipping_info_en?: string
           updated_at?: string
@@ -1682,6 +1829,7 @@ export type Database = {
         }[]
       }
       admin_save_product: { Args: { p: Json }; Returns: string }
+      approve_order_points: { Args: { p_order_id: string }; Returns: Json }
       customer_profile: { Args: { p_customer_id: string }; Returns: Json }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
@@ -1744,7 +1892,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
-      payment_method: "cod" | "whish"
+      payment_method: "cod" | "whish" | "card"
       payment_status: "pending" | "otp_sent" | "paid" | "failed" | "cancelled"
       personalization_kind: "name" | "initial"
       points_reason: "order" | "review" | "redeem" | "adjust"
@@ -1901,7 +2049,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      payment_method: ["cod", "whish"],
+      payment_method: ["cod", "whish", "card"],
       payment_status: ["pending", "otp_sent", "paid", "failed", "cancelled"],
       personalization_kind: ["name", "initial"],
       points_reason: ["order", "review", "redeem", "adjust"],
