@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "i18n:check": "node scripts/check-messages.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:seed:generate": "tsx scripts/generate-seed.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
@@ -32,6 +33,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
