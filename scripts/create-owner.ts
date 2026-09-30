@@ -38,10 +38,10 @@ async function main() {
   const refCode = (await rl.question("Personal link code (livrelb.com/r/...), e.g. nour: "))
     .trim()
     .toLowerCase();
-  const password = await rl.question("Password (at least 10 characters): ");
+  const password = await rl.question("Password (at least 8 characters): ");
   rl.close();
 
-  if (!name || !phone || !/^[a-z0-9-]{2,30}$/.test(refCode) || password.length < 10) {
+  if (!name || !phone || !/^[a-z0-9-]{2,30}$/.test(refCode) || password.length < 8) {
     console.error("Invalid input: check the name, phone, link code and password length.");
     process.exit(1);
   }
