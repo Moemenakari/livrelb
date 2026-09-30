@@ -136,6 +136,8 @@ export type Product = {
   media: ProductMedia[];
   /** Text for the "Size & Materials" tab. */
   details: Localized;
+  /** Pieces left, only when stock is tracked (undefined = made to order). */
+  stock?: number;
 };
 
 export type Category = {
@@ -179,6 +181,36 @@ export type StoreSettings = {
   /** Empty until the owner sets it: the Instagram link is hidden. */
   instagramUrl: string;
   announcements: Localized[];
+  /** "Estimated delivery" text; empty = built from deliveryDays. */
+  deliveryTime: Localized;
+  deliveryDays: { min: number; max: number };
+  /** LIVRE Points rules (site_settings). */
+  points: PointsRules;
+  /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
+  whishOnline: boolean;
+};
+
+export type PointsRules = {
+  enabled: boolean;
+  /** Points per $1 paid. */
+  perDollar: number;
+  /** Points for an approved review. */
+  perReview: number;
+  /** redeemPoints points = redeemValue dollars off. */
+  redeemPoints: number;
+  redeemValue: number;
+};
+
+/** A delivery area and its own fee (null = the shop's delivery fee). */
+export type DeliveryArea = { slug: string; name: Localized; fee: number | null };
+
+/** A coupon the owner marked public: shown in the product page deals row. */
+export type PublicCoupon = {
+  code: string;
+  type: "percent" | "fixed" | "free_delivery";
+  /** Percent, or dollars for fixed coupons. */
+  value: number;
+  minOrder: number;
 };
 
 /** promotions (promo_bar): the code in the promo bar and hero sub-line. */
@@ -205,5 +237,9 @@ export type Catalog = {
   /** null when no promo code is running. */
   promo: StorePromo | null;
   heroOffer: HeroOffer | null;
+  areas: DeliveryArea[];
+  /** Pieces sold per product slug (orders not cancelled). */
+  sold: Record<string, number>;
+  publicCoupons: PublicCoupon[];
   source: "supabase" | "static";
 };

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { findProduct, getCatalog } from "@/lib/catalog";
 import { allMaterials, isFontKey } from "@/lib/catalog/materials";
 import { normalizePhone } from "@/lib/phone";
+import { rateLimit } from "@/lib/security/rate-limit";
 import type { Json } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
@@ -101,6 +102,15 @@ export async function quoteCart(input: {
   if (error || !data) return { ok: false, error: "unavailable" };
 
   const q = data as unknown as DbQuote;
+  // Old prices come from the catalog (same database, cached): only lines the
+  // database priced count.
+  const catalog = await getCatalog();
+  const saleSavings = items.reduce((sum, item, i) => {
+    if ("error" in q.lines[i]) return sum;
+    const offer = findProduct(catalog, item.product)?.offers.find((o) => o.material === item.material);
+    const save = offer?.compareAtPrice ? Math.max(0, offer.compareAtPrice - offer.price) : 0;
+    return sum + save * item.qty;
+  }, 0);
   return {
     ok: true,
     quote: {
@@ -111,6 +121,7 @@ export async function quoteCart(input: {
             : { unitPrice: dollars(l.unit_price_cents), lineTotal: dollars(l.line_total_cents) },
       ),
       subtotal: dollars(q.subtotal_cents),
+      saleSavings: Math.round(saleSavings * 100) / 100,
       discount: dollars(q.discount_cents),
       coupon: q.coupon
         ? {
@@ -150,9 +161,14 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   const db = admin();
   if (!db) return { ok: false, error: "unavailable" };
 
+  // Honeypot filled: a bot. Answer like a failure, save nothing.
+  if (str(input.website, 200)) return { ok: false, error: "failed" };
+
   const name = str(input.name, 101);
   if (!name || name.length > 100) return { ok: false, error: "name_required" };
-  if (!normalizePhone(str(input.phone, 30))) return { ok: false, error: "phone_invalid" };
+  const e164 = normalizePhone(str(input.phone, 30));
+  if (!e164) return { ok: false, error: "phone_invalid" };
+  if (!(await rateLimit("checkout", e164))) return { ok: false, error: "rate_limited" };
   const area = str(input.area, 40);
   if (!SLUG.test(area)) return { ok: false, error: "area_invalid" };
   const address = str(input.address, 401);
@@ -215,6 +231,7 @@ export async function clearSavedCustomer(): Promise<void> {
 export type TrackState =
   | { status: "idle" }
   | { status: "not_found"; number: string; phone: string }
+  | { status: "rate_limited"; number: string; phone: string }
   | {
       status: "found";
       number: number;
@@ -235,6 +252,7 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
   const db = admin();
   const e164 = normalizePhone(phone);
   if (!db || !number || !e164) return notFound;
+  if (!(await rateLimit("track", e164))) return { status: "rate_limited", number, phone };
 
   const { data } = await db
     .from("orders")
@@ -260,4 +278,38 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
       qty: i.qty,
     })),
   };
+}
+
+export type PointsState =
+  | { status: "idle" }
+  | { status: "not_found" | "rate_limited"; number: string; phone: string }
+  | { status: "found"; points: number; value: number };
+
+/**
+ * "My points" on /track: an order number + the phone it was placed with
+ * (same proof as tracking) shows that customer's LIVRE Points balance.
+ */
+export async function lookupPoints(_prev: PointsState, form: FormData): Promise<PointsState> {
+  const number = str(form.get("number"), 12).replace(/\D/g, "");
+  const phone = str(form.get("phone"), 30);
+  const notFound = { status: "not_found" as const, number, phone };
+  const db = admin();
+  const e164 = normalizePhone(phone);
+  if (!db || !number || !e164) return notFound;
+  if (!(await rateLimit("points", e164))) return { status: "rate_limited", number, phone };
+
+  const { data: order } = await db
+    .from("orders")
+    .select("customer_id")
+    .eq("number", Number(number))
+    .eq("phone", e164)
+    .maybeSingle();
+  if (!order) return notFound;
+  const [{ data: profile }, { data: s }] = await Promise.all([
+    db.rpc("customer_profile", { p_customer_id: order.customer_id }),
+    db.from("site_settings").select("points_redeem_points, points_redeem_cents").eq("id", 1).maybeSingle(),
+  ]);
+  const points = Math.max(0, (profile as { points?: number } | null)?.points ?? 0);
+  const value = s ? Math.floor(points / s.points_redeem_points) * dollars(s.points_redeem_cents) : 0;
+  return { status: "found", points, value };
 }

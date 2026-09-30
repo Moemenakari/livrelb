@@ -14,7 +14,10 @@ import { orderPoints } from "@/lib/checkout/points";
 import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
+import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { OrderStatusSteps } from "@/components/checkout/order-status";
+import { WhishPayment } from "@/components/checkout/whish-payment";
+import { whish } from "@/lib/payments/whish";
 import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -79,6 +82,9 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 pt-10 pb-20 lg:px-8 lg:pt-14">
+      <div className="mx-auto w-full max-w-xl">
+        <CheckoutSteps current="done" />
+      </div>
       <header className="flex flex-col items-center gap-3 text-center">
         <p className="rounded-full bg-cedar px-4 py-1.5 text-sm font-medium text-white">
           {t("number", { number: order.number })}
@@ -106,6 +112,11 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
           </p>
         </div>
       </div>
+
+      {order.payment_method === "whish" &&
+        order.status !== "cancelled" &&
+        catalog.settings.whishOnline &&
+        whish.isConfigured() && <WhishPayment orderNumber={order.number} total={dollars(order.total_cents)} />}
 
       <section className="flex flex-col gap-4">
         <h2 className="text-2xl">{t("itemsTitle")}</h2>

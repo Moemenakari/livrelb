@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
-import { TrackForm } from "@/components/checkout/track-form";
+import { PointsLookup, TrackForm } from "@/components/checkout/track-form";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/track">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -23,6 +23,7 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
         <p className="text-muted">{t("intro")}</p>
       </header>
       <TrackForm locale={locale} number={prefill} />
+      <PointsLookup />
     </div>
   );
 }

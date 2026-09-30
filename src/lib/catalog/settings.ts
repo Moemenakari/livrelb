@@ -19,6 +19,10 @@ export const sampleSettings: StoreSettings = {
       ar: "جودة ممتازة ★★★★★ — تحبّها زبوناتنا",
     },
   ],
+  deliveryTime: { en: "", ar: "" },
+  deliveryDays: { min: 2, max: 7 },
+  points: { enabled: true, perDollar: 10, perReview: 10, redeemPoints: 100, redeemValue: 1 },
+  whishOnline: false,
 };
 
 // Beirut time.

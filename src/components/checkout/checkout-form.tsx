@@ -1,18 +1,19 @@
 "use client";
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
-import { Banknote, Loader2, Lock, Smartphone, Sparkles } from "lucide-react";
+import { Banknote, Loader2, Lock, Smartphone } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { clearCart, toInput, useCart, useCoupon } from "@/lib/cart";
 import { clearSavedCustomer, placeOrder } from "@/lib/checkout/actions";
 import type { AreaOption, CheckoutError, HelperOption, SavedCustomer } from "@/lib/checkout/types";
-import { formatPrice } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { CartLine } from "@/components/cart/cart-line";
 import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
 import { primaryButton } from "@/components/ui/styles";
+import { CheckoutSteps, PaymentBadges } from "./checkout-steps";
 import { GoogleButton } from "./google-button";
 
 type Props = {
@@ -62,6 +63,8 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
   const [clearing, startClearing] = useTransition();
   const [notes, setNotes] = useState("");
   const [helper, setHelper] = useState("");
+  // Honeypot: hidden from people, bots fill it; the server drops those orders.
+  const [website, setWebsite] = useState("");
   const [payment, setPayment] = useState<"cod" | "whish">("cod");
   const [error, setError] = useState<CheckoutError | null>(null);
   const [placed, setPlaced] = useState(false);
@@ -127,6 +130,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
         helper,
         payment,
         usePoints,
+        website,
         items: items.map(toInput),
       });
       if (result.ok) {
@@ -164,8 +168,13 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
 
   const total = quote?.total ?? items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
   const hasLineErrors = fresh && quote?.lines.some((l) => l.error);
+  const ready = Boolean(name.trim() && e164 && area && address.trim());
 
   return (
+    <>
+    <div className="mb-8 max-w-xl">
+      <CheckoutSteps current={ready ? "confirm" : "details"} />
+    </div>
     <form
       ref={formRef}
       noValidate
@@ -176,6 +185,17 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
       className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-14"
     >
       <div className="flex flex-col gap-10">
+        <div aria-hidden className="pointer-events-none absolute size-px overflow-hidden opacity-0">
+          <label htmlFor="co-website">{"Website"}</label>
+          <input
+            id="co-website"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+        </div>
         {known ? (
           <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-blush px-4 py-3 text-sm" role="status">
             <span>{t("welcomeBack", { name: (known.name ?? "").split(" ")[0] })}</span>
@@ -373,24 +393,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
             </Link>
           </p>
         )}
-        {quote && quote.points.balance > 0 && quote.points.value > 0 && (
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3">
-            <Sparkles className="size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-            <span className="flex flex-1 flex-col text-sm">
-              <span className="font-medium">
-                {t("pointsHave", { points: quote.points.balance, value: formatPrice(quote.points.value) })}
-              </span>
-              <span className="text-xs text-muted">{t("pointsUse")}</span>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={usePoints}
-              onChange={(e) => setUsePoints(e.target.checked)}
-              className="size-5 accent-[var(--gold)]"
-            />
-          </label>
-        )}
         <CouponField coupon={coupon} quote={quote} />
         <CartSummary
           quote={quote}
@@ -400,6 +402,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
           freeShippingOver={freeShippingOver}
           coupon={coupon}
           couponField={false}
+          points={{ on: usePoints, onChange: setUsePoints }}
         />
 
         {error && !errorField && (
@@ -420,12 +423,17 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
           ) : (
             <>
               <Lock className="size-4.5" strokeWidth={1.5} aria-hidden />
-              {t("placeOrder", { total: formatPrice(total) })}
+              {t("placeOrder", { total: formatMoney(total) })}
             </>
           )}
         </button>
+        <p className="flex items-center justify-center gap-2 text-center text-xs text-muted">
+          {"🔒"} {t("secure")}
+        </p>
+        <PaymentBadges />
       </div>
     </form>
+    </>
   );
 }
 

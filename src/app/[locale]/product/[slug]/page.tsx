@@ -9,6 +9,7 @@ import {
   findProduct,
   getCatalog,
   materials,
+  productsIn,
   relatedProducts,
   reviewStats,
   reviewsFor,
@@ -17,6 +18,7 @@ import {
 import { fonts } from "@/lib/catalog/materials";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/product/product-card";
+import type { Deal } from "@/components/product/product-offer";
 import { ProductTabs } from "@/components/product/product-tabs";
 import { ProductView, type ProductViewData } from "@/components/product/product-view";
 import { RecentlyViewed } from "@/components/product/recently-viewed";
@@ -57,8 +59,28 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   const t = await getTranslations("product");
   const tCategory = await getTranslations("category");
   const tCommon = await getTranslations("common");
+  const tInfo = await getTranslations("productInfo");
   const trail = categoryTrail(catalog, product.categories[0]);
   const p = product.personalization;
+  const { settings } = catalog;
+
+  // "#1 Best Seller in <category>": only when real orders say so.
+  const sold = catalog.sold[product.slug] ?? 0;
+  const mainCategory = trail.at(-1);
+  const topSeller =
+    mainCategory &&
+    sold >= 10 &&
+    productsIn(catalog, mainCategory.slug).every((o) => o.slug === product.slug || (catalog.sold[o.slug] ?? 0) < sold);
+
+  // Deals row: shop rules, the promo bar code and coupons marked public.
+  const deals: Deal[] = [
+    { kind: "freeOver", amount: settings.freeShippingOver },
+    ...(settings.firstOrderFreeDelivery ? [{ kind: "firstOrder" } as const] : []),
+    ...(catalog.promo ? [{ kind: "code", code: catalog.promo.code, type: "percent", value: catalog.promo.percent } as const] : []),
+    ...catalog.publicCoupons
+      .filter((c) => c.code !== catalog.promo?.code)
+      .map((c): Deal => ({ kind: "code", code: c.code, type: c.type, value: c.value })),
+  ];
 
   const view: ProductViewData = {
     slug: product.slug,
@@ -87,6 +109,27 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     altSize: product.altSize,
     art: product.art,
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
+    offer: {
+      sold,
+      badges: {
+        topIn: topSeller ? mainCategory.name[locale] : undefined,
+        bestSeller: Boolean(product.isBestSeller),
+        isNew: Boolean(product.isNew),
+        stockLeft: product.stock,
+      },
+      points: settings.points,
+      deals,
+    },
+    info: {
+      areas: catalog.areas.map((a) => ({ slug: a.slug, name: a.name[locale], fee: a.fee })),
+      deliveryFee: settings.deliveryFee,
+      freeShippingOver: settings.freeShippingOver,
+      firstOrderFreeDelivery: settings.firstOrderFreeDelivery,
+      deliveryTime:
+        settings.deliveryTime[locale] ||
+        tInfo("delivery.days", { min: settings.deliveryDays.min, max: settings.deliveryDays.max }),
+      points: settings.points,
+    },
   };
 
   const related = relatedProducts(catalog, product, 4).map((r) => toCard(r, locale));

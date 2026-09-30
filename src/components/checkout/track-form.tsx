@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { trackOrder, type TrackState } from "@/lib/checkout/actions";
-import { formatPrice } from "@/lib/format";
+import { lookupPoints, trackOrder, type PointsState, type TrackState } from "@/lib/checkout/actions";
+import { formatMoney, formatPrice } from "@/lib/format";
+import { LivreCoin } from "@/components/icons/livre-coin";
 import { primaryButton } from "@/components/ui/styles";
 import { OrderStatusSteps } from "./order-status";
 
@@ -29,7 +30,7 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
             id="track-number"
             name="number"
             inputMode="numeric"
-            defaultValue={state.status === "not_found" ? state.number : number}
+            defaultValue={"number" in state ? state.number : number}
             placeholder="1001"
             required
             maxLength={12}
@@ -47,7 +48,7 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            defaultValue={state.status === "not_found" ? state.phone : ""}
+            defaultValue={"phone" in state ? state.phone : ""}
             placeholder="03 123 456"
             required
             maxLength={25}
@@ -58,6 +59,11 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
         {state.status === "not_found" && (
           <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
             {t("notFound")}
+          </p>
+        )}
+        {state.status === "rate_limited" && (
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            {t("tooMany")}
           </p>
         )}
         <button type="submit" disabled={pending} className={`${primaryButton} w-full py-4`}>
@@ -106,5 +112,71 @@ export function TrackForm({ locale, number }: { locale: string; number: string }
         </section>
       )}
     </div>
+  );
+}
+
+// "My points": phone + any order number shows the LIVRE Points balance.
+export function PointsLookup() {
+  const t = useTranslations("track");
+  const [state, action, pending] = useActionState<PointsState, FormData>(lookupPoints, { status: "idle" });
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border border-gold/40 bg-gold/5 p-5">
+      <header className="flex items-center gap-3">
+        <LivreCoin className="size-7 shrink-0" />
+        <div>
+          <h2 className="text-2xl">{t("pointsTitle")}</h2>
+          <p className="text-sm text-muted">{t("pointsIntro")}</p>
+        </div>
+      </header>
+      {state.status === "found" ? (
+        <p className="flex flex-col gap-0.5 rounded-lg bg-background px-4 py-3" aria-live="polite">
+          <span className="text-xl font-medium text-gold-dark">{t("pointsBalance", { points: state.points })}</span>
+          <span className="text-sm text-muted">{t("pointsValue", { value: formatMoney(state.value) })}</span>
+        </p>
+      ) : (
+        <form action={action} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <label className="sr-only" htmlFor="points-phone">
+            {t("phone")}
+          </label>
+          <input
+            id="points-phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            defaultValue={"phone" in state ? state.phone : ""}
+            placeholder={t("phone")}
+            required
+            maxLength={25}
+            className={input}
+            dir="ltr"
+          />
+          <label className="sr-only" htmlFor="points-number">
+            {t("number")}
+          </label>
+          <input
+            id="points-number"
+            name="number"
+            inputMode="numeric"
+            defaultValue={"number" in state ? state.number : ""}
+            placeholder={t("number")}
+            required
+            maxLength={12}
+            className={input}
+            dir="ltr"
+          />
+          <button type="submit" disabled={pending} className={`${primaryButton} h-12 py-0`}>
+            {pending && <Loader2 className="size-4.5 animate-spin" aria-hidden />}
+            {t("pointsSubmit")}
+          </button>
+          {(state.status === "not_found" || state.status === "rate_limited") && (
+            <p className="text-sm text-red-800 sm:col-span-3" role="alert">
+              {state.status === "not_found" ? t("pointsNotFound") : t("tooMany")}
+            </p>
+          )}
+        </form>
+      )}
+    </section>
   );
 }

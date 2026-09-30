@@ -3,14 +3,17 @@
 import { useState } from "react";
 
 type Props = {
+  /** Shown on the chip (and copied unless `value` is given). */
   code: string;
+  /** What is copied, when the chip shows a label such as "Copy". */
+  value?: string;
   copyLabel: string;
   copiedLabel: string;
   className?: string;
 };
 
 // A promo code chip that copies itself on tap.
-export function CopyCode({ code, copyLabel, copiedLabel, className = "" }: Props) {
+export function CopyCode({ code, value, copyLabel, copiedLabel, className = "" }: Props) {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -19,7 +22,7 @@ export function CopyCode({ code, copyLabel, copiedLabel, className = "" }: Props
       aria-label={copyLabel}
       onClick={async () => {
         try {
-          await navigator.clipboard.writeText(code);
+          await navigator.clipboard.writeText(value ?? code);
           setCopied(true);
           setTimeout(() => setCopied(false), 1800);
         } catch {

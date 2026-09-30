@@ -87,6 +87,22 @@ a customer's balance is the sum. Rules live in `site_settings`
 - A logged-in customer reads only her own rows (RLS); staff add manual
   `adjust` rows from the admin.
 
+## Buy on the website (Phase 4 A)
+
+- `storefront_stats()` (server only): pieces sold per product (orders not
+  cancelled) for "🔥 X sold" (shown from 10) and "#1 Best Seller in …", and
+  the coupons marked `coupons.is_public` for the product page deals row.
+- `products.stock_qty`: null = made to order; a number shows "Only X left".
+- `site_settings.delivery_time_en/_ar`: "Estimated delivery" text (empty =
+  `delivery_days_min`–`delivery_days_max` days).
+- `payments`: one row per online payment attempt (Whish OTP). Cash on
+  delivery never creates one. Only the provider reference and the wallet's
+  last 4 digits are stored. Hidden until `site_settings.whish_online_enabled`
+  is on **and** `WHISH_API_URL`, `WHISH_MERCHANT_ID`, `WHISH_API_KEY` are set.
+- `rate_limits` + `hit_rate_limit()` (server only): checkout, track, points
+  and payment attempts per IP and per phone, keyed by an HMAC hash (no raw
+  IP or phone stored). Old windows are cleaned up automatically.
+
 ## Returning customers (no lookup by phone)
 
 Typing a phone number never reveals anything. The checkout is prefilled

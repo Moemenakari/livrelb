@@ -29,6 +29,8 @@ export type QuoteLine = { error: LineError } | { error?: undefined; unitPrice: n
 export type Quote = {
   lines: QuoteLine[];
   subtotal: number;
+  /** Sale savings: (old price - price) of every piece, so "Items" shows the price before discount. */
+  saleSavings: number;
   discount: number;
   coupon: { code: string; error?: "coupon_invalid" | "coupon_min_order"; minOrder?: number } | null;
   /** LIVRE Points of the verified customer (0 for everyone else). */
@@ -67,6 +69,8 @@ export type CheckoutInput = {
   helper: string;
   payment: "cod" | "whish";
   usePoints: boolean;
+  /** Honeypot field: empty for people. */
+  website?: string;
   items: CartItemInput[];
 };
 
@@ -82,6 +86,7 @@ export type CheckoutError =
   | "cart_invalid"
   | "cart_changed"
   | "unavailable"
+  | "rate_limited"
   | "failed";
 
 export type CheckoutResult = { ok: true; number: number } | { ok: false; error: CheckoutError };

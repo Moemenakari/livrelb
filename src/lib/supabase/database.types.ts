@@ -1,5 +1,3 @@
-// Generated from the database schema (Supabase generate_typescript_types).
-// Regenerate after every migration; do not edit by hand.
 export type Json =
   | string
   | number
@@ -274,6 +272,7 @@ export type Database = {
           ends_at: string | null
           id: string
           is_active: boolean
+          is_public: boolean
           max_uses: number | null
           min_order_cents: number
           staff_id: string | null
@@ -291,6 +290,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_active?: boolean
+          is_public?: boolean
           max_uses?: number | null
           min_order_cents?: number
           staff_id?: string | null
@@ -308,6 +308,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_active?: boolean
+          is_public?: boolean
           max_uses?: number | null
           min_order_cents?: number
           staff_id?: string | null
@@ -782,10 +783,10 @@ export type Database = {
           notes: string | null
           number: number
           payment_method: Database["public"]["Enums"]["payment_method"]
-          request_id: string | null
           phone: string
           points_discount_cents: number
           points_used: number
+          request_id: string | null
           staff_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
@@ -813,10 +814,10 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
-          request_id?: string | null
           phone: string
           points_discount_cents?: number
           points_used?: number
+          request_id?: string | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
@@ -844,10 +845,10 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
-          request_id?: string | null
           phone?: string
           points_discount_cents?: number
           points_used?: number
+          request_id?: string | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
@@ -893,6 +894,62 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          error_code: string | null
+          id: string
+          order_id: string
+          otp_attempts: number
+          paid_at: string | null
+          provider: string
+          provider_ref: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+          wallet_last4: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          id?: string
+          order_id: string
+          otp_attempts?: number
+          paid_at?: string | null
+          provider: string
+          provider_ref?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          wallet_last4?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          id?: string
+          order_id?: string
+          otp_attempts?: number
+          paid_at?: string | null
+          provider?: string
+          provider_ref?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          wallet_last4?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_ledger: {
         Row: {
           created_at: string
@@ -927,7 +984,36 @@ export type Database = {
           reason?: Database["public"]["Enums"]["points_reason"]
           review_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "points_ledger_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_ledger_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories: {
         Row: {
@@ -1141,6 +1227,7 @@ export type Database = {
           slug: string
           sort_order: number
           status: Database["public"]["Enums"]["product_status"]
+          stock_qty: number | null
           style: string | null
           summary_ar: string
           summary_en: string
@@ -1171,6 +1258,7 @@ export type Database = {
           slug: string
           sort_order?: number
           status?: Database["public"]["Enums"]["product_status"]
+          stock_qty?: number | null
           style?: string | null
           summary_ar?: string
           summary_en?: string
@@ -1201,6 +1289,7 @@ export type Database = {
           slug?: string
           sort_order?: number
           status?: Database["public"]["Enums"]["product_status"]
+          stock_qty?: number | null
           style?: string | null
           summary_ar?: string
           summary_en?: string
@@ -1290,6 +1379,24 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          hits: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          hits?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          hits?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           city: string | null
@@ -1360,6 +1467,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1382,6 +1496,8 @@ export type Database = {
           delivery_days_max: number
           delivery_days_min: number
           delivery_fee_cents: number
+          delivery_time_ar: string
+          delivery_time_en: string
           first_order_free_delivery: boolean
           free_shipping_threshold_cents: number
           id: number
@@ -1396,6 +1512,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           whatsapp_number: string
+          whish_online_enabled: boolean
         }
         Insert: {
           announcements?: Json
@@ -1403,6 +1520,8 @@ export type Database = {
           delivery_days_max?: number
           delivery_days_min?: number
           delivery_fee_cents?: number
+          delivery_time_ar?: string
+          delivery_time_en?: string
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
           id?: number
@@ -1417,6 +1536,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           whatsapp_number?: string
+          whish_online_enabled?: boolean
         }
         Update: {
           announcements?: Json
@@ -1424,6 +1544,8 @@ export type Database = {
           delivery_days_max?: number
           delivery_days_min?: number
           delivery_fee_cents?: number
+          delivery_time_ar?: string
+          delivery_time_en?: string
           first_order_free_delivery?: boolean
           free_shipping_threshold_cents?: number
           id?: number
@@ -1438,6 +1560,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           whatsapp_number?: string
+          whish_online_enabled?: boolean
         }
         Relationships: [
           {
@@ -1542,6 +1665,10 @@ export type Database = {
     }
     Functions: {
       customer_profile: { Args: { p_customer_id: string }; Returns: Json }
+      hit_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
+      }
       list_helpers: {
         Args: never
         Returns: {
@@ -1551,14 +1678,14 @@ export type Database = {
       }
       place_order: {
         Args: {
+          p_auth_user_id?: string
           p_coupon_code?: string
           p_customer: Json
+          p_customer_id?: string
           p_helper_staff_id?: string
           p_items: Json
           p_notes?: string
           p_payment_method?: Database["public"]["Enums"]["payment_method"]
-          p_auth_user_id?: string
-          p_customer_id?: string
           p_ref_code?: string
           p_request_id?: string
           p_use_points?: boolean
@@ -1576,6 +1703,7 @@ export type Database = {
         }
         Returns: Json
       }
+      storefront_stats: { Args: never; Returns: Json }
     }
     Enums: {
       adjustment_type:
@@ -1599,6 +1727,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
       payment_method: "cod" | "whish"
+      payment_status: "pending" | "otp_sent" | "paid" | "failed" | "cancelled"
       personalization_kind: "name" | "initial"
       points_reason: "order" | "review" | "redeem" | "adjust"
       product_status: "draft" | "active" | "archived"
@@ -1755,6 +1884,7 @@ export const Constants = {
         "cancelled",
       ],
       payment_method: ["cod", "whish"],
+      payment_status: ["pending", "otp_sent", "paid", "failed", "cancelled"],
       personalization_kind: ["name", "initial"],
       points_reason: ["order", "review", "redeem", "adjust"],
       product_status: ["draft", "active", "archived"],

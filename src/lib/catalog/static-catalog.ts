@@ -1,3 +1,4 @@
+import { sampleAreas } from "./areas";
 import { categories } from "./categories";
 import { products } from "./products";
 import { reviews, showSampleReviews } from "./reviews";
@@ -13,6 +14,9 @@ export function loadStaticCatalog(): Catalog {
     settings: sampleSettings,
     promo: samplePromo,
     heroOffer: sampleHeroOffer,
+    areas: sampleAreas.map((a) => ({ ...a, fee: null })),
+    sold: {},
+    publicCoupons: [],
     source: "static",
   };
 }

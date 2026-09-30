@@ -23,6 +23,9 @@
   /* Derived: --gold is 3.1:1 on white, too light for small text.
      This shade is 4.9:1 and still reads as gold. */
   --gold-dark: #8a6a3b;
+
+  /* Sale price, discount pill and savings (Phase 4 "buy on the website"). */
+  --sale: #d0342c;
 }
 
 /* Font stacks. Each Latin font's generated fallback is a local font that
@@ -51,6 +54,7 @@
   --color-gold-dark: var(--gold-dark);
   --color-cedar: var(--cedar);
   --color-ink: var(--ink);
+  --color-sale: var(--sale);
 
   /* Font variables come from src/app/fonts.ts */
   --font-display: var(--serif-stack);

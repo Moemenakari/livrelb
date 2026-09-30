@@ -12,6 +12,7 @@ import type {
   MaterialKey,
   Product,
   ProductArt,
+  PublicCoupon,
   Review,
   SizeOption,
   StorePromo,
@@ -67,7 +68,7 @@ function fail(what: string, error: { message: string } | null): never {
 const productColumns = `
   slug, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
   details_en, details_ar, style, is_best_seller, is_new, personalization, max_length,
-  sample_text, chain_connections, art, sort_order,
+  sample_text, chain_connections, art, sort_order, stock_qty,
   product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
   product_options (kind, value, price_modifier_cents, is_default, sort_order),
   product_fonts (sort_order, fonts (key)),
@@ -81,7 +82,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
   // read: use the secret key when set, else the sample file.
   const reviewReader = showSampleReviews ? (createAdminClient() ?? null) : null;
 
-  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes] = await Promise.all([
+  // Sales counts and public coupons: server-only numbers (secret key).
+  const admin = createAdminClient();
+  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes] = await Promise.all([
     db.from("products").select(productColumns).eq("status", "active").order("sort_order"),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
     (reviewReader ?? db)
@@ -93,6 +96,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       .order("review_date", { ascending: false }),
     db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("promotions").select("*").eq("is_active", true).order("sort_order"),
+    db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents").eq("is_active", true).order("sort_order"),
+    admin ? admin.rpc("storefront_stats") : Promise.resolve({ data: null, error: null }),
   ]);
 
   if (productsRes.error) fail("products", productsRes.error);
@@ -150,6 +155,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         size: sizeOf(options, mainKind),
         altSize: sizeOf(options, options.find((o) => o.kind !== mainKind && o.kind !== "ring")?.kind),
         art,
+        stock: row.stock_qty ?? undefined,
         media: [...row.product_media]
           .sort(bySort)
           .filter((m) => m.type === "image")
@@ -195,6 +201,11 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
   }
 
   const s = settingsRes.data;
+  // Numbers only: a failed stats call just hides "X sold" and the coupons.
+  const stats = (statsRes.error ? {} : (statsRes.data ?? {})) as {
+    sold?: Record<string, number>;
+    coupons?: { code: string; type: PublicCoupon["type"]; value: number; min_order_cents: number }[];
+  };
   const bar = promotionsRes.data.find((p) => p.placement === "promo_bar" && p.code && p.percent);
   const hero = promotionsRes.data.find((p) => p.placement === "hero" && p.percent);
   const promo: StorePromo | null = bar
@@ -217,9 +228,33 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
             a?.en && a?.ar ? [loc(a.en, a.ar)] : [],
           )
         : [],
+      deliveryTime: loc(s.delivery_time_en, s.delivery_time_ar),
+      deliveryDays: { min: s.delivery_days_min, max: s.delivery_days_max },
+      points: {
+        enabled: s.points_enabled,
+        perDollar: s.points_per_dollar,
+        perReview: s.points_per_review,
+        redeemPoints: s.points_redeem_points,
+        redeemValue: dollars(s.points_redeem_cents),
+      },
+      whishOnline: s.whish_online_enabled,
     },
     promo,
     heroOffer,
+    areas: (areasRes.data ?? []).map((a) => ({
+      slug: a.slug,
+      name: loc(a.name_en, a.name_ar),
+      fee: a.delivery_fee_cents === null ? null : dollars(a.delivery_fee_cents),
+    })),
+    sold: stats.sold ?? {},
+    publicCoupons: (stats.coupons ?? []).map(
+      (c): PublicCoupon => ({
+        code: c.code,
+        type: c.type,
+        value: c.type === "fixed" ? dollars(c.value) : c.value,
+        minOrder: dollars(c.min_order_cents),
+      }),
+    ),
     source: "supabase",
   };
 }

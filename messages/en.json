@@ -189,6 +189,71 @@
     "braceletGuide": "Measure your wrist and add 1–2 cm for a comfortable fit.",
     "ringGuide": "Wrap a strip of paper around your finger, measure it and message us on WhatsApp: we'll tell you your size."
   },
+  "offer": {
+    "percentOff": "−{percent}%",
+    "youSave": "You save {amount}",
+    "pointsEarn": "Buy now and earn <strong>{points} LIVRE Points</strong> (= {value})",
+    "sold": "{count} sold",
+    "dealsLabel": "Deals",
+    "freeOver": "Free delivery on orders over {amount}",
+    "firstOrder": "First order: free delivery",
+    "codePercent": "Code {code}: {percent}% off",
+    "codeFixed": "Code {code}: {amount} off",
+    "codeFreeDelivery": "Code {code}: free delivery",
+    "copy": "Copy",
+    "topIn": "#1 Best Seller in {category}",
+    "bestSeller": "Best Seller",
+    "new": "New",
+    "onlyLeft": "Only {count} left"
+  },
+  "productInfo": {
+    "more": "More details",
+    "delivery": {
+      "to": "Delivery to",
+      "fee": "Free delivery on orders over {amount} · otherwise {fee}",
+      "estimate": "Estimated delivery: {time}",
+      "days": "{min}–{max} days",
+      "detail": "We deliver everywhere in Lebanon. Orders over {amount} ship free; otherwise delivery to this area is {fee}, added at checkout.",
+      "firstOrder": "Your first order ships free, whatever the amount."
+    },
+    "payment": {
+      "title": "Payment",
+      "cod": "Cash on Delivery",
+      "whish": "Whish",
+      "codDetail": "Cash on Delivery: pay the driver when your order arrives.",
+      "whishDetail": "Whish: after we confirm your order, we send you our Whish details."
+    },
+    "security": {
+      "title": "Shopping security",
+      "line": "Secure payment · Privacy protected · Your data is never shared",
+      "detail": "Your details are only used to make and deliver your order. We never store card details and never share your data with anyone."
+    },
+    "points": {
+      "title": "LIVRE Points",
+      "line": "Every $1 = {perDollar} points · {redeem} points = {value} off · Review = +{review} points",
+      "detail": "Points are added when we confirm your order. Use them at checkout: every {redeem} points take {value} off. See your balance on the Track my order page."
+    },
+    "gift": {
+      "detail": "Every piece ships in our LIVRE gift box with a pouch, ready to give. No extra cost."
+    }
+  },
+  "whishPay": {
+    "title": "Pay now with Whish",
+    "intro": "Enter your Whish phone number. Whish sends you a code to confirm the payment.",
+    "wallet": "Whish phone number",
+    "send": "Send code",
+    "otp": "Code from Whish",
+    "confirm": "Confirm payment · {total}",
+    "paid": "Payment received. Thank you!",
+    "errors": {
+      "not_available": "Online Whish payment isn't available right now. We'll send you our Whish details instead.",
+      "wallet_invalid": "Please check your Whish phone number.",
+      "otp_invalid": "This code isn't right. Please check it and try again.",
+      "otp_expired": "This code expired. Please ask for a new one.",
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
+      "failed": "Something went wrong. Please try again."
+    }
+  },
   "giftBox": {
     "free": "Special LIVRE gift box: <strong>FREE</strong> with every order"
   },
@@ -343,7 +408,11 @@
     "viewCart": "View bag",
     "unavailable": "Prices can't be checked right now. Please try again in a moment.",
     "pointsDiscount": "LIVRE Points ({points})",
-    "pointsEarn": "You'll earn {points} LIVRE Points with this order"
+    "pointsEarn": "You'll earn {points} LIVRE Points with this order",
+    "items": "Items",
+    "discounts": "Discounts (sale + code)",
+    "saved": "You saved {amount} on this order",
+    "pointsEarnConfirmed": "You'll earn {points} points when your order is confirmed"
   },
   "checkout": {
     "title": "Checkout",
@@ -383,13 +452,23 @@
       "cart_invalid": "Your bag is empty.",
       "cart_changed": "Some pieces in your bag changed. Please check your bag.",
       "unavailable": "We can't take orders right now. Please try again in a moment.",
-      "failed": "Something went wrong. Please try again."
+      "failed": "Something went wrong. Please try again.",
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again."
     },
     "notYou": "Not you? Clear",
     "google": "Continue with Google",
     "googleSignedIn": "You're signed in with Google. Your details will be saved with this order for next time, on any device.",
     "pointsHave": "You have {points} points = {value}",
-    "pointsUse": "Use my points on this order"
+    "pointsUse": "Use my points on this order",
+    "stepsLabel": "Checkout steps",
+    "steps": {
+      "bag": "Bag",
+      "details": "Details",
+      "confirm": "Confirm",
+      "done": "Done"
+    },
+    "weAccept": "We accept",
+    "secure": "Secure checkout. Your information is protected."
   },
   "order": {
     "number": "Order #{number}",
@@ -425,7 +504,14 @@
     "notFound": "We couldn't find an order with this number and phone. Please check them and try again.",
     "placedOn": "Placed on {date}",
     "qty": "×{qty}",
-    "total": "Total"
+    "total": "Total",
+    "pointsTitle": "My LIVRE Points",
+    "pointsIntro": "Enter your phone number and any order number to see your points.",
+    "pointsSubmit": "See my points",
+    "pointsBalance": "You have {points} points",
+    "pointsValue": "= {value} off your next order",
+    "pointsNotFound": "We couldn't find an order with this number and phone.",
+    "tooMany": "Too many attempts. Please wait a few minutes and try again."
   },
   "search": {
     "open": "Search",

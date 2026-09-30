@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Check, MessageCircle, ShoppingBag, Truck } from "lucide-react";
+import { MessageCircle, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
@@ -12,6 +12,7 @@ import type {
   MaterialKey,
   Localized,
   Piece,
+  PointsRules,
   ProductArt as Art,
   ReviewStats,
   SizeOption,
@@ -21,9 +22,10 @@ import { useTrackView } from "@/lib/recently-viewed";
 import { Stars } from "@/components/ui/stars";
 import { primaryButton } from "@/components/ui/styles";
 import { FontPicker } from "./font-picker";
-import { GiftBoxNote } from "./gift-box-note";
 import { ProductArt } from "./product-art";
 import { ProductGallery, type GalleryHandle } from "./product-gallery";
+import { ProductInfoCards, type InfoCardsData } from "./product-info-cards";
+import { OfferBadgesRow, PriceBlock, SoldCount, type Deal, type OfferBadges } from "./product-offer";
 import { SizeGuide } from "./size-guide";
 import { pieceOf } from "@/lib/catalog/types";
 
@@ -61,6 +63,10 @@ export type ProductViewData = {
   altSize?: SizeOption;
   art: Art;
   media: { src: string; alt: string }[];
+  /** Selling details (Phase 4 A1): real sales, badges, points, deals. */
+  offer: { sold: number; badges: OfferBadges; points: PointsRules; deals: Deal[] };
+  /** Cards under "Add to cart" (Phase 4 A2). */
+  info: InfoCardsData;
 };
 
 const noSubscription = () => () => {};
@@ -129,7 +135,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   const priceChange = sizing?.priceModifier ?? 0;
   const unitPrice = current.price + priceChange;
   const compareAt = current.compareAtPrice && current.compareAtPrice + priceChange;
-  const discount = compareAt ? Math.round((1 - unitPrice / compareAt) * 100) : undefined;
 
   // Every design change brings the live preview slide back into view.
   const design = <T,>(set: (v: T) => void) => (value: T) => {
@@ -176,7 +181,12 @@ export function ProductView({ product, children }: { product: ProductViewData; c
 
       <div className="flex flex-col gap-7">
         <div className="flex flex-col gap-3">
-          <h1 className="text-3xl lg:text-4xl">{product.name}</h1>
+          <OfferBadgesRow badges={product.offer.badges} />
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl lg:text-4xl">{product.name}</h1>
+            {product.summary && <p className="text-muted">{product.summary}</p>}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {product.reviews && (
             <a href="#reviews" className="flex items-center gap-2 text-sm text-muted hover:text-foreground">
               <Stars
@@ -189,16 +199,14 @@ export function ProductView({ product, children }: { product: ProductViewData; c
               </span>
             </a>
           )}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-2xl font-medium text-gold-dark">{formatPrice(unitPrice)}</span>
-            {compareAt && <s className="text-lg text-muted">{formatPrice(compareAt)}</s>}
-            {discount && (
-              <span className="rounded-full bg-cedar px-2.5 py-1 text-xs font-medium tracking-wide text-white rtl:tracking-normal">
-                {t("off", { percent: discount })}
-              </span>
-            )}
+            <SoldCount sold={product.offer.sold} />
           </div>
-          <p className="text-muted">{product.summary}</p>
+          <PriceBlock
+            price={unitPrice}
+            compareAt={compareAt || undefined}
+            points={product.offer.points}
+            deals={product.offer.deals}
+          />
         </div>
 
         <div className="border-t border-line pt-6">
@@ -384,8 +392,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </fieldset>
         )}
 
-        <GiftBoxNote />
-
         <div className="flex flex-col gap-3">
           <button type="button" onClick={onAdd} className={`${primaryButton} w-full py-4 text-base`}>
             <ShoppingBag className="size-5" strokeWidth={1.5} aria-hidden />
@@ -393,16 +399,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
             <span aria-hidden>·</span>
             {formatPrice(unitPrice)}
           </button>
-          <ul className="flex flex-col gap-1.5 text-[13px] text-muted">
-            <li className="flex items-center gap-2">
-              <Truck className="size-4 text-cedar" strokeWidth={1.5} aria-hidden />
-              {t("deliveryNote")}
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 text-cedar" strokeWidth={1.5} aria-hidden />
-              {t("freeShippingNote", { amount: formatPrice(product.freeShippingOver) })}
-            </li>
-          </ul>
           {product.whatsappNumber && (
             <a
               href={whatsappUrl(
@@ -418,6 +414,8 @@ export function ProductView({ product, children }: { product: ProductViewData; c
             </a>
           )}
         </div>
+
+        <ProductInfoCards data={product.info} />
 
         {children}
       </div>
