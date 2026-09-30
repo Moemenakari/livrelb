@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Check, MessageCircle, ShoppingBag, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
@@ -10,6 +10,7 @@ import type {
   ChainConnection,
   FontKey,
   MaterialKey,
+  Localized,
   ProductArt as Art,
   ReviewStats,
   SizeOption,
@@ -27,6 +28,8 @@ import { SizeGuide } from "./size-guide";
 export type ProductViewData = {
   slug: string;
   name: string;
+  /** Both languages, saved with the cart line. */
+  names: Localized;
   summary: string;
   url: string;
   /** Shop rules from site_settings (USD) and the WhatsApp number (empty hides the button). */
@@ -108,15 +111,8 @@ export function ProductView({ product, children }: { product: ProductViewData; c
     (p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined);
   const [size, setSize] = useState<number | undefined>(product.size?.default);
   const [missingName, setMissingName] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
 
   useTrackView(product.slug);
-
-  useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(() => setToast(null), 3200);
-    return () => clearTimeout(id);
-  }, [toast]);
 
   const current = product.materials.find((m) => m.key === material) ?? product.materials[0];
   const unitPrice = current.price;
@@ -135,8 +131,12 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       inputRef.current?.focus();
       return;
     }
+    // Opens the cart drawer.
     addToCart({
       slug: product.slug,
+      name: product.names,
+      art: product.art,
+      sizeKind: product.size?.kind,
       material,
       text: p ? text.trim() : undefined,
       font: p ? font : undefined,
@@ -144,12 +144,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       connection,
       unitPrice,
     });
-    setToast(
-      t("addedDetail", {
-        name: p ? `${product.name} — ${text.trim()}` : product.name,
-        material: current.name,
-      }),
-    );
   };
 
   const sizeLabel = (v: number) =>
@@ -383,17 +377,6 @@ export function ProductView({ product, children }: { product: ProductViewData; c
         {children}
       </div>
 
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-        {toast && (
-          <div className="pointer-events-auto flex animate-rise-in items-center gap-3 rounded-xl bg-ink px-5 py-3.5 text-sm text-white shadow-lg motion-reduce:animate-none">
-            <Check className="size-5 text-gold" strokeWidth={2} aria-hidden />
-            <span className="flex flex-col">
-              <span className="font-medium">{t("added")}</span>
-              <span className="text-white/70">{toast}</span>
-            </span>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

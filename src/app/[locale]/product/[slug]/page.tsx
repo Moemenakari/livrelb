@@ -63,6 +63,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   const view: ProductViewData = {
     slug: product.slug,
     name: product.name[locale],
+    names: product.name,
     summary: product.summary[locale],
     url: `${siteConfig.url}/${locale}${productHref(product.slug)}`,
     freeShippingOver: catalog.settings.freeShippingOver,

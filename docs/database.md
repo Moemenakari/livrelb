@@ -65,6 +65,10 @@ forever; each order stores `staff_id` + `attribution_source` (`code`,
 - **Server only** (secret key): `place_order()` finds or creates the customer
   by phone, recalculates every price from the database, applies the coupon,
   delivery rules and attribution. The browser never sends prices.
+- **Server only**: `quote_order()` prices a bag for the cart and checkout
+  (same helpers as `place_order`, nothing saved). `place_order` takes a
+  `p_request_id`: the same id twice returns the first order (double taps).
+  Returning customers are looked up by phone to prefill the checkout.
 
 Checks: Supabase dashboard → Advisors (security: no warnings).
 

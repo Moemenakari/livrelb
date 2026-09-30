@@ -1,47 +1,127 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { FontKey, MaterialKey, ChainConnection } from "@/lib/catalog/types";
+import type {
+  ChainConnection,
+  FontKey,
+  Localized,
+  MaterialKey,
+  ProductArt,
+  SizeOption,
+} from "@/lib/catalog/types";
+import type { CartItemInput } from "@/lib/checkout/types";
 import { createLocalStore } from "./local-store";
 
-// Minimal bag so "Add to cart" works in the storefront phase. Checkout,
-// phone accounts and orders come in Phase 4 (brief §10), which will read
-// these items.
+// The bag, saved in the browser. It only holds what the customer chose plus
+// what's needed to draw the line (name, art); prices shown from here are an
+// estimate until the server quote arrives, and the order is always priced
+// again on the server (place_order).
 
 export type CartItem = {
   id: string;
   slug: string;
+  /** Snapshot for drawing the line without loading the catalog. */
+  name: Localized;
+  art: ProductArt;
+  sizeKind?: SizeOption["kind"];
   material: MaterialKey;
   text?: string;
   font?: FontKey;
   size?: number;
   connection?: ChainConnection;
+  /** Price when added (USD). Display only. */
   unitPrice: number;
   qty: number;
 };
 
+export const MAX_QTY = 20;
+export const MAX_LINES = 30;
+
 // v2: metals and fonts changed (no 14K, no gift box option); older bags are dropped.
-const store = createLocalStore<CartItem[]>("livre:cart:v2", []);
+const items = createLocalStore<CartItem[]>("livre:cart:v2", []);
+const coupon = createLocalStore<string>("livre:coupon", "");
+// The drawer is not saved: it opens when something is added.
+let drawerOpen = false;
+const drawerListeners = new Set<() => void>();
+
+function setDrawer(open: boolean) {
+  drawerOpen = open;
+  drawerListeners.forEach((l) => l());
+}
+
+const sameDesign = (a: Omit<CartItem, "id" | "qty">, b: Omit<CartItem, "id" | "qty">) =>
+  a.slug === b.slug &&
+  a.material === b.material &&
+  a.text === b.text &&
+  a.font === b.font &&
+  a.size === b.size &&
+  a.connection === b.connection;
 
 export function addToCart(item: Omit<CartItem, "id" | "qty">) {
-  const items = store.read();
-  const same = items.find(
-    (i) =>
-      i.slug === item.slug &&
-      i.material === item.material &&
-      i.text === item.text &&
-      i.font === item.font &&
-      i.size === item.size &&
-      i.connection === item.connection,
-  );
-  store.write(
-    same
-      ? items.map((i) => (i === same ? { ...i, qty: i.qty + 1 } : i))
-      : [...items, { ...item, id: crypto.randomUUID(), qty: 1 }],
+  const list = items.read();
+  const same = list.find((i) => sameDesign(i, item));
+  if (same) {
+    items.write(list.map((i) => (i === same ? { ...i, qty: Math.min(MAX_QTY, i.qty + 1) } : i)));
+  } else if (list.length < MAX_LINES) {
+    items.write([...list, { ...item, id: crypto.randomUUID(), qty: 1 }]);
+  }
+  setDrawer(true);
+}
+
+export function setQty(id: string, qty: number) {
+  items.write(
+    items.read().map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(MAX_QTY, qty)) } : i)),
   );
 }
 
+export function removeFromCart(id: string) {
+  items.write(items.read().filter((i) => i.id !== id));
+}
+
+export function clearCart() {
+  items.write([]);
+  coupon.write("");
+}
+
+export function setCoupon(code: string) {
+  coupon.write(code.trim().toUpperCase());
+}
+
+export const openCart = () => setDrawer(true);
+export const closeCart = () => setDrawer(false);
+
+export function useCart(): CartItem[] {
+  return useSyncExternalStore(items.subscribe, items.read, items.serverSnapshot);
+}
+
 export function useCartCount(): number {
-  const items = useSyncExternalStore(store.subscribe, store.read, store.serverSnapshot);
-  return items.reduce((sum, i) => sum + i.qty, 0);
+  return useCart().reduce((sum, i) => sum + i.qty, 0);
+}
+
+export function useCoupon(): string {
+  return useSyncExternalStore(coupon.subscribe, coupon.read, coupon.serverSnapshot);
+}
+
+export function useCartDrawer(): boolean {
+  return useSyncExternalStore(
+    (l) => {
+      drawerListeners.add(l);
+      return () => drawerListeners.delete(l);
+    },
+    () => drawerOpen,
+    () => false,
+  );
+}
+
+/** What the server needs to price a line: never a price. */
+export function toInput(item: CartItem): CartItemInput {
+  return {
+    product: item.slug,
+    material: item.material,
+    qty: item.qty,
+    text: item.text,
+    font: item.font,
+    size: item.size,
+    connection: item.connection,
+  };
 }

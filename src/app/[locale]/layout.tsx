@@ -3,6 +3,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
 import { resolveLocale } from "@/i18n/resolve-locale";
+import { getCatalog } from "@/lib/catalog";
+import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
@@ -34,6 +36,7 @@ export default async function LocaleLayout({
 }: LayoutProps<"/[locale]">) {
   const locale = await resolveLocale(params);
   const t = await getTranslations("common");
+  const { settings } = await getCatalog();
 
   return (
     <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
@@ -54,6 +57,7 @@ export default async function LocaleLayout({
           <Footer />
           <WheelCoin />
           <WhatsAppFloat />
+          <CartDrawer freeShippingOver={settings.freeShippingOver} />
         </NextIntlClientProvider>
       </body>
     </html>

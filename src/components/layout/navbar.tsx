@@ -1,4 +1,4 @@
-import { ChevronRight, Search, UserRound } from "lucide-react";
+import { ChevronRight, UserRound } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { categoryHref, navCategories } from "@/config/navigation";
@@ -9,6 +9,7 @@ import { CartButton } from "./cart-button";
 import { LocaleSwitcher } from "./locale-switcher";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
+import { SearchButton, type SearchIndex } from "./search-button";
 
 const iconButton =
   "flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold-dark";
@@ -36,6 +37,19 @@ export async function Navbar() {
       full: category.name[locale],
     };
   });
+
+  // Small: names only. Searched in the browser (brief: simple search).
+  const searchIndex: SearchIndex = {
+    products: catalog.products.map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      categories: p.categories
+        .map((slug) => findCategory(catalog, slug))
+        .flatMap((c) => (c ? [c.name.en, c.name.ar] : []))
+        .join(" "),
+    })),
+    categories: catalog.categories.map((c) => ({ slug: c.slug, name: c.name })),
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
@@ -108,9 +122,7 @@ export async function Navbar() {
         </nav>
 
         <div className="ms-auto flex items-center">
-          <Link href="/search" aria-label={t("search")} className={iconButton}>
-            <Search className="size-5.5" strokeWidth={1.5} />
-          </Link>
+          <SearchButton index={searchIndex} className={iconButton} />
           <LocaleSwitcher className="hidden h-10 min-w-10 items-center justify-center px-1.5 text-sm transition-colors hover:text-gold-dark sm:flex" />
           <Link href="/account" aria-label={t("account")} className={`hidden sm:flex ${iconButton}`}>
             <UserRound className="size-5.5" strokeWidth={1.5} />

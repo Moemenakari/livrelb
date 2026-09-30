@@ -6,6 +6,7 @@
 // The seed is idempotent: running it twice changes nothing (existing rows
 // are kept). Prices go in as USD cents; sample reviews as is_sample = true.
 import { writeFileSync } from "node:fs";
+import { sampleAreas } from "../src/lib/catalog/areas";
 import { categories } from "../src/lib/catalog/categories";
 import { allFonts, allMaterials, fonts, materials } from "../src/lib/catalog/materials";
 import { products } from "../src/lib/catalog/products";
@@ -48,13 +49,6 @@ const fontFamily: Record<(typeof allFonts)[number], string> = {
   "deir-el-qamar": "Amiri",
 };
 
-const areas = [
-  ["beirut", "Beirut", "بيروت"],
-  ["mount-lebanon", "Mount Lebanon", "جبل لبنان"],
-  ["north", "North", "الشمال"],
-  ["south", "South", "الجنوب"],
-  ["bekaa", "Bekaa", "البقاع"],
-];
 
 const out: string[] = [];
 const add = (s: string) => out.push(s.trim() + "\n");
@@ -211,7 +205,7 @@ on conflict do nothing;
 
 add(`
 insert into public.areas (slug, name_en, name_ar, sort_order) values
-${rows(areas.map(([slug, en, ar], i) => [slug, en, ar, i]))}
+${rows(sampleAreas.map((a, i) => [a.slug, a.name.en, a.name.ar, i]))}
 on conflict (slug) do nothing;
 `);
 
