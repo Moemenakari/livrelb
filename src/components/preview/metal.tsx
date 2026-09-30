@@ -6,7 +6,7 @@ import { materials } from "@/lib/catalog/materials";
 // polished curved surface; the filter adds a bevel highlight and a soft
 // shadow so it looks like cut metal, not flat text.
 
-const stops: Record<MetalTone, [number, string][]> = {
+export const metalStops: Record<MetalTone, [number, string][]> = {
   gold: [
     [0, "#fdf1c9"],
     [0.25, "#e8c678"],
@@ -68,7 +68,7 @@ export function MetalDefs({ id, tone }: { id: string; tone: MetalTone }) {
   return (
     <>
       <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
-        {stops[tone].map(([offset, color]) => (
+        {metalStops[tone].map(([offset, color]) => (
           <stop key={offset} offset={offset} stopColor={color} />
         ))}
       </linearGradient>

@@ -28,7 +28,7 @@ export async function Navbar() {
 
   const brand = tCommon("brandName");
   const catalog = await getCatalog();
-  const links = navCategories.flatMap((slug) => {
+  const categoryLinks = navCategories.flatMap((slug) => {
     const category = findCategory(catalog, slug);
     if (!category) return [];
     return {
@@ -37,6 +37,12 @@ export async function Navbar() {
       full: category.name[locale],
     };
   });
+  // Charms is its own page (design your charms): second in the menu.
+  const links = [
+    ...categoryLinks.slice(0, 1),
+    { href: "/charms", label: t("charms"), full: t("charms") },
+    ...categoryLinks.slice(1),
+  ];
 
   // Small: names only. Searched in the browser (brief: simple search).
   const searchIndex: SearchIndex = {

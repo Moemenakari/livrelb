@@ -38,7 +38,8 @@
     "search": "Search",
     "account": "My account",
     "cart": "Cart",
-    "cartCount": "Cart, {count, plural, =0 {empty} one {# item} other {# items}}"
+    "cartCount": "Cart, {count, plural, =0 {empty} one {# item} other {# items}}",
+    "charms": "Charms"
   },
   "localeSwitcher": {
     "label": "عربي",
@@ -46,6 +47,7 @@
   },
   "whatsapp": {
     "float": "Chat with us on WhatsApp",
+    "hello": "Hi LIVRE! I have a question.",
     "join": "Hi LIVRE! Please add me to your WhatsApp list for new drops and codes ✨"
   },
   "footer": {
@@ -60,6 +62,8 @@
       "contact": "Contact us",
       "faq": "FAQ",
       "sizeGuide": "Size guide",
+      "about": "Our story",
+      "charms": "Design charms",
       "shipping": "Shipping policy",
       "returns": "Returns & exchanges",
       "privacy": "Privacy policy",
@@ -180,6 +184,9 @@
     "reviewsTitle": "Customer Reviews",
     "reviewsSummary": "Based on {count, plural, one {# review} other {# reviews}}",
     "sizeGuideTitle": "Chain length guide",
+    "chainTitle": "Chain length",
+    "braceletTitle": "Bracelets",
+    "ringTitle": "Rings",
     "sizeGuideIntro": "Measured end to end, clasp included. Not sure? 45 cm suits most necks.",
     "chainGuide": {
       "35": "Choker, sits at the base of the neck",
@@ -486,6 +493,119 @@
     },
     "weAccept": "We accept",
     "secure": "Secure checkout. Your information is protected."
+  },
+  "pages": {
+    "breadcrumbLabel": "Breadcrumb",
+    "home": "Home",
+    "draftTitle": "Draft for review.",
+    "draftText": "This page is a simple template waiting for Nour to read and approve it before we open to customers."
+  },
+  "contact": {
+    "title": "Contact us",
+    "intro": "We love hearing from you. Message us about an order, a design or a gift idea and we will reply as soon as we can.",
+    "whatsapp": "Chat on WhatsApp",
+    "instagram": "Follow on Instagram",
+    "links": {
+      "track": {
+        "title": "Track my order",
+        "text": "See where your order is."
+      },
+      "faq": {
+        "title": "FAQ",
+        "text": "Sizes, care, delivery and points."
+      },
+      "charms": {
+        "title": "Design charms",
+        "text": "Pick shapes or send your idea."
+      }
+    },
+    "hours": "We usually reply within a few hours, every day."
+  },
+  "charms": {
+    "nav": "Charms",
+    "eyebrow": "Design your own",
+    "title": "Your charms, your story",
+    "subtitle": "Pick from {count}+ shapes and letters, add your own letters or show us a photo of your idea. We make it by hand and message you the price.",
+    "stepShapes": "1. Pick your shapes",
+    "stepLetters": "2. Add your letters",
+    "stepIdea": "3. Or show us your idea",
+    "stepSend": "4. Send it to us",
+    "count": "{count} shapes, letters and numbers",
+    "search": "Search shapes (heart, star, A…)",
+    "groups": {
+      "all": "All",
+      "love": "Love",
+      "sky": "Sky & sun",
+      "nature": "Nature",
+      "animals": "Animals",
+      "symbols": "Symbols",
+      "fun": "Fun & life",
+      "letters": "Letters",
+      "arabic": "Arabic letters",
+      "numbers": "Numbers"
+    },
+    "metal": {
+      "label": "Metal",
+      "gold": "Gold",
+      "silver": "Silver"
+    },
+    "add": "Add {name}",
+    "remove": "Remove {name}",
+    "clear": "Clear all",
+    "yourDesign": "Your design",
+    "empty": "Tap a shape to add it. Up to {max} charms.",
+    "picked": "{count} of {max} charms. Tap a charm on the chain to remove it.",
+    "full": "You reached {max} charms.",
+    "showMore": "Show {left} more",
+    "noResults": "No shape found. Try another word, or send us a photo of what you want.",
+    "lettersLabel": "Letters or a short word (up to {max})",
+    "lettersHint": "It appears on your design as a small plate. English or Arabic.",
+    "photo": {
+      "title": "Upload a photo of your idea",
+      "hint": "A drawing, a screenshot or a photo. JPG, PNG or WebP, up to 5 MB.",
+      "choose": "Choose a photo",
+      "uploading": "Uploading…",
+      "remove": "Remove photo",
+      "error": "We couldn't upload this photo. Please try another one."
+    },
+    "ai": {
+      "title": "AI charm designer",
+      "text": "Describe the charm you imagine and get a drawing of it.",
+      "soon": "Coming this week"
+    },
+    "whatsapp": {
+      "title": "Prefer WhatsApp?",
+      "text": "Send us your idea or photo directly and we will help you.",
+      "cta": "Chat on WhatsApp",
+      "message": "Hi LIVRE! I designed charms on your website:"
+    },
+    "summary": {
+      "shapes": "Shapes",
+      "letters": "Letters",
+      "metal": "Metal",
+      "photo": "Photo",
+      "name": "Name"
+    },
+    "form": {
+      "name": "Your name",
+      "phone": "Phone number",
+      "note": "Anything else we should know? (optional)",
+      "submit": "Send my charm design",
+      "privacy": "We only use your name and phone to reply to this request."
+    },
+    "errors": {
+      "name_required": "Please write your name.",
+      "phone_invalid": "Please check your phone number.",
+      "empty_design": "Pick a shape, add letters or upload a photo first.",
+      "rate_limited": "Too many requests. Please wait a few minutes and try again.",
+      "failed": "Something went wrong. Please try again."
+    },
+    "done": {
+      "title": "Thank you, we got your design!",
+      "text": "We will message you on WhatsApp with the price and the next step. Your reference: {ref}.",
+      "whatsapp": "Send it on WhatsApp too",
+      "another": "Design another"
+    }
   },
   "tracking": {
     "progress": "Order progress",

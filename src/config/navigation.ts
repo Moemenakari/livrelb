@@ -18,8 +18,9 @@ export const navCategories: CategorySlug[] = [
 export const categoryHref = (slug: CategorySlug) => `/category/${slug}`;
 export const productHref = (slug: string) => `/product/${slug}`;
 
-// Help and policy pages are built in a later phase (they 404 for now).
 export const helpLinks = [
+  { key: "charms", href: "/charms" },
+  { key: "about", href: "/about" },
   { key: "contact", href: "/contact" },
   { key: "faq", href: "/faq" },
   { key: "sizeGuide", href: "/size-guide" },

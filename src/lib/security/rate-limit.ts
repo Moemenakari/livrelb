@@ -14,6 +14,8 @@ const rules = {
   checkout: { ip: { limit: 30, windowSeconds: 600 }, phone: { limit: 8, windowSeconds: 600 } },
   track: { ip: { limit: 30, windowSeconds: 600 }, phone: { limit: 10, windowSeconds: 600 } },
   points: { ip: { limit: 30, windowSeconds: 600 }, phone: { limit: 10, windowSeconds: 600 } },
+  // Charm requests and reference photo uploads from the Charms page.
+  charm: { ip: { limit: 12, windowSeconds: 600 }, phone: { limit: 4, windowSeconds: 600 } },
   payment: { ip: { limit: 20, windowSeconds: 600 }, phone: { limit: 5, windowSeconds: 600 } },
   // Staff login (/admin): slows down password guessing.
   login: { ip: { limit: 20, windowSeconds: 900 }, phone: { limit: 8, windowSeconds: 900 } },
