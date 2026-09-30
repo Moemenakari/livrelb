@@ -30,9 +30,9 @@ export function MobileMenu({
         onClick={() => dialogRef.current?.showModal()}
         aria-label={openLabel}
         aria-haspopup="dialog"
-        className="flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold-dark lg:hidden"
+        className="flex size-9 items-center justify-center rounded-full transition-colors hover:text-gold-dark lg:hidden"
       >
-        <Menu className="size-6" strokeWidth={1.5} />
+        <Menu className="size-5.5" strokeWidth={1.5} />
       </button>
 
       <dialog

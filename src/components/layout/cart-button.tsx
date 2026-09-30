@@ -12,7 +12,7 @@ export function CartButton({ className }: { className: string }) {
 
   return (
     <Link href="/cart" aria-label={t("cartCount", { count })} className={`relative ${className}`}>
-      <ShoppingBag className="size-5.5" strokeWidth={1.5} />
+      <ShoppingBag className="size-5" strokeWidth={1.5} />
       {count > 0 && (
         <span
           aria-hidden

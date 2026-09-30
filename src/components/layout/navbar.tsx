@@ -12,7 +12,7 @@ import { MobileMenu } from "./mobile-menu";
 import { SearchButton, type SearchIndex } from "./search-button";
 
 const iconButton =
-  "flex size-10 items-center justify-center rounded-full transition-colors hover:text-gold-dark";
+  "flex size-9 items-center justify-center rounded-full transition-colors hover:text-gold-dark lg:size-10";
 const drawerLink =
   "flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:text-gold-dark";
 
@@ -55,7 +55,7 @@ export async function Navbar() {
     <header className="sticky top-0 z-40 border-b border-line bg-background">
       {/* Wider than the page container so the one-row menu fits at 1440px. */}
       <div className="mx-auto flex max-w-[90rem] flex-wrap items-center px-2 sm:px-4 lg:px-8">
-        <div className="flex h-14 items-center gap-1 lg:h-20">
+        <div className="flex h-12 items-center gap-1 lg:h-16">
           <MobileMenu
             openLabel={t("openMenu")}
             closeLabel={t("closeMenu")}
@@ -99,7 +99,7 @@ export async function Navbar() {
           <Logo
             name={brand}
             homeLabel={t("homeLabel")}
-            className="ms-1 text-[1.45rem] lg:ms-0 lg:text-[1.85rem]"
+            className="ms-1 text-[1.2rem] lg:ms-0 lg:text-[1.55rem]"
           />
         </div>
 
@@ -107,7 +107,7 @@ export async function Navbar() {
           aria-label={t("mainLabel")}
           className="order-last hidden w-full border-t border-line lg:block min-[90rem]:order-none min-[90rem]:w-auto min-[90rem]:flex-1 min-[90rem]:border-t-0"
         >
-          <ul className="flex h-12 items-center justify-center gap-x-7 min-[90rem]:h-20 min-[90rem]:gap-x-6">
+          <ul className="flex h-12 items-center justify-center gap-x-7 min-[90rem]:h-16 min-[90rem]:gap-x-6">
             {links.map(({ href, label }) => (
               <li key={href}>
                 <Link
@@ -125,7 +125,7 @@ export async function Navbar() {
           <SearchButton index={searchIndex} className={iconButton} />
           <LocaleSwitcher className="hidden h-10 min-w-10 items-center justify-center px-1.5 text-sm transition-colors hover:text-gold-dark sm:flex" />
           <Link href="/account" aria-label={t("account")} className={`hidden sm:flex ${iconButton}`}>
-            <UserRound className="size-5.5" strokeWidth={1.5} />
+            <UserRound className="size-5" strokeWidth={1.5} />
           </Link>
           <CartButton className={iconButton} />
         </div>

@@ -67,7 +67,7 @@ export function SearchButton({ index, className }: { index: SearchIndex; classNa
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label={t("open")} className={className}>
-        <Search className="size-5.5" strokeWidth={1.5} />
+        <Search className="size-5" strokeWidth={1.5} />
       </button>
 
       {open && (

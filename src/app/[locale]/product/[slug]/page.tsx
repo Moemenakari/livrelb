@@ -137,7 +137,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   const reviews = reviewsFor(catalog, product.slug);
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 pt-5 pb-20 lg:gap-20 lg:px-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 pt-3 pb-20 lg:gap-20 lg:px-8">
       <div className="flex flex-col gap-5">
         <Breadcrumbs
           label={t("breadcrumbLabel")}

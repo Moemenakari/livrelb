@@ -7,11 +7,11 @@ type Crumb = { label: string; href?: string };
 export function Breadcrumbs({ items, label }: { items: Crumb[]; label: string }) {
   return (
     <nav aria-label={label}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
+      <ol className="flex flex-wrap items-center gap-1 text-[11.5px] text-muted sm:text-[12.5px]">
         {items.map((item, i) => (
-          <li key={item.label} className="flex items-center gap-1.5">
+          <li key={item.label} className="flex items-center gap-1">
             {i > 0 && (
-              <ChevronRight className="size-3.5 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />
+              <ChevronRight className="size-3 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />
             )}
             {item.href ? (
               <Link href={item.href} className="transition-colors hover:text-foreground">

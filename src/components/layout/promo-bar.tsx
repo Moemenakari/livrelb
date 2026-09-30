@@ -12,13 +12,13 @@ export async function PromoBar() {
 
   return (
     <aside aria-label={t("label")} className="relative z-[1] bg-cedar text-white">
-      <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-center text-[12px] sm:text-[13px]">
+      <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-1.5 text-center text-[11px] sm:text-[12px]">
         <span>{promo.text?.[locale] ?? t("tagline")}</span>
         <strong className="font-semibold">{t("offer", { percent: promo.percent })}</strong>
         <span aria-hidden>·</span>
         <span className="inline-flex items-center gap-1.5">
           {t("code")}
-          <CopyCode code={promo.code} copyLabel={t("copy", { code: promo.code })} copiedLabel={t("copied")} />
+          <CopyCode className="px-1.5 py-0 text-[10.5px] sm:text-[11.5px]" code={promo.code} copyLabel={t("copy", { code: promo.code })} copiedLabel={t("copied")} />
         </span>
       </p>
     </aside>
