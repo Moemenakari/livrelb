@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
-import type { FontKey, MaterialKey, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
+import type { FontKey, MaterialKey, Piece, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
 import { NamePreview, aspectHeight, type Aspect } from "@/components/preview/name-preview";
 import { MetalDefs, coinTint, metalEdge, toTone } from "@/components/preview/metal";
 import { scriptFace } from "@/components/preview/script-fonts";
@@ -16,6 +16,8 @@ type Props = {
   text?: string;
   font?: FontKey;
   connection?: ChainConnection;
+  /** Worn as a necklace or a bracelet; the art's own variant when missing. */
+  piece?: Piece;
   aspect?: Aspect;
   shine?: boolean;
   className?: string;
@@ -27,6 +29,7 @@ export function ProductArt({
   text = "",
   font,
   connection,
+  piece,
   aspect = "portrait",
   shine,
   className = "",
@@ -38,7 +41,7 @@ export function ProductArt({
         material={material}
         font={font}
         connection={connection}
-        variant={art.variant}
+        variant={piece ?? art.variant}
         aspect={aspect}
         shine={shine}
         className={className}
@@ -46,7 +49,16 @@ export function ProductArt({
     );
   }
   return (
-    <ShapeArt art={art} material={material} text={text} font={font} aspect={aspect} className={className} />
+    <ShapeArt
+      art={art}
+      material={material}
+      text={text}
+      font={font}
+      connection={connection}
+      piece={piece}
+      aspect={aspect}
+      className={className}
+    />
   );
 }
 
@@ -68,6 +80,8 @@ function Chain({ d, tone }: { d: string; tone: Tone }) {
   );
 }
 
+type Pt = { x: number; y: number };
+
 /** Necklace chain from the top corners down to a pendant at (200, y). */
 const drape = (y: number) =>
   `M 44 -4 C 70 ${y * 0.8} 150 ${y} 200 ${y} S 330 ${y * 0.8} 356 -4`;
@@ -77,6 +91,8 @@ function ShapeArt({
   material,
   text,
   font = "beirut",
+  connection = "center",
+  piece,
   aspect,
   className,
 }: {
@@ -84,6 +100,8 @@ function ShapeArt({
   material: MaterialKey;
   text: string;
   font?: FontKey;
+  connection?: ChainConnection;
+  piece?: Piece;
   aspect: Aspect;
   className: string;
 }) {
@@ -97,7 +115,7 @@ function ShapeArt({
   const coin = (cx: number, y: number, r: number) => (
     <g>
       <image
-        href="/coin/coin.webp"
+        href={art.kind === "coin" && art.coin ? `/coin/lira-${art.coin}-back.webp` : "/coin/coin.webp"}
         x={cx - r}
         y={y - r}
         width={r * 2}
@@ -108,25 +126,68 @@ function ShapeArt({
     </g>
   );
 
+  const ring = ({ x, y }: Pt) => (
+    <circle key={`${x},${y}`} cx={x} cy={y} r="6" fill="none" stroke={fill} strokeWidth="2.8" />
+  );
+
+  // The chain and jump rings of a pendant worn as a necklace or a bracelet,
+  // from one ring on top (center) or two rings on its sides.
+  const hang = (worn: Piece, at: { top: Pt; left: Pt; right: Pt }) => {
+    const { top, left, right } = at;
+    if (worn === "necklace" && connection === "center") {
+      return (
+        <>
+          <Chain d={drape(top.y - 6)} tone={tone} />
+          {ring(top)}
+        </>
+      );
+    }
+    if (worn === "necklace") {
+      return (
+        <>
+          <Chain d={`M 44 -4 Q ${left.x - 12} ${left.y * 0.55} ${left.x - 4} ${left.y - 5}`} tone={tone} />
+          <Chain d={`M 356 -4 Q ${right.x + 12} ${right.y * 0.55} ${right.x + 4} ${right.y - 5}`} tone={tone} />
+          {ring(left)}
+          {ring(right)}
+        </>
+      );
+    }
+    if (connection === "center") {
+      const y = top.y - 6;
+      return (
+        <>
+          <Chain d={`M -4 ${y - 10} Q ${top.x / 2} ${y + 4} ${top.x} ${y}`} tone={tone} />
+          <Chain d={`M 404 ${y - 10} Q ${(400 + top.x) / 2} ${y + 4} ${top.x} ${y}`} tone={tone} />
+          {ring(top)}
+        </>
+      );
+    }
+    return (
+      <>
+        <Chain d={`M -4 ${left.y - 8} Q ${left.x / 2} ${left.y + 8} ${left.x - 6} ${left.y}`} tone={tone} />
+        <Chain d={`M 404 ${right.y - 8} Q ${(400 + right.x) / 2} ${right.y + 8} ${right.x + 6} ${right.y}`} tone={tone} />
+        {ring(left)}
+        {ring(right)}
+      </>
+    );
+  };
+
   let body: ReactNode;
   switch (art.kind) {
-    case "coin":
-      if (art.variant === "necklace") {
+    case "coin": {
+      const worn = art.variant === "earrings" ? undefined : (piece ?? art.variant);
+      if (worn) {
+        const r = worn === "necklace" ? 62 : 44;
+        // Side rings: up on the shoulders of a necklace pendant, level on a bracelet.
+        const side = worn === "necklace" ? { dx: (r + 5) * 0.8, dy: -(r + 5) * 0.6 } : { dx: r + 3, dy: 0 };
         body = (
           <>
-            <Chain d={drape(cy - 76)} tone={tone} />
-            <ellipse cx="200" cy={cy - 70} rx="6" ry="9" fill="none" stroke={fill} strokeWidth="3" />
-            {coin(200, cy, 62)}
-          </>
-        );
-      } else if (art.variant === "bracelet") {
-        body = (
-          <>
-            <Chain d={`M -4 ${cy - 8} Q 70 ${cy + 8} 150 ${cy}`} tone={tone} />
-            <Chain d={`M 404 ${cy - 8} Q 330 ${cy + 8} 250 ${cy}`} tone={tone} />
-            <circle cx="153" cy={cy} r="6" fill="none" stroke={fill} strokeWidth="2.6" />
-            <circle cx="247" cy={cy} r="6" fill="none" stroke={fill} strokeWidth="2.6" />
-            {coin(200, cy, 44)}
+            {hang(worn, {
+              top: { x: 200, y: cy - r - 5 },
+              left: { x: 200 - side.dx, y: cy + side.dy },
+              right: { x: 200 + side.dx, y: cy + side.dy },
+            })}
+            {coin(200, cy, r)}
           </>
         );
       } else {
@@ -149,12 +210,21 @@ function ShapeArt({
         );
       }
       break;
-    case "cedar":
+    }
+    case "cedar": {
+      const worn = piece ?? art.variant ?? "necklace";
+      // The cedar drawing is 32 x 24 units; s = its scale.
+      const s = worn === "necklace" ? 4 : 3;
+      const ox = 200 - 16 * s;
+      const oy = worn === "necklace" ? cy - 72 : cy - 12 * s;
       body = (
         <>
-          <Chain d={drape(cy - 84)} tone={tone} />
-          <circle cx="200" cy={cy - 78} r="6.5" fill="none" stroke={fill} strokeWidth="2.8" />
-          <g transform={`translate(136 ${cy - 72}) scale(4)`} fill={fill} stroke={edge} strokeWidth="0.3">
+          {hang(worn, {
+            top: { x: 200, y: oy + 2 * s - 6 },
+            left: { x: ox + 2 * s - 6, y: oy + 19 * s - 2 },
+            right: { x: ox + 30 * s + 6, y: oy + 19 * s - 2 },
+          })}
+          <g transform={`translate(${ox} ${oy}) scale(${s})`} fill={fill} stroke={edge} strokeWidth="0.3">
             <path d="M16 2 19.5 5.5h-7z" />
             <path d="M16 5l6.5 4.5h-13z" />
             <path d="M16 8.5 26 14H6z" />
@@ -164,6 +234,7 @@ function ShapeArt({
         </>
       );
       break;
+    }
     case "ring":
       body = (
         <>

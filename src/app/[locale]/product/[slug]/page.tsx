@@ -81,9 +81,10 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
       kind: p.kind,
       maxLength: p.maxLength,
       fonts: p.fonts.map((key) => ({ key, name: fonts[key].name[locale] })),
-      connections: p.connections,
     },
+    connections: p?.connections ?? product.connections ?? [],
     size: product.size,
+    altSize: product.altSize,
     art: product.art,
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
   };

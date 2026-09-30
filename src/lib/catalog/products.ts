@@ -1,5 +1,6 @@
 import { allFonts } from "./materials";
 import type {
+  ChainConnection,
   FontKey,
   Localized,
   MaterialKey,
@@ -55,12 +56,46 @@ const coinDetails: Localized = {
   ar: "ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.\nالسلسلة: 1.5 ملم.\nأساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.",
 };
 
+const livresDetails = (value: 250 | 500, year: number, ar: string): Localized => ({
+  en: `Coin pendant: 2.4 cm, both faces of the ${year} ${value} Livres coin in relief: the cedar and "مصرف لبنان" on one side, the big ${value} on the other.
+Chain: 1.5 mm cable chain.
+Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.`,
+  ar: `ميدالية الليرة: 2.4 سم، بوجهَي ${ar} ${year} البارزين: الأرزة و«مصرف لبنان» على وجه، والرقم ${value} الكبير على الآخر.
+السلسلة: 1.5 ملم.
+أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.`,
+});
+
 const simpleDetails: Localized = {
   en: "Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.",
   ar: "فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.",
 };
 
-export const products: Product[] = [
+// Every necklace can also be ordered as a bracelet and every bracelet as a
+// necklace (a necklace costs $6.49 more), and every chain piece lets the customer pick
+// where the chain attaches: one ring on top or both sides. The first
+// connection is the default: both sides for a name, one ring for the rest.
+const PIECE_PRICE_CHANGE = 6.49;
+const connections: ChainConnection[] = ["center", "sides"];
+
+function wearable(p: Product): Product {
+  if (p.size?.kind !== "chain" && p.size?.kind !== "bracelet") return p;
+  const altSize: SizeOption =
+    p.size.kind === "chain"
+      ? { ...bracelet, priceModifier: -PIECE_PRICE_CHANGE }
+      : { ...chain, priceModifier: PIECE_PRICE_CHANGE };
+  return p.personalization
+    ? {
+        ...p,
+        altSize,
+        personalization: {
+          ...p.personalization,
+          connections: p.personalization.kind === "name" ? ["sides", "center"] : connections,
+        },
+      }
+    : { ...p, altSize, connections };
+}
+
+export const products: Product[] = ([
   {
     slug: "cursive-name-necklace",
     name: { en: "Cursive Name Necklace", ar: "قلادة الاسم بخط متصل" },
@@ -124,6 +159,46 @@ export const products: Product[] = [
     art: { kind: "coin", variant: "necklace" },
     media: [],
     details: coinDetails,
+  },
+  {
+    slug: "250-livres-coin-necklace",
+    name: { en: "250 Livres Coin Necklace", ar: "قلادة الـ٢٥٠ ليرة" },
+    summary: {
+      en: "The golden 250 of the 90s, with its sunburst of leaves.",
+      ar: "الـ٢٥٠ الذهبية تبع التسعينات، مع دائرة الأوراق حولها.",
+    },
+    description: {
+      en: "New in the Lira collection. The 1996 250 Livres was the coin of every manoushe, every bus ride and every \"keep the change\". We recast it as a pendant with all its details: the cedar and \"مصرف لبنان\" on one face, the big 250 inside a sunburst of leaves on the other. Wear it alone, or layer it with the 500 for the full story.",
+      ar: "جديد في مجموعة الليرة. الـ٢٥٠ ليرة تبع ١٩٩٦ كانت ليرة كل منقوشة وكل مشوار بالفان وكل «خلّي الباقي». صببناها ميدالية بكل تفاصيلها: الأرزة و«مصرف لبنان» على وجه، والـ٢٥٠ الكبيرة وسط دائرة أوراق على الوجه الآخر. البسيها وحدها أو مع الـ٥٠٠ لتكتمل القصة.",
+    },
+    categories: ["lira-collection", "necklaces", "gifts"],
+    isNew: true,
+    offers: offers(plated, 54, 70, [162, 210]),
+    defaultMaterial: "gold",
+    size: chain,
+    art: { kind: "coin", variant: "necklace", coin: 250 },
+    media: [],
+    details: livresDetails(250, 1996, "ليرة الـ٢٥٠"),
+  },
+  {
+    slug: "500-livres-coin-necklace",
+    name: { en: "500 Livres Coin Necklace", ar: "قلادة الـ٥٠٠ ليرة" },
+    summary: {
+      en: "The silver 500, the biggest coin in your pocket.",
+      ar: "الـ٥٠٠ الفضية، أكبر ليرة بجيبتك.",
+    },
+    description: {
+      en: "New in the Lira collection. The 2006 500 Livres, the coin we all saved in a jar. The cedar and \"مصرف لبنان\" around a bold ٥٠٠ on one face, a strong 500 framed by a ring of panels on the other, recast as a pendant in the metal you choose. A piece of home you can hold, and the perfect gift for anyone who misses it.",
+      ar: "جديد في مجموعة الليرة. الـ٥٠٠ ليرة تبع ٢٠٠٦، الليرة يلي كلنا جمعناها بالقجّة. الأرزة و«مصرف لبنان» حول ٥٠٠ عريضة على وجه، و500 كبيرة داخل حلقة على الوجه الآخر، مصبوبة ميدالية بالمعدن يلي بتختاريه. قطعة من الوطن بإيدك، وأحلى هدية لكل حدا مشتاقله.",
+    },
+    categories: ["lira-collection", "necklaces", "mens-jewelry", "gifts"],
+    isNew: true,
+    offers: offers(plated, 54, 70, [162, 210]),
+    defaultMaterial: "silver",
+    size: chain,
+    art: { kind: "coin", variant: "necklace", coin: 500 },
+    media: [],
+    details: livresDetails(500, 2006, "ليرة الـ٥٠٠"),
   },
   {
     slug: "name-bracelet",
@@ -489,4 +564,4 @@ export const products: Product[] = [
     media: [],
     details: nameDetails,
   },
-];
+] satisfies Product[]).map(wearable);

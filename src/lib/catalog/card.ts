@@ -61,7 +61,7 @@ export function toCard(product: Product, locale: Locale): CardProduct {
     defaultMaterial: main.material,
     sample: p?.sample,
     fonts: p?.fonts,
-    connection: p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined,
+    connection: (p?.connections ?? product.connections)?.[0],
     art: product.art,
     media: product.media.map((m) => ({ src: m.src, alt: m.alt[locale] })),
     categories: product.categories,

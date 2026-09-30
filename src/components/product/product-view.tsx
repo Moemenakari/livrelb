@@ -11,6 +11,7 @@ import type {
   FontKey,
   MaterialKey,
   Localized,
+  Piece,
   ProductArt as Art,
   ReviewStats,
   SizeOption,
@@ -24,6 +25,7 @@ import { GiftBoxNote } from "./gift-box-note";
 import { ProductArt } from "./product-art";
 import { ProductGallery, type GalleryHandle } from "./product-gallery";
 import { SizeGuide } from "./size-guide";
+import { pieceOf } from "@/lib/catalog/types";
 
 export type ProductViewData = {
   slug: string;
@@ -51,9 +53,12 @@ export type ProductViewData = {
     maxLength: number;
     /** Allowed fonts (the product's default first), named in the page language. */
     fonts: { key: FontKey; name: string }[];
-    connections: ChainConnection[];
   };
+  /** Where the chain may attach (one ring on top, or both sides). */
+  connections: ChainConnection[];
   size?: SizeOption;
+  /** The same design worn the other way (necklace or bracelet), with its price change. */
+  altSize?: SizeOption;
   art: Art;
   media: { src: string; alt: string }[];
 };
@@ -88,9 +93,9 @@ export function ProductView({ product, children }: { product: ProductViewData; c
     return {
       text: p ? [...(q.get("name") ?? "")].slice(0, p.maxLength).join("") : "",
       material: product.materials.find((m) => m.key === material)?.key,
-      connection: p?.connections.find((c) => c === connection),
+      connection: product.connections.find((c) => c === connection),
     };
-  }, [search, p, product.materials]);
+  }, [search, p, product.materials, product.connections]);
 
   const [materialChoice, setMaterial] = useState<MaterialKey | null>(null);
   const [textChoice, setText] = useState<string | null>(null);
@@ -108,15 +113,22 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   const connection =
     connectionChoice ??
     fromUrl.connection ??
-    (p ? (p.connections.includes("sides") ? "sides" : p.connections[0]) : undefined);
+    // The product's first connection is its default.
+    product.connections[0];
+  // Necklace or bracelet: the listed sizes or the other piece's sizes.
+  const [pieceChoice, setPieceChoice] = useState<"main" | "alt">("main");
+  const sizing = (pieceChoice === "alt" && product.altSize) || product.size;
+  const pieces = product.altSize ? [product.size, product.altSize] : [];
+  const piece = pieceOf(sizing?.kind);
   const [size, setSize] = useState<number | undefined>(product.size?.default);
   const [missingName, setMissingName] = useState(false);
 
   useTrackView(product.slug);
 
   const current = product.materials.find((m) => m.key === material) ?? product.materials[0];
-  const unitPrice = current.price;
-  const compareAt = current.compareAtPrice;
+  const priceChange = sizing?.priceModifier ?? 0;
+  const unitPrice = current.price + priceChange;
+  const compareAt = current.compareAtPrice && current.compareAtPrice + priceChange;
   const discount = compareAt ? Math.round((1 - unitPrice / compareAt) * 100) : undefined;
 
   // Every design change brings the live preview slide back into view.
@@ -136,7 +148,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       slug: product.slug,
       name: product.names,
       art: product.art,
-      sizeKind: product.size?.kind,
+      sizeKind: sizing?.kind,
       material,
       text: p ? text.trim() : undefined,
       font: p ? font : undefined,
@@ -147,7 +159,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   };
 
   const sizeLabel = (v: number) =>
-    product.size?.kind === "ring" ? t("usSize", { value: v }) : t("cm", { value: v });
+    sizing?.kind === "ring" ? t("usSize", { value: v }) : t("cm", { value: v });
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
@@ -158,7 +170,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           art={product.art}
           media={product.media}
           personalizable={Boolean(p)}
-          state={{ material, text, font, connection }}
+          state={{ material, text, font, connection, piece }}
         />
       </div>
 
@@ -216,7 +228,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                 />
                 <span className="text-[12px] leading-tight">{m.name}</span>
                 <span className="mt-auto text-[12px] font-medium text-gold-dark">
-                  {formatPrice(m.price)}
+                  {formatPrice(m.price + priceChange)}
                 </span>
               </button>
             ))}
@@ -285,6 +297,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                   text={text}
                   font={font}
                   connection={connection}
+                  piece={piece}
                   aspect="wide"
                 />
               </div>
@@ -292,16 +305,48 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
         )}
 
-        {product.size && (
+        {pieces.length > 1 && (
+          <fieldset className="flex min-w-0 flex-col">
+            <legend className="mb-3 text-sm font-medium">{t("pieceLabel")}</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {pieces.map((option, i) => {
+                const which = i === 0 ? "main" : "alt";
+                const worn = pieceOf(option?.kind) ?? "necklace";
+                return (
+                  <button
+                    key={which}
+                    type="button"
+                    aria-pressed={pieceChoice === which}
+                    onClick={() => {
+                      design(setPieceChoice)(which);
+                      setSize(option?.default);
+                    }}
+                    className={`${optionCard} flex items-center gap-3 px-3 py-3 text-start text-[13px] leading-tight ${pieceChoice === which ? selected : unselected}`}
+                  >
+                    <PieceIcon piece={worn} />
+                    <span className="flex flex-col gap-0.5">
+                      {t(`piece.${worn}`)}
+                      <span className="text-[12px] text-gold-dark">
+                        {formatPrice(current.price + (option?.priceModifier ?? 0))}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {sizing && (
           <div role="group" aria-labelledby={`${inputId}-size`} className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <span id={`${inputId}-size`} className="text-sm font-medium">
-                {t(`size.${product.size.kind}`)}
+                {t(`size.${sizing.kind}`)}
               </span>
-              <SizeGuide size={product.size} />
+              <SizeGuide size={sizing} />
             </div>
             <div className="grid grid-cols-5 gap-2">
-              {product.size.values.map((v) => (
+              {sizing.values.map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -316,14 +361,14 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
         )}
 
-        {p && p.connections.length > 1 && (
+        {product.connections.length > 1 && (
           <fieldset className="flex min-w-0 flex-col gap-3">
             <legend className="mb-3 flex flex-col gap-0.5">
               <span className="text-sm font-medium">{t("connectionLabel")}</span>
-              <span className="text-xs text-muted">{t("connectionHint")}</span>
+              <span className="text-xs text-muted">{t(p ? "connectionHint" : "connectionHintPendant")}</span>
             </legend>
             <div className="grid grid-cols-2 gap-2">
-              {p.connections.map((r) => (
+              {product.connections.map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -378,6 +423,25 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       </div>
 
     </div>
+  );
+}
+
+// Tiny drawing of the piece: a chain hanging down, or a loop for the wrist.
+function PieceIcon({ piece }: { piece: Piece }) {
+  return (
+    <svg viewBox="0 0 40 24" className="h-6 w-10 shrink-0 text-gold-dark" fill="none" stroke="currentColor" aria-hidden>
+      {piece === "necklace" ? (
+        <>
+          <path d="M5 1 Q8 17 20 17 Q32 17 35 1" strokeWidth="1" strokeDasharray="1.6 1" />
+          <circle cx="20" cy="19.5" r="3" fill="currentColor" stroke="none" />
+        </>
+      ) : (
+        <>
+          <ellipse cx="20" cy="12" rx="15" ry="6.5" strokeWidth="1" strokeDasharray="1.6 1" />
+          <circle cx="20" cy="18.5" r="3" fill="currentColor" stroke="none" />
+        </>
+      )}
+    </svg>
   );
 }
 

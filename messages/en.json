@@ -146,6 +146,12 @@
     "cm": "{value} cm",
     "usSize": "US {value}",
     "sizeGuide": "Size guide",
+    "pieceLabel": "Wear it as",
+    "piece": {
+      "necklace": "Necklace",
+      "bracelet": "Bracelet"
+    },
+    "connectionHintPendant": "One ring on top, or the chain on both sides",
     "connectionLabel": "Chain Connection",
     "connectionHint": "Where the chain attaches to your name",
     "connection": {
@@ -218,7 +224,7 @@
     "lira": {
       "eyebrow": "The Lira Collection",
       "title": "Your story, in a Livre",
-      "text": "Remember the 1 Livre coin? The cedar on one side, the laurel wreath on the other. We turned the 1975 coin into jewelry you can wear every day: a little piece of home, in silver or gold.",
+      "text": "Remember the 1 Livre coin? The golden 250 and the big silver 500? The cedar on one side, the value on the other. We turned the coins we grew up with into jewelry you can wear every day: a little piece of home, in silver or gold. New: the 250 and 500 Livres necklaces.",
       "cta": "Shop the Lira collection",
       "coinAlt": "The 1975 Lebanese 1 Livre coin"
     },

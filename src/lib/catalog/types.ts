@@ -58,7 +58,15 @@ export type SizeOption = {
   kind: "chain" | "bracelet" | "ring";
   values: number[];
   default: number;
+  /** USD added to the metal price for this size type (price_modifier_cents). */
+  priceModifier?: number;
 };
+
+/** What a chain piece is worn as: necklace (chain sizes) or bracelet. */
+export type Piece = "necklace" | "bracelet";
+
+export const pieceOf = (kind: SizeOption["kind"] | undefined): Piece | undefined =>
+  kind === "chain" ? "necklace" : kind === "bracelet" ? "bracelet" : undefined;
 
 export type Personalization = {
   kind: "name" | "initial";
@@ -77,8 +85,9 @@ export type Personalization = {
  */
 export type ProductArt =
   | { kind: "name"; variant: "necklace" | "bracelet" }
-  | { kind: "coin"; variant: "necklace" | "bracelet" | "earrings" }
-  | { kind: "cedar" }
+  /** coin: which Livre coin; the 1975 1 Livre when missing. */
+  | { kind: "coin"; variant: "necklace" | "bracelet" | "earrings"; coin?: 250 | 500 }
+  | { kind: "cedar"; variant?: Piece }
   | { kind: "ring"; engraving: "initial" | "plain" }
   | { kind: "hoops"; pearl: boolean };
 
@@ -111,7 +120,18 @@ export type Product = {
   offers: MaterialOffer[];
   defaultMaterial: MaterialKey;
   personalization?: Personalization;
+  /**
+   * Chain connection choices of a piece that is not personalized (coins,
+   * cedars). Personalized pieces use personalization.connections.
+   */
+  connections?: ChainConnection[];
+  /** Sizes of the piece as listed (necklace, bracelet or ring). */
   size?: SizeOption;
+  /**
+   * The same design worn the other way: bracelet sizes for a necklace,
+   * chain sizes for a bracelet, with its own price change.
+   */
+  altSize?: SizeOption;
   art: ProductArt;
   media: ProductMedia[];
   /** Text for the "Size & Materials" tab. */

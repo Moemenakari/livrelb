@@ -64,8 +64,8 @@ export const categories: Category[] = [
     slug: "lira-collection",
     name: { en: "Lira Collection", ar: "مجموعة الليرة" },
     description: {
-      en: "Inspired by the 1975 Lebanese 1 Livre coin: the cedar on one side, the laurel wreath on the other. A piece of home to wear every day.",
-      ar: "مستوحاة من ليرة لبنان المعدنية لعام 1975: الأرزة على وجه وإكليل الغار على الآخر. قطعة من الوطن تلبسينها كل يوم.",
+      en: "Inspired by the Lebanese coins we grew up with: the 1975 1 Livre, the golden 250 and the silver 500. The cedar on one side, the value on the other. A piece of home to wear every day.",
+      ar: "مستوحاة من الليرات المعدنية يلي كبرنا معها: ليرة 1975، والـ٢٥٠ الذهبية، والـ٥٠٠ الفضية. الأرزة على وجه والقيمة على الآخر. قطعة من الوطن تلبسينها كل يوم.",
     },
     art: { kind: "coin", variant: "necklace" },
   },

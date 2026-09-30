@@ -75,8 +75,6 @@ export function NamePreview({
   const fontSize = Math.round(baseFontSize(length) * face.scale * (variant === "bracelet" ? 0.8 : 1));
   const family = face.family;
   const fontCss = `${face.weight} ${fontSize}px ${family}`;
-  // A bracelet always hangs from two side rings.
-  const connectionStyle: ChainConnection = variant === "bracelet" ? "sides" : connection;
 
   // Measure only once the font is loaded. Server and first client render use
   // the estimate so hydration matches.
@@ -115,14 +113,22 @@ export function NamePreview({
 
   let chains: string[];
   let ringPoints: Point[];
-  if (variant === "bracelet") {
+  if (variant === "bracelet" && connection === "center") {
+    // The chain runs across the wrist and the name hangs from one ring.
+    const low = ringTop.y - RING_R + 1.2;
+    chains = [
+      `M -4 ${low - 10} Q ${ringTop.x / 2} ${low + 4} ${ringTop.x} ${low}`,
+      `M ${L.w + 4} ${low - 10} Q ${(L.w + ringTop.x) / 2} ${low + 4} ${ringTop.x} ${low}`,
+    ];
+    ringPoints = [ringTop];
+  } else if (variant === "bracelet") {
     const droop = L.cy + 10;
     chains = [
       `M -4 ${droop - 4} Q ${ringLeft.x / 2} ${droop + 8} ${ringLeft.x - RING_R} ${ringLeft.y}`,
       `M ${L.w + 4} ${droop - 4} Q ${(L.w + ringRight.x) / 2} ${droop + 8} ${ringRight.x + RING_R} ${ringRight.y}`,
     ];
     ringPoints = [ringLeft, ringRight];
-  } else if (connectionStyle === "center") {
+  } else if (connection === "center") {
     const low = ringTop.y - RING_R + 1.2;
     chains = [
       `M 44 -4 C 70 ${low * 0.8} ${ringTop.x - 80} ${low} ${ringTop.x} ${low} S ${L.w - 70} ${low * 0.8} ${L.w - 44} -4`,

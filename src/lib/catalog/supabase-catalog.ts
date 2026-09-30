@@ -13,6 +13,7 @@ import type {
   Product,
   ProductArt,
   Review,
+  SizeOption,
   StorePromo,
   StyleKey,
 } from "./types";
@@ -34,6 +35,31 @@ function asArt(value: Json | null): ProductArt | undefined {
     : undefined;
 }
 
+type OptionRow = {
+  kind: SizeOption["kind"];
+  value: number;
+  price_modifier_cents: number;
+  is_default: boolean;
+};
+
+/**
+ * The sizes of one size type. A product lists its own type first (the one
+ * with the default) and may add the other chain type: a necklace that can
+ * also be a bracelet. Its default is the marked one, else the middle size.
+ */
+function sizeOf(options: OptionRow[], kind: SizeOption["kind"] | undefined): SizeOption | undefined {
+  const own = options.filter((o) => o.kind === kind);
+  if (!kind || own.length === 0) return undefined;
+  const values = own.map((o) => Number(o.value));
+  const marked = own.find((o) => o.is_default);
+  return {
+    kind,
+    values,
+    default: marked ? Number(marked.value) : values[Math.floor((values.length - 1) / 2)],
+    priceModifier: own[0].price_modifier_cents ? dollars(own[0].price_modifier_cents) : undefined,
+  };
+}
+
 function fail(what: string, error: { message: string } | null): never {
   throw new Error(`Supabase: could not load ${what}: ${error?.message ?? "no data"}`);
 }
@@ -43,7 +69,7 @@ const productColumns = `
   details_en, details_ar, style, is_best_seller, is_new, personalization, max_length,
   sample_text, chain_connections, art, sort_order,
   product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
-  product_options (kind, value, is_default, sort_order),
+  product_options (kind, value, price_modifier_cents, is_default, sort_order),
   product_fonts (sort_order, fonts (key)),
   product_media (url, type, alt_en, alt_ar, sort_order),
   product_categories (sort_order, categories (slug))
@@ -89,6 +115,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
 
     const defaultKey = row.product_materials.find((pm) => pm.is_default)?.materials?.key;
     const options = [...row.product_options].sort(bySort);
+    const mainKind = (options.find((o) => o.is_default) ?? options[0])?.kind;
     const fonts = [...row.product_fonts]
       .sort(bySort)
       .map((pf) => pf.fonts?.key)
@@ -119,14 +146,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
                 sample: row.sample_text ?? "",
               }
             : undefined,
-        size:
-          options.length > 0
-            ? {
-                kind: options[0].kind,
-                values: options.map((o) => Number(o.value)),
-                default: Number((options.find((o) => o.is_default) ?? options[0]).value),
-              }
-            : undefined,
+        connections: row.personalization ? undefined : row.chain_connections,
+        size: sizeOf(options, mainKind),
+        altSize: sizeOf(options, options.find((o) => o.kind !== mainKind && o.kind !== "ring")?.kind),
         art,
         media: [...row.product_media]
           .sort(bySort)

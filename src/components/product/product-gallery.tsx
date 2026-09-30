@@ -4,7 +4,7 @@ import { useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import type { FontKey, MaterialKey, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
+import type { FontKey, MaterialKey, Piece, ProductArt as Art, ChainConnection } from "@/lib/catalog/types";
 import { NamePreview } from "@/components/preview/name-preview";
 import { PhotoSlot } from "@/components/ui/photo-slot";
 import { ProductArt } from "./product-art";
@@ -14,6 +14,7 @@ export type GalleryState = {
   text: string;
   font?: FontKey;
   connection?: ChainConnection;
+  piece?: Piece;
 };
 
 export type GalleryHandle = { showPreview: () => void };
@@ -45,6 +46,7 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
       text={state.text}
       font={state.font}
       connection={state.connection}
+      piece={state.piece}
       aspect="square"
       shine={shine}
       className={className}
@@ -76,7 +78,7 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
                       material={state.material}
                       font={state.font}
                       connection={state.connection}
-                      variant={art.variant}
+                      variant={state.piece ?? art.variant}
                       shine
                     />
                   </div>

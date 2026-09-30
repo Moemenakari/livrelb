@@ -100,6 +100,7 @@ export async function verifiedCustomer(): Promise<VerifiedCustomer> {
 
 /** Saved details to prefill the checkout, and her points. */
 export async function savedCustomer(): Promise<SavedCustomer | null> {
+  if (!isSupabaseConfigured()) return null;
   const { customerId, authUserId } = await verifiedCustomer();
   const db = createAdminClient();
   if (!customerId || !db) return authUserId ? { google: true } : null;

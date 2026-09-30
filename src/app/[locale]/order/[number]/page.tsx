@@ -8,7 +8,7 @@ import { resolveLocale } from "@/i18n/resolve-locale";
 import { whatsappUrl } from "@/config/site";
 import { findProduct, getCatalog } from "@/lib/catalog";
 import { fonts, isFontKey, materials } from "@/lib/catalog/materials";
-import type { MaterialKey } from "@/lib/catalog/types";
+import { pieceOf, type MaterialKey } from "@/lib/catalog/types";
 import { ORDERS_COOKIE } from "@/lib/checkout/cookies";
 import { orderPoints } from "@/lib/checkout/points";
 import { formatPrice } from "@/lib/format";
@@ -137,6 +137,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
                       text={item.custom_text ?? undefined}
                       font={font}
                       connection={item.chain_connection ?? undefined}
+                      piece={pieceOf(item.size_kind ?? undefined)}
                       aspect="square"
                     />
                   )}

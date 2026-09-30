@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
 import { MAX_QTY, removeFromCart, setQty, type CartItem } from "@/lib/cart";
 import { fonts, materials } from "@/lib/catalog/materials";
+import { pieceOf } from "@/lib/catalog/types";
 import type { QuoteLine } from "@/lib/checkout/types";
 import { formatPrice } from "@/lib/format";
 import { ProductArt } from "@/components/product/product-art";
@@ -60,6 +61,7 @@ export function CartLine({ item, quoted, readOnly = false, onNavigate }: Props) 
           text={item.text}
           font={item.font}
           connection={item.connection}
+          piece={pieceOf(item.sizeKind)}
           aspect="square"
         />
       </Link>

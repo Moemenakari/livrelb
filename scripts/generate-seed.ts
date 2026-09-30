@@ -130,7 +130,7 @@ ${rows(
     p.personalization?.kind,
     p.personalization?.maxLength,
     p.personalization?.sample,
-    textArray(p.personalization?.connections ?? [], "public.chain_connection"),
+    textArray(p.personalization?.connections ?? p.connections ?? [], "public.chain_connection"),
     json(p.art),
     i,
   ]),
@@ -162,21 +162,27 @@ on conflict do nothing;
 `);
 
 add(`
-insert into public.product_options (product_id, kind, value, is_default, sort_order)
-select p.id, v.kind::public.size_kind, v.value, v.is_default, v.sort
+insert into public.product_options
+  (product_id, kind, value, price_modifier_cents, is_default, sort_order)
+select p.id, v.kind::public.size_kind, v.value, v.price_modifier, v.is_default, v.sort
 from (values
 ${rows(
-  products.flatMap((p) =>
-    (p.size?.values ?? []).map((value, i) => [
-      p.slug,
-      p.size!.kind,
-      value,
-      value === p.size!.default,
-      i,
-    ]),
-  ),
+  products.flatMap((p) => {
+    // The listed sizes first (with the default), then the other piece's.
+    const sizes = [p.size, p.altSize].filter((s) => s !== undefined);
+    return sizes.flatMap((size, n) =>
+      size.values.map((value, i) => [
+        p.slug,
+        size.kind,
+        value,
+        cents(size.priceModifier ?? 0),
+        n === 0 && value === size.default,
+        n * 100 + i,
+      ]),
+    );
+  }),
 )}
-) as v (slug, kind, value, is_default, sort)
+) as v (slug, kind, value, price_modifier, is_default, sort)
 join public.products p on p.slug = v.slug
 on conflict do nothing;
 `);
