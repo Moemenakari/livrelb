@@ -7,6 +7,7 @@ import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { PromoBar } from "@/components/layout/promo-bar";
+import { WheelCoin } from "@/components/layout/wheel-coin";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { fontVariables } from "../fonts";
 import "../globals.css";
@@ -51,6 +52,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <Footer />
+          <WheelCoin />
           <WhatsAppFloat />
         </NextIntlClientProvider>
       </body>
