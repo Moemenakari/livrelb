@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/config/site";
 import { useState } from "react";
 import { ExternalLink, Loader2, Plus } from "lucide-react";
 import { saveSeason, type SeasonInput } from "@/lib/admin/promo-actions";
@@ -50,7 +51,7 @@ function SeasonForm({ initial, products, onDone }: { initial: SeasonInput; produ
         <Field label="Title (Arabic)" htmlFor={`s-ar-${idp}`}>
           <input id={`s-ar-${idp}`} required dir="rtl" maxLength={120} value={s.titleAr} onChange={(e) => set("titleAr", e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Link" hint={`livrelb.com/en/${s.slug || "…"}`} htmlFor={`s-slug-${idp}`}>
+        <Field label="Link" hint={`${siteConfig.host}/en/${s.slug || "…"}`} htmlFor={`s-slug-${idp}`}>
           <input id={`s-slug-${idp}`} required maxLength={60} value={s.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} className={inputClass} dir="ltr" />
         </Field>
         <Field label="Text (English)" htmlFor={`s-den-${idp}`}>

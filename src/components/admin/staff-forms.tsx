@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/config/site";
 import { useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { createStaff, setPermission, updateStaff, type NewStaffInput, type StaffUpdate } from "@/lib/admin/staff-actions";
@@ -56,7 +57,7 @@ function NewStaff({ onDone }: { onDone: () => void }) {
         <Field label="Password" hint="At least 8 characters. Give it to her privately." htmlFor="ns-pass">
           <input id="ns-pass" required minLength={8} type="text" autoComplete="new-password" value={s.password} onChange={(e) => set("password", e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Link code" hint={`livrelb.com/r/${s.refCode || "…"}`} htmlFor="ns-ref">
+        <Field label="Link code" hint={`${siteConfig.host}/r/${s.refCode || "…"}`} htmlFor="ns-ref">
           <input id="ns-ref" required value={s.refCode} onChange={(e) => set("refCode", e.target.value.toLowerCase())} className={inputClass} dir="ltr" />
         </Field>
         <Field label="Personal code (optional)" htmlFor="ns-code">

@@ -24,7 +24,7 @@ export function nameOf(list: StaffName[], id: string | null | undefined): string
   return list.find((s) => s.id === id)?.name ?? "Former employee";
 }
 
-/** Personal link of an employee: livrelb.com/r/amal. */
+/** Personal link of an employee: shop.livrelb.workers.dev/r/amal. */
 export function personalLink(refCode: string): string {
   return `${siteConfig.url}/r/${refCode}`;
 }

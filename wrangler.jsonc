@@ -1,10 +1,12 @@
-// Cloudflare Workers config for the OpenNext build. Not deployed yet.
+// Cloudflare Workers config for the OpenNext build. Worker "shop" lives at
+// https://shop.livrelb.workers.dev (the address is NEXT_PUBLIC_SITE_URL, see
+// src/config/site.ts).
 // Before the first deploy (see README "Hosting on Cloudflare"):
 //   npx wrangler r2 bucket create livrelb-opennext-cache
-//   npx wrangler d1 create livrelb-tag-cache   -> paste its id below
+//   (done) D1 livrelb-tag-cache created; R2 buckets need R2 enabled in the dashboard
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "livrelb",
+  "name": "shop",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -16,7 +18,7 @@
     {
       // Self-reference, required by the OpenNext cache. Must match "name".
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "livrelb"
+      "service": "shop"
     }
   ],
   // Rendered pages (ISR cache).
@@ -31,7 +33,7 @@
     {
       "binding": "NEXT_TAG_CACHE_D1",
       "database_name": "livrelb-tag-cache",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "acb58e34-f773-48aa-a30e-1ac36ecd0ff4"
     }
   ],
   // Background page revalidation queue.

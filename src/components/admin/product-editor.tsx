@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/config/site";
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Loader2, Plus, Save, Trash2, X } from "lucide-react";
@@ -137,7 +138,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
           <Field label="Short tagline (Arabic)" htmlFor="p-sum-ar">
             <input id="p-sum-ar" dir="rtl" maxLength={300} value={f.summaryAr} onChange={(e) => set("summaryAr", e.target.value)} className={inputClass} />
           </Field>
-          <Field label="Link" hint={`livrelb.com/en/product/${f.slug || "…"}`} htmlFor="p-slug">
+          <Field label="Link" hint={`${siteConfig.host}/en/product/${f.slug || "…"}`} htmlFor="p-slug">
             <input
               id="p-slug"
               required
