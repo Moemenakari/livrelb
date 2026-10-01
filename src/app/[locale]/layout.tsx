@@ -4,6 +4,9 @@ import { getTranslations } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { getCatalog } from "@/lib/catalog";
+import { siteConfig } from "@/config/site";
+import { defaultOgImage } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
@@ -25,8 +28,18 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "metadata" });
 
   return {
+    metadataBase: new URL(siteConfig.url),
     title: { default: t("title"), template: `%s · ${t("title")}` },
     description: t("description"),
+    openGraph: {
+      type: "website",
+      siteName: "LIVRE",
+      title: t("title"),
+      description: t("description"),
+      locale: locale === "ar" ? "ar_LB" : "en_US",
+      images: [defaultOgImage],
+    },
+    twitter: { card: "summary_large_image", title: t("title"), description: t("description"), images: [defaultOgImage.url] },
   };
 }
 
@@ -37,10 +50,24 @@ export default async function LocaleLayout({
   const locale = await resolveLocale(params);
   const t = await getTranslations("common");
   const { settings } = await getCatalog();
+  const sameAs = settings.instagramUrl ? [settings.instagramUrl] : [];
 
   return (
     <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
       <body className="flex min-h-dvh flex-col">
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "LIVRE",
+            url: siteConfig.url,
+            logo: `${siteConfig.url}/icon.svg`,
+            image: `${siteConfig.url}/og-default.png`,
+            description: "Personalized jewelry and the 1975 Lira collection, made to order in Lebanon.",
+            areaServed: "LB",
+            ...(sameAs.length ? { sameAs } : {}),
+          }}
+        />
         <NextIntlClientProvider>
           <a
             href="#main"

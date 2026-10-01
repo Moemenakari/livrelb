@@ -5,13 +5,14 @@ import { getCatalog } from "@/lib/catalog";
 import { allShapes } from "@/lib/charms";
 import { isR2Configured } from "@/lib/storage/r2";
 import { CharmBuilder } from "@/components/charms/charm-builder";
+import { alternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { eyebrow } from "@/components/ui/styles";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/charms">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "charms" });
-  return { title: t("title"), description: t("subtitle", { count: allShapes.length }) };
+  return { title: t("title"), description: t("subtitle", { count: allShapes.length }), alternates: alternates(locale, "/charms") };
 }
 
 export const revalidate = 3600;

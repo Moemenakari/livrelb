@@ -15,6 +15,8 @@ import {
   type StyleKey,
 } from "@/lib/catalog";
 import { CategoryBrowser } from "@/components/category/category-browser";
+import { alternates, pageUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { TrustStrip } from "@/components/ui/trust-strip";
 
@@ -36,6 +38,7 @@ export async function generateMetadata({
   return {
     title: category.name[locale],
     description: category.description[locale],
+    alternates: alternates(locale, `/category/${slug}`),
   };
 }
 
@@ -60,8 +63,18 @@ export default async function CategoryPage({ params }: PageProps<"/[locale]/cate
     font: styleFont[key] ?? "beirut",
   }));
 
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { label: t("home"), path: "/" },
+      ...trail.map((c) => ({ label: c.name[locale], path: categoryHref(c.slug) })),
+    ].map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.label, item: pageUrl(locale, c.path) })),
+  };
+
   return (
     <>
+      <JsonLd data={crumbsLd} />
       <TrustStrip />
       <div className="mx-auto max-w-7xl px-4 pt-5 pb-20 lg:px-8">
         <Breadcrumbs

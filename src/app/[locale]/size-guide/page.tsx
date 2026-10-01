@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
+import { alternates } from "@/lib/seo";
 import { InfoPage } from "@/components/ui/info-page";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/size-guide">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "product" });
-  return { title: t("sizeGuideTitle"), description: t("sizeGuideIntro") };
+  return { title: t("sizeGuideTitle"), description: t("sizeGuideIntro"), alternates: alternates(locale, "/size-guide") };
 }
 
 const chains = [35, 40, 45, 50, 55] as const;

@@ -5,13 +5,14 @@ import { resolveLocale } from "@/i18n/resolve-locale";
 import { whatsappUrl } from "@/config/site";
 import { getCatalog } from "@/lib/catalog";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
+import { alternates } from "@/lib/seo";
 import { InfoPage } from "@/components/ui/info-page";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/contact">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "contact" });
-  return { title: t("title"), description: t("intro") };
+  return { title: t("title"), description: t("intro"), alternates: alternates(locale, "/contact") };
 }
 
 // Contact: the WhatsApp and Instagram buttons only exist once their setting

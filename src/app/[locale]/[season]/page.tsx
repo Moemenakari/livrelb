@@ -7,6 +7,7 @@ import { getSeason } from "@/lib/catalog/seasons";
 import { CategoryBrowser } from "@/components/category/category-browser";
 import { Countdown } from "@/components/home/countdown";
 import { CopyCode } from "@/components/layout/copy-code";
+import { alternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { TrustStrip } from "@/components/ui/trust-strip";
 
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/[season]
   const locale = await resolveLocale(params);
   const season = await getSeason((await params).season);
   if (!season) return {};
-  return { title: season.title[locale], description: season.description[locale] || undefined };
+  return { title: season.title[locale], description: season.description[locale] || undefined, alternates: alternates(locale, `/${season.slug}`) };
 }
 
 export default async function SeasonPage({ params }: PageProps<"/[locale]/[season]">) {

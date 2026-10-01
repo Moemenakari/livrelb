@@ -25,6 +25,8 @@ import { RecentlyViewed } from "@/components/product/recently-viewed";
 import { ReviewCard } from "@/components/product/review-card";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Stars } from "@/components/ui/stars";
+import { absoluteUrl, alternates, defaultOgImage, pageUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ScrollRow } from "@/components/ui/scroll-row";
 import { swipeRow } from "@/components/ui/styles";
 
@@ -43,9 +45,14 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const product = findProduct(await getCatalog(), slug);
   if (!product || (locale !== "en" && locale !== "ar")) return {};
+  const photo = product.media.find((m) => (m.type ?? "image") === "image");
+  const image = photo ? { url: absoluteUrl(photo.src), alt: photo.alt[locale] || product.name[locale] } : defaultOgImage;
   return {
     title: product.name[locale],
     description: product.summary[locale],
+    alternates: alternates(locale, `/product/${slug}`),
+    openGraph: { type: "website", siteName: "LIVRE", title: product.name[locale], description: product.summary[locale], images: [image] },
+    twitter: { card: "summary_large_image", title: product.name[locale], description: product.summary[locale], images: [image.url] },
   };
 }
 
@@ -137,8 +144,60 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   const candidates = catalog.products.filter((c) => c.slug !== product.slug).map((c) => toCard(c, locale));
   const reviews = reviewsFor(catalog, product.slug);
 
+  // Search-engine data. Ratings come only from real, approved reviews of this
+  // piece (never the development samples).
+  const realReviews = catalog.reviews.filter((r) => !r.isSample && r.productSlug === product.slug);
+  const prices = product.offers.map((o) => o.price);
+  const photos = product.media.filter((m) => (m.type ?? "image") === "image").map((m) => absoluteUrl(m.src));
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name[locale],
+    description: product.summary[locale],
+    image: photos.length ? photos : [absoluteUrl(defaultOgImage.url)],
+    sku: product.slug,
+    brand: { "@type": "Brand", name: "LIVRE" },
+    url: pageUrl(locale, `/product/${product.slug}`),
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "USD",
+      lowPrice: Math.min(...prices).toFixed(2),
+      highPrice: Math.max(...prices).toFixed(2),
+      offerCount: prices.length,
+      availability: product.stock === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      url: pageUrl(locale, `/product/${product.slug}`),
+    },
+    ...(realReviews.length > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: (realReviews.reduce((s, r) => s + r.rating, 0) / realReviews.length).toFixed(1),
+            reviewCount: realReviews.length,
+          },
+          review: realReviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.author },
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+            reviewBody: r.text[locale] || r.text.en,
+            datePublished: r.date,
+          })),
+        }
+      : {}),
+  };
+  const crumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { label: tCategory("home"), path: "/" },
+      ...trail.map((c) => ({ label: c.name[locale], path: categoryHref(c.slug) })),
+      { label: product.name[locale], path: `/product/${product.slug}` },
+    ].map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.label, item: pageUrl(locale, c.path) })),
+  };
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 pt-3 pb-20 lg:gap-20 lg:px-8">
+      <JsonLd data={productLd} />
+      <JsonLd data={crumbsLd} />
       <div className="flex flex-col gap-5">
         <Breadcrumbs
           label={t("breadcrumbLabel")}

@@ -12,7 +12,9 @@ import {
   Tag,
   Truck,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { alternates } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { categoryHref, productHref } from "@/config/navigation";
@@ -57,6 +59,11 @@ const mosaic: { slug: CategorySlug; tile: string; tone: string; sample?: string 
 
 // Rebuilt hourly and whenever the admin saves (revalidateTag("catalog")).
 export const revalidate = 3600;
+
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const locale = await resolveLocale(params);
+  return { alternates: alternates(locale, "/") };
+}
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const locale = await resolveLocale(params);

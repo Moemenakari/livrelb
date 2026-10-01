@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { policies, type PolicySlug } from "@/content/pages";
+import { alternates } from "@/lib/seo";
 import { InfoPage } from "@/components/ui/info-page";
 
 const slugs = Object.keys(policies) as PolicySlug[];
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/policies
   const { locale, slug } = await params;
   if (!isPolicy(slug) || (locale !== "en" && locale !== "ar")) return {};
   const page = policies[slug][locale];
-  return { title: page.title, description: page.intro };
+  return { title: page.title, description: page.intro, alternates: alternates(locale, `/policies/${slug}`) };
 }
 
 // Shipping, returns, privacy and terms: draft templates (Nour reviews them).

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { about } from "@/content/pages";
+import { alternates } from "@/lib/seo";
 import { InfoPage } from "@/components/ui/info-page";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/about">): Promise<Metadata> {
   const { locale } = await params;
   if (locale !== "en" && locale !== "ar") return {};
-  return { title: about[locale].title, description: about[locale].intro };
+  return { title: about[locale].title, description: about[locale].intro, alternates: alternates(locale, "/about") };
 }
 
 // Our story: placeholder text (the 1975 Lira, the cedar). Nour reviews it.

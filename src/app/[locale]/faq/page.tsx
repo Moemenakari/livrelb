@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { ChevronDown } from "lucide-react";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { faq } from "@/content/pages";
+import { alternates } from "@/lib/seo";
 import { InfoPage } from "@/components/ui/info-page";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/faq">): Promise<Metadata> {
   const { locale } = await params;
   if (locale !== "en" && locale !== "ar") return {};
-  return { title: faq[locale].title, description: faq[locale].intro };
+  return { title: faq[locale].title, description: faq[locale].intro, alternates: alternates(locale, "/faq") };
 }
 
 export default async function FaqPage({ params }: PageProps<"/[locale]/faq">) {
