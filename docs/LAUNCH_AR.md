@@ -13,55 +13,52 @@
    - **Name:** `BACKUP_PASSPHRASE` — **Secret:** جملة سرّ طويلة عشوائية (احتفظ بنسخة منها بمكان آمن، بدونها ما فينا نفك الـ backup).
 4. اختبره: تاب **Actions** ← **Database backup** ← **Run workflow**. لازم يطلع أخضر.
 
-## 1) حساب Cloudflare + مشروع الـ Worker
+## 1) Cloudflare: الـ Worker `shop` (الرابط https://shop.livrelb.workers.dev)
 
-1. روح على `dash.cloudflare.com` ← **Sign up** (مجاني) وأكّد الإيميل.
-2. من القائمة اليسار: **Workers & Pages** ← **Create** ← **Import a repository (Connect to Git)**.
-3. اختار GitHub واسمح لـ Cloudflare يوصل للريبو `livrelb`.
-4. إعدادات البناء:
-   - **Project name:** `livrelb` (لازم يطابق `name` بـ `wrangler.jsonc`)
+**انعمل:** تسجيل الدخول بـ wrangler، قاعدة D1 `livrelb-tag-cache` (والـ id بـ `wrangler.jsonc`)، وbuckets الـ R2 (الكاش والصور).
+
+باقي (من الداشبورد):
+1. `dash.cloudflare.com` ← **Workers & Pages** ← **Create application** ← **Import a repository** (Connect to Git).
+2. اختار GitHub ← الريبو `Moemenakari/livrelb`.
+3. الإعدادات:
+   - **Project name:** `shop` (لازم يطابق `name` بـ `wrangler.jsonc`)
    - **Production branch:** `main`
    - **Build command:** `npx opennextjs-cloudflare build`
    - **Deploy command:** `npx wrangler deploy`
-   - **Non-production branch deploy command:** `npx wrangler versions upload` (هيدا اللي بيعطي رابط **preview** لكل فرع)
-5. **قبل** أول deploy لازم تنعمل مخازن الكاش (مرة وحدة، من الكمبيوتر):
-   ```powershell
-   npx wrangler login
-   npx wrangler r2 bucket create livrelb-opennext-cache
-   npx wrangler d1 create livrelb-tag-cache
-   ```
-   انسخ `database_id` اللي بيطلع وحطه بـ `wrangler.jsonc` مكان `REPLACE_WITH_D1_DATABASE_ID`، وسوّي commit. (قلّي وأنا بعملها.)
+   - **Non-production branch deploy command:** `npx wrangler versions upload` (بيعطي رابط **preview** لكل فرع)
+4. الصق المتغيّرات (الخطوة 3) ثم **Save and Deploy**.
 
 ## 2) R2 لصور المنتجات
 
-1. Cloudflare ← **R2 Object Storage** ← **Create bucket** ← الاسم `livrelb-images`.
-2. داخل الـ bucket ← **Settings** ← **Public access** ← **Custom Domains** ← **Connect domain** ← اكتب `images.livrelb.com` (بعد ما ينضاف الدومين لـ Cloudflare، الخطوة 5). قبلها فيك تفعّل **R2.dev subdomain** مؤقتاً للتجربة.
-3. نفس الصفحة ← **CORS Policy** ← **Add** وحط:
-   ```json
-   [{"AllowedOrigins":["https://livrelb.com","http://localhost:3000"],"AllowedMethods":["PUT"],"AllowedHeaders":["Content-Type"]}]
-   ```
-4. **R2 → Manage API Tokens → Create API token** ← الصلاحية **Object Read & Write** على `livrelb-images` ← انسخ: Account ID، Access Key ID، Secret Access Key.
+- **انعمل:** bucket `livrelb-media` بوصول عام عبر `https://pub-28576af5ed90403fa07d14555723f2f1.r2.dev` مع CORS لـ `https://shop.livrelb.workers.dev` و`http://localhost:3000`. وbucket الكاش `livrelb-opennext-cache`.
+- **مفاتيح الـ API (مرة وحدة، بإيدك):**
+  1. Cloudflare ← **R2 Object Storage** ← **Manage API Tokens** (أو **API** ← **Manage R2 API Tokens**) ← **Create API token**.
+  2. **Token name:** `livrelb-media`. **Permissions:** **Object Read & Write**. **Specify bucket(s):** `livrelb-media` فقط.
+  3. **Create API Token**. بيظهرلك مرة وحدة: **Access Key ID** و**Secret Access Key** (انسخهم فوراً، ما بيرجعوا يظهروا). الـ Account ID: `10f8bfb65cf4d77929e514a34093c1f5`.
 
 ## 3) متغيّرات البيئة (Environment variables)
 
-Cloudflare ← **Workers & Pages** ← `livrelb` ← **Settings** ← **Variables and Secrets** ← **Add**. للأسرار اختار النوع **Secret**.
-(وبنفس الأسماء لازم تنحط كمان تحت **Build → Variables** لأن `NEXT_PUBLIC_*` بتنقرا وقت البناء.)
+Cloudflare ← **Workers & Pages** ← `shop` ← **Settings** ← **Variables and Secrets** ← **Add**. للأسرار اختار النوع **Secret**.
+المتغيّرات اللي اسمها `NEXT_PUBLIC_*` لازم تنحط كمان تحت **Settings ← Build ← Variables and secrets** لأنها بتنقرا وقت البناء.
 
 | الاسم | القيمة | النوع |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase ← Project Settings ← Data API | Text (+Build) |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase ← API Keys (`sb_publishable_…`) | Text (+Build) |
-| `SUPABASE_SECRET_KEY` | Supabase ← API Keys (`sb_secret_…`) | **Secret** |
-| `CUSTOMER_COOKIE_SECRET` | نص عشوائي طويل | **Secret** |
-| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | من الخطوة 2.4 | **Secret** |
-| `R2_BUCKET` | `livrelb-images` | Text |
-| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://images.livrelb.com` (بلا `/` بالآخر) | Text (+Build) |
-| `ANTHROPIC_API_KEY` | `console.anthropic.com` ← API keys (للرسالة الذكية؛ اختياري) | **Secret** |
-| `CARD_GATEWAY_URL`, `CARD_GATEWAY_MERCHANT_ID`, `CARD_GATEWAY_API_PASSWORD` | من البنك لما يفتح حساب التاجر | **Secret** |
-| `WHISH_API_URL`, `WHISH_MERCHANT_ID`, `WHISH_API_KEY` | من Whish | **Secret** |
-| `META_CAPI_TOKEN` | Meta Events Manager ← Conversions API | **Secret** |
+| `NEXT_PUBLIC_SITE_URL` | `https://shop.livrelb.workers.dev` | Text (+Build) |
+| `NEXT_PUBLIC_SUPABASE_URL` | من `.env.local` | Text (+Build) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | من `.env.local` | Text (+Build) |
+| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://pub-28576af5ed90403fa07d14555723f2f1.r2.dev` (بلا `/` بالآخر) | Text (+Build) |
+| `SUPABASE_SECRET_KEY` | من `.env.local` | **Secret** |
+| `CUSTOMER_COOKIE_SECRET` | من `.env.local` | **Secret** |
+| `R2_ACCOUNT_ID` | `10f8bfb65cf4d77929e514a34093c1f5` | Text |
+| `R2_ACCESS_KEY_ID` | من الخطوة 2 | **Secret** |
+| `R2_SECRET_ACCESS_KEY` | من الخطوة 2 | **Secret** |
+| `R2_BUCKET` | `livrelb-media` | Text |
+| `ANTHROPIC_API_KEY` | اختياري (الرسالة الذكية) | **Secret** |
+| `CARD_GATEWAY_URL`, `CARD_GATEWAY_MERCHANT_ID`, `CARD_GATEWAY_API_PASSWORD` | من البنك لاحقاً | **Secret** |
+| `WHISH_API_URL`, `WHISH_MERCHANT_ID`, `WHISH_API_KEY` | من Whish لاحقاً | **Secret** |
+| `META_CAPI_TOKEN` | لاحقاً | **Secret** |
 
-أي ميزة مفاتيحها ناقصة بتبقى مخفية، ما في شي بيخرب.
+وبنفس القيم لازم تنحط بـ `.env.local` عندك (`R2_ACCOUNT_ID` و`R2_ACCESS_KEY_ID` و`R2_SECRET_ACCESS_KEY` و`R2_BUCKET` و`NEXT_PUBLIC_R2_PUBLIC_URL`) ليشتغل رفع الصور محلياً.
 
 ## 4) نشر **Preview** أولاً
 
@@ -70,7 +67,7 @@ Cloudflare ← **Workers & Pages** ← `livrelb` ← **Settings** ← **Variable
 3. افتح الرابط من موبايلك وجرّب: الرئيسية، منتج، السلة، طلب تجريبي، `/en/track`.
 4. **الإنتاج (production) ما بنعمله إلا لما تقولي «موافق».**
 
-## 5) الدومين livrelb.com
+## 5) الدومين (لاحقاً livrelb.com)
 
 1. اشتري `livrelb.com` (من Cloudflare Registrar أو أي مسجّل).
 2. إذا اشتريته من غير Cloudflare: Cloudflare ← **Add a domain** ← `livrelb.com` ← الخطة **Free** ← غيّر **Nameservers** عند المسجّل لنفس اللي بيعطيك ياها Cloudflare.

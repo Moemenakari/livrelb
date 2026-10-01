@@ -30,7 +30,7 @@ Product photos go to **Cloudflare R2**. Not deployed yet.
 
 ## Images (R2)
 
-- Create a bucket `livrelb-images` and give it a public address (custom
+- Bucket `livrelb-media` (created, public r2.dev address on). Public address (custom
   domain like `images.livrelb.com`, or the r2.dev URL).
 - R2 → Manage API tokens → Object Read & Write on that bucket → put the keys
   in `R2_*` env vars, the public address in `NEXT_PUBLIC_R2_PUBLIC_URL`.

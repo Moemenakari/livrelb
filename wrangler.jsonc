@@ -1,9 +1,9 @@
 // Cloudflare Workers config for the OpenNext build. Worker "shop" lives at
 // https://shop.livrelb.workers.dev (the address is NEXT_PUBLIC_SITE_URL, see
 // src/config/site.ts).
-// Before the first deploy (see README "Hosting on Cloudflare"):
-//   npx wrangler r2 bucket create livrelb-opennext-cache
-//   (done) D1 livrelb-tag-cache created; R2 buckets need R2 enabled in the dashboard
+// Created on the Cloudflare account: R2 buckets livrelb-opennext-cache (page
+// cache, below) and livrelb-media (product photos, public r2.dev URL, CORS for
+// the site address), and the D1 database livrelb-tag-cache (below).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shop",
