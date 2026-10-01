@@ -1395,6 +1395,8 @@ export type Database = {
           description_en: string
           details_ar: string
           details_en: string
+          free_delivery: boolean
+          free_gift_box: boolean
           id: string
           is_best_seller: boolean
           is_featured: boolean
@@ -1426,6 +1428,8 @@ export type Database = {
           description_en?: string
           details_ar?: string
           details_en?: string
+          free_delivery?: boolean
+          free_gift_box?: boolean
           id?: string
           is_best_seller?: boolean
           is_featured?: boolean
@@ -1457,6 +1461,8 @@ export type Database = {
           description_en?: string
           details_ar?: string
           details_en?: string
+          free_delivery?: boolean
+          free_gift_box?: boolean
           id?: string
           is_best_seller?: boolean
           is_featured?: boolean
@@ -1701,6 +1707,7 @@ export type Database = {
           points_enabled: boolean
           points_per_dollar: number
           points_per_review: number
+          points_per_step: number
           points_redeem_cents: number
           points_redeem_points: number
           points_step_cents: number
@@ -1732,6 +1739,7 @@ export type Database = {
           points_enabled?: boolean
           points_per_dollar?: number
           points_per_review?: number
+          points_per_step?: number
           points_redeem_cents?: number
           points_redeem_points?: number
           points_step_cents?: number
@@ -1763,6 +1771,7 @@ export type Database = {
           points_enabled?: boolean
           points_per_dollar?: number
           points_per_review?: number
+          points_per_step?: number
           points_redeem_cents?: number
           points_redeem_points?: number
           points_step_cents?: number

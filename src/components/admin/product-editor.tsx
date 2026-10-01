@@ -198,6 +198,8 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
           <Toggle label="Best seller badge" checked={f.isBestSeller} onChange={(v) => set("isBestSeller", v)} />
           <Toggle label="New badge" checked={f.isNew} onChange={(v) => set("isNew", v)} />
           <Toggle label="Track stock" checked={f.stock !== null} onChange={(v) => set("stock", v ? 10 : null)} />
+          <Toggle label="Free delivery with this piece" checked={f.freeDelivery} onChange={(v) => set("freeDelivery", v)} />
+          <Toggle label="Free gift box" checked={f.freeGiftBox} onChange={(v) => set("freeGiftBox", v)} />
         </div>
         {f.stock !== null && (
           <Field label="In stock" hint={`"Only ${f.stock} left" shows on the product page when 10 or fewer.`} htmlFor="p-stock" className="mt-3 sm:max-w-48">

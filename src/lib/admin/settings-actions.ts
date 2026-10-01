@@ -17,7 +17,7 @@ export type SettingsInput = {
   whatsapp: string;
   instagram: string;
   pointsEnabled: boolean;
-  pointsPerDollar: string;
+  pointsPerStep: string;
   pointsStepDollars: string;
   rewardPercent: string;
   rewardDays: string;
@@ -81,7 +81,7 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         whatsapp_number: whatsapp,
         instagram_url: instagram,
         points_enabled: Boolean(input.pointsEnabled),
-        points_per_dollar: whole(input.pointsPerDollar, "Points per $1", 0, 1000),
+        points_per_step: whole(input.pointsPerStep, "Points per step", 0, 100000),
         points_per_review: whole(input.pointsPerReview, "Points per review", 0, 10000),
         points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
         points_redeem_cents: centsOf(input.redeemDollars, "Their value"),

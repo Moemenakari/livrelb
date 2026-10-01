@@ -68,7 +68,7 @@ function fail(what: string, error: { message: string } | null): never {
 
 const productColumns = `
   slug, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
-  details_en, details_ar, style, is_best_seller, is_new, personalization, max_length,
+  details_en, details_ar, style, is_best_seller, is_new, free_delivery, free_gift_box, personalization, max_length,
   sample_text, chain_connections, art, sort_order, stock_qty,
   product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
   product_options (kind, value, price_modifier_cents, is_default, sort_order),
@@ -140,6 +140,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         style: isStyleKey(row.style) ? row.style : undefined,
         isBestSeller: row.is_best_seller,
         isNew: row.is_new,
+        freeDelivery: row.free_delivery,
+        freeGiftBox: row.free_gift_box,
         offers,
         defaultMaterial: isMaterialKey(defaultKey) ? defaultKey : offers[0].material,
         personalization:
@@ -247,7 +249,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       deliveryDays: { min: s.delivery_days_min, max: s.delivery_days_max },
       points: {
         enabled: s.points_enabled,
-        perDollar: s.points_per_dollar,
+        perStep: s.points_per_step,
         stepDollars: dollars(s.points_step_cents),
         perReview: s.points_per_review,
         redeemPoints: s.points_redeem_points,

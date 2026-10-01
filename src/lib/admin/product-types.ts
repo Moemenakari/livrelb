@@ -18,6 +18,8 @@ export type ProductForm = {
   style: string;
   isBestSeller: boolean;
   isNew: boolean;
+  freeDelivery: boolean;
+  freeGiftBox: boolean;
   personalization: "name" | "initial" | "";
   maxLength: number;
   sampleText: string;

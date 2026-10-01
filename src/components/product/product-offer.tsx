@@ -19,6 +19,8 @@ export type OfferBadges = {
   topIn?: string;
   bestSeller: boolean;
   isNew: boolean;
+  freeDelivery?: boolean;
+  freeGiftBox?: boolean;
   /** Pieces left, only when stock is tracked. */
   stockLeft?: number;
 };
@@ -32,7 +34,7 @@ const LOW_STOCK = 10;
 export function pointsFor(price: number, rules: PointsRules): { points: number; value: number } {
   if (!rules.enabled) return { points: 0, value: 0 };
   const step = rules.stepDollars;
-  const points = Math.floor(price / step) * step * rules.perDollar;
+  const points = Math.floor(price / step) * rules.perStep;
   return { points, value: (points / rules.redeemPoints) * rules.redeemValue };
 }
 
@@ -45,6 +47,7 @@ export function OfferBadgesRow({ badges }: { badges: OfferBadges }) {
     badges.topIn ? { key: "top", label: t("topIn", { category: badges.topIn }), cls: "bg-ink text-white" } : null,
     !badges.topIn && badges.bestSeller ? { key: "best", label: t("bestSeller"), cls: "bg-ink text-white" } : null,
     badges.isNew ? { key: "new", label: t("new"), cls: "bg-cedar text-white" } : null,
+    badges.freeDelivery ? { key: "freeDelivery", label: t("freeDeliveryPiece"), cls: "bg-gold/15 text-gold-dark" } : null,
     badges.stockLeft !== undefined && badges.stockLeft > 0 && badges.stockLeft <= LOW_STOCK
       ? { key: "stock", label: t("onlyLeft", { count: badges.stockLeft }), cls: "bg-sale/10 text-sale" }
       : null,

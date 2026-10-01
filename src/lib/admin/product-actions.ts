@@ -105,6 +105,8 @@ function toPayload(f: ProductForm, existingMedia: Set<string>) {
     style: text(f.style, 40, "Style") || null,
     is_best_seller: Boolean(f.isBestSeller),
     is_new: Boolean(f.isNew),
+    free_delivery: Boolean(f.freeDelivery),
+    free_gift_box: f.freeGiftBox !== false,
     personalization,
     max_length: personalization ? maxLength : null,
     sample_text: text(f.sampleText, 20, "Sample name") || null,

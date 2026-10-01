@@ -200,6 +200,8 @@
   },
   "offer": {
     "percentOff": "−{percent}%",
+    "freeDeliveryPiece": "Free delivery with this piece",
+    "freeBoxPiece": "Free gift box",
     "youSave": "You save {amount}",
     "pointsEarn": "Buy now and earn <strong>{points} LIVRE Points</strong> (= {value})",
     "sold": "{count} sold",

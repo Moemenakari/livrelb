@@ -116,6 +116,10 @@ export type Product = {
   style?: StyleKey;
   isBestSeller?: boolean;
   isNew?: boolean;
+  /** An order with this piece pays no delivery (set in the admin). */
+  freeDelivery?: boolean;
+  /** The LIVRE gift box comes free with this piece (default on). */
+  freeGiftBox?: boolean;
   /** Metals offered, in display order, each with its price. */
   offers: MaterialOffer[];
   defaultMaterial: MaterialKey;
@@ -199,8 +203,8 @@ export type StoreSettings = {
 
 export type PointsRules = {
   enabled: boolean;
-  /** Points per $1 paid. */
-  perDollar: number;
+  /** Points earned for each full step ($15 by default). */
+  perStep: number;
   /** Points count per full step of this many dollars ($20). */
   stepDollars: number;
   /** Points for an approved review. */

@@ -36,7 +36,7 @@ export default async function SettingsPage() {
           whatsapp: s.whatsapp_number,
           instagram: s.instagram_url,
           pointsEnabled: s.points_enabled,
-          pointsPerDollar: String(s.points_per_dollar),
+          pointsPerStep: String(s.points_per_step),
           pointsStepDollars: d(s.points_step_cents),
           rewardPercent: String(s.reward_coupon_percent),
           rewardDays: String(s.reward_coupon_days),

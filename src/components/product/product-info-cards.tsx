@@ -15,6 +15,8 @@ export type InfoCardsData = {
   /** "2–7 days", or the owner's own text from site_settings. */
   deliveryTime: string;
   points: PointsRules;
+  /** The gift box comes free with this piece (admin switch). */
+  giftBox: boolean;
 };
 
 // Compact cards under "Add to cart" (Phase 4 A2): delivery, payment,
@@ -107,7 +109,7 @@ export function ProductInfoCards({ data }: { data: InfoCardsData }) {
           <p className="text-muted">
             {t("points.line", {
               step: formatPrice(p.stepDollars),
-              perStep: p.stepDollars * p.perDollar,
+              perStep: p.perStep,
               redeem: p.redeemPoints,
               value: formatPrice(p.redeemValue),
               review: p.perReview,
@@ -116,17 +118,19 @@ export function ProductInfoCards({ data }: { data: InfoCardsData }) {
         </Card>
       )}
 
-      <Card
-        icon={<Gift className="size-5 text-cedar" strokeWidth={1.5} aria-hidden />}
-        detail={<p>{t("gift.detail")}</p>}
-      >
-        <p>
-          {"🎁 "}
-          {tGift.rich("free", {
-            strong: (chunks) => <strong className="font-medium text-gold-dark">{chunks}</strong>,
-          })}
-        </p>
-      </Card>
+      {data.giftBox && (
+        <Card
+          icon={<Gift className="size-5 text-cedar" strokeWidth={1.5} aria-hidden />}
+          detail={<p>{t("gift.detail")}</p>}
+        >
+          <p>
+            {"🎁 "}
+            {tGift.rich("free", {
+              strong: (chunks) => <strong className="font-medium text-gold-dark">{chunks}</strong>,
+            })}
+          </p>
+        </Card>
+      )}
     </div>
   );
 }

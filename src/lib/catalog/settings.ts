@@ -21,7 +21,7 @@ export const sampleSettings: StoreSettings = {
   ],
   deliveryTime: { en: "", ar: "" },
   deliveryDays: { min: 2, max: 7 },
-  points: { enabled: true, perDollar: 10, stepDollars: 20, perReview: 10, redeemPoints: 100, redeemValue: 1 },
+  points: { enabled: true, perStep: 10, stepDollars: 15, perReview: 1, redeemPoints: 10, redeemValue: 1 },
   whishOnline: false,
   cardOnline: false,
   metaPixelId: "",

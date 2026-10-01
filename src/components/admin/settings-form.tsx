@@ -84,8 +84,8 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
       <Card title="LIVRE Points">
         <Toggle label="Points are on" checked={s.pointsEnabled} onChange={(v) => set("pointsEnabled", v)} />
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Points per $1 paid" htmlFor="st-ppd">
-            <input id="st-ppd" type="number" min="0" value={s.pointsPerDollar} onChange={(e) => set("pointsPerDollar", e.target.value)} className={inputClass} />
+          <Field label="Points for each step" hint="Each full step paid (the amount below) gives this many points." htmlFor="st-ppd">
+            <input id="st-ppd" type="number" min="0" value={s.pointsPerStep} onChange={(e) => set("pointsPerStep", e.target.value)} className={inputClass} />
           </Field>
           <Field label="Points per approved review" htmlFor="st-ppr">
             <input id="st-ppr" type="number" min="0" value={s.pointsPerReview} onChange={(e) => set("pointsPerReview", e.target.value)} className={inputClass} />
@@ -109,8 +109,8 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
           </Field>
         </div>
         <p className="mt-2 text-xs text-muted">
-          Example: every ${s.pointsStepDollars} paid gives {Number(s.pointsPerDollar) * Number(s.pointsStepDollars)} points = $
-          {(Number(s.pointsPerDollar) * Number(s.pointsStepDollars) * pointValue).toFixed(2)} off next time. After the order is Delivered, a
+          Example: every ${s.pointsStepDollars} paid gives {Number(s.pointsPerStep)} points = $
+          {(Number(s.pointsPerStep) * pointValue).toFixed(2)} off next time. After the order is Delivered, a
           team member approves the points on the order page and gets a message to send with a {s.rewardPercent}% coupon for {s.rewardDays} days.
           Cancelling an order removes its points.
         </p>

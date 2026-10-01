@@ -200,6 +200,8 @@
   },
   "offer": {
     "percentOff": "−{percent}%",
+    "freeDeliveryPiece": "توصيل مجاني مع هذه القطعة",
+    "freeBoxPiece": "علبة هدية مجانية",
     "youSave": "توفّرين {amount}",
     "pointsEarn": "اشتري الآن واربحي <strong>{points} نقطة LIVRE</strong> (= {value})",
     "sold": "بيع {count}",

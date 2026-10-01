@@ -47,15 +47,15 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
 
   const [names, { data: settings }, { data: points }, { data: customer }] = await Promise.all([
     staffNames(),
-    db.from("site_settings").select("whatsapp_number, points_step_cents, points_per_dollar").eq("id", 1).maybeSingle(),
+    db.from("site_settings").select("whatsapp_number, points_step_cents, points_per_step").eq("id", 1).maybeSingle(),
     db.from("points_ledger").select("delta, reason").eq("order_id", order.id),
     db.from("customers").select("id, referred_by_staff_id").eq("id", order.customer_id).maybeSingle(),
   ]);
   const earned = (points ?? []).filter((p) => p.reason === "order").reduce((s, p) => s + p.delta, 0);
 
-  const step = settings?.points_step_cents ?? 2000;
+  const step = settings?.points_step_cents ?? 1500;
   const wouldEarn =
-    (Math.floor(Math.max(order.subtotal_cents - order.discount_cents - order.points_discount_cents, 0) / step) * step * (settings?.points_per_dollar ?? 10)) / 100;
+    Math.floor(Math.max(order.subtotal_cents - order.discount_cents - order.points_discount_cents, 0) / step) * (settings?.points_per_step ?? 10);
 
   const itemsText = order.order_items
     .map((i) => `${i.qty}× ${i.product_name}${i.custom_text ? ` "${i.custom_text}"` : ""} (${i.material_name}${i.font_name ? `, ${i.font_name}` : ""}${i.size_value ? `, ${i.size_value} cm` : ""})`)
