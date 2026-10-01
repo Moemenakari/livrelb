@@ -27,6 +27,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Stars } from "@/components/ui/stars";
 import { absoluteUrl, alternates, defaultOgImage, pageUrl } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
+import { TrackOnMount } from "@/components/analytics/analytics";
 import { ScrollRow } from "@/components/ui/scroll-row";
 import { swipeRow } from "@/components/ui/styles";
 
@@ -197,6 +198,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 pt-3 pb-20 lg:gap-20 lg:px-8">
       <JsonLd data={productLd} />
+      <TrackOnMount event="ViewContent" data={{ id: product.slug, name: product.name[locale], value: Math.min(...prices) }} />
       <JsonLd data={crumbsLd} />
       <div className="flex flex-col gap-5">
         <Breadcrumbs

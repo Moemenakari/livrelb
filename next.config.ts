@@ -10,6 +10,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const isDev = process.env.NODE_ENV !== "production";
 
 const origin = (url: string | undefined) => (url ? new URL(url).origin : "");
+// Hosted card checkout: the bank's own address (CARD_GATEWAY_URL).
+const cardOrigin = origin(process.env.CARD_GATEWAY_URL);
+// Analytics load only after the visitor accepts cookies (see components/analytics).
+const analyticsScripts = "https://connect.facebook.net https://www.googletagmanager.com";
+const analyticsConnect =
+  "https://www.facebook.com https://connect.facebook.net https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com";
 
 // Content Security Policy without nonces, so pages stay statically generated
 // (Next.js guide "Without Nonces"). The browser only talks to this site,
@@ -17,17 +23,17 @@ const origin = (url: string | undefined) => (url ? new URL(url).origin : "");
 // here and R2.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' ${analyticsScripts} ${cardOrigin}${isDev ? " 'unsafe-eval'" : ""}`.replace(/\s+/g, " "),
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${origin(imagesUrl)}`.trim(),
+  `img-src 'self' data: blob: ${origin(imagesUrl)} https://www.facebook.com https://*.google-analytics.com https://www.googletagmanager.com`.trim(),
   "font-src 'self' data:",
   // R2: the admin uploads photos straight to the bucket (signed URLs).
-  `connect-src 'self' https://*.r2.cloudflarestorage.com ${origin(supabaseUrl)} ${supabaseUrl ? origin(supabaseUrl).replace("https://", "wss://") : ""}${isDev ? " ws:" : ""}`.trim(),
+  `connect-src 'self' ${analyticsConnect} ${cardOrigin} https://*.r2.cloudflarestorage.com ${origin(supabaseUrl)} ${supabaseUrl ? origin(supabaseUrl).replace("https://", "wss://") : ""}${isDev ? " ws:" : ""}`.trim(),
   `media-src 'self' blob: ${origin(imagesUrl)}`.trim(),
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  `form-action 'self' ${cardOrigin}`.trim(),
   "frame-ancestors 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");

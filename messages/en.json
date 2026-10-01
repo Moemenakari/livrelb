@@ -610,6 +610,13 @@
       "another": "Design another"
     }
   },
+  "consent": {
+    "title": "Cookies",
+    "text": "We use cookies to see which pages help you and to show you LIVRE offers. Nothing is loaded unless you accept.",
+    "more": "Privacy policy",
+    "accept": "Accept",
+    "decline": "No thanks"
+  },
   "tracking": {
     "progress": "Order progress",
     "stage": {

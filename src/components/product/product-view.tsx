@@ -5,6 +5,7 @@ import { MessageCircle, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
+import { track } from "@/lib/analytics/client";
 import { defaultFontFor, textScript } from "@/lib/catalog/materials";
 import type {
   ChainConnection,
@@ -148,6 +149,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       inputRef.current?.focus();
       return;
     }
+    track("AddToCart", { id: product.slug, name: product.name, value: unitPrice, quantity: 1 });
     // Opens the cart drawer.
     addToCart({
       slug: product.slug,

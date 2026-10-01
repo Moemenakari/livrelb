@@ -12,6 +12,7 @@ import { normalizePhone } from "@/lib/phone";
 import { CartLine } from "@/components/cart/cart-line";
 import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
+import { TrackOnMount } from "@/components/analytics/analytics";
 import { primaryButton } from "@/components/ui/styles";
 import { CheckoutSteps, PaymentBadges } from "./checkout-steps";
 import { GoogleButton } from "./google-button";
@@ -174,6 +175,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
 
   return (
     <>
+    <TrackOnMount event="InitiateCheckout" data={{ value: total, quantity: items.reduce((s, i) => s + i.qty, 0) }} />
     <div className="mb-8 max-w-xl">
       <CheckoutSteps current={ready ? "confirm" : "details"} />
     </div>

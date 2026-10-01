@@ -20,6 +20,7 @@ import { orderTracking } from "@/lib/checkout/tracking";
 import { WhishPayment } from "@/components/checkout/whish-payment";
 import { whish } from "@/lib/payments/whish";
 import { cardConfigured } from "@/lib/payments/card";
+import { TrackOnMount } from "@/components/analytics/analytics";
 import { CardPayment } from "@/components/checkout/card-payment";
 import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
@@ -55,7 +56,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
     db
       .from("orders")
       .select(
-        `id, number, status, created_at, carrier, tracking_number, customer_name, payment_method, subtotal_cents, discount_cents,
+        `id, number, status, created_at, carrier, tracking_number, customer_name, phone, payment_method, subtotal_cents, discount_cents,
          points_used, points_discount_cents, delivery_fee_cents, total_cents,
          order_items (id, product_slug, product_name, custom_text, size_kind, size_value,
            chain_connection, qty, line_total_cents, materials (key), fonts (key))`,
@@ -92,6 +93,11 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
       <div className="mx-auto w-full max-w-xl">
         <CheckoutSteps current="done" />
       </div>
+      <TrackOnMount
+        event="Purchase"
+        once={`purchase-${order.number}`}
+        data={{ value: dollars(order.total_cents), eventId: `order-${order.number}`, phone: order.phone }}
+      />
       <header className="flex flex-col items-center gap-3 text-center">
         <p className="rounded-full bg-cedar px-4 py-1.5 text-sm font-medium text-white">
           {t("number", { number: order.number })}

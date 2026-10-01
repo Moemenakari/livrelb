@@ -6,6 +6,7 @@ import { resolveLocale } from "@/i18n/resolve-locale";
 import { getCatalog } from "@/lib/catalog";
 import { siteConfig } from "@/config/site";
 import { defaultOgImage } from "@/lib/seo";
+import { Analytics } from "@/components/analytics/analytics";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
@@ -85,6 +86,7 @@ export default async function LocaleLayout({
           <WheelCoin />
           <WhatsAppFloat />
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
+          <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
         </NextIntlClientProvider>
       </body>
     </html>
