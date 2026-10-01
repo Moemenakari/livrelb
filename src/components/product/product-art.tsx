@@ -5,6 +5,7 @@ import type { FontKey, MaterialKey, Piece, ProductArt as Art, ChainConnection } 
 import { NamePreview, aspectHeight, type Aspect } from "@/components/preview/name-preview";
 import { MetalDefs, coinTint, metalEdge, toTone } from "@/components/preview/metal";
 import { scriptFace } from "@/components/preview/script-fonts";
+import { useBevel } from "@/components/preview/use-bevel";
 
 // Drawn stand-ins for product photos: every product shows its real shape in
 // the selected metal until the owner uploads photos (product.media).
@@ -106,6 +107,7 @@ function ShapeArt({
   className: string;
 }) {
   const id = `pa${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const bevel = useBevel();
   const tone = toTone(material);
   const h = aspectHeight[aspect];
   const cy = h * 0.6;
@@ -302,7 +304,7 @@ function ShapeArt({
           <stop offset="1" stopColor="#cdbfae" />
         </radialGradient>
       </defs>
-      <g filter={`url(#${id}-metal)`}>{body}</g>
+      <g filter={bevel ? `url(#${id}-metal)` : undefined}>{body}</g>
     </svg>
   );
 }

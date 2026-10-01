@@ -131,7 +131,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
 
         {slides.length > 1 && (
           <>
-            <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+            <div className="absolute inset-x-0 bottom-0 flex justify-center">
               {slides.map((_, i) => (
                 <button
                   key={i}
@@ -139,8 +139,10 @@ export function ProductCard({ product, previewText, preferredTone, className = "
                   aria-label={t("showSlide", { index: i + 1 })}
                   aria-current={slide === i || undefined}
                   onClick={() => goTo(i)}
-                  className={`size-1.5 rounded-full transition-colors ${slide === i ? "bg-ink" : "bg-ink/25"}`}
-                />
+                  className="flex size-6 items-center justify-center"
+                >
+                  <span className={`size-1.5 rounded-full transition-colors ${slide === i ? "bg-ink" : "bg-ink/25"}`} />
+                </button>
               ))}
             </div>
             {/* Arrows for mouse users; touch users swipe. */}

@@ -22,10 +22,10 @@
 
   /* Derived: --gold is 3.1:1 on white, too light for small text.
      This shade is 4.9:1 and still reads as gold. */
-  --gold-dark: #8a6a3b;
+  --gold-dark: #7a5c30;
 
   /* Sale price, discount pill and savings (Phase 4 "buy on the website"). */
-  --sale: #8a6a3b; /* gold, not red: the palette is gold + silver */
+  --sale: #7a5c30; /* gold, not red: the palette is gold + silver */
 }
 
 /* Font stacks. Each Latin font's generated fallback is a local font that

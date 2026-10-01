@@ -166,7 +166,7 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
           {name}
         </span>
 
-        <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5 lg:hidden">
+        <div className="absolute inset-x-0 bottom-1 flex justify-center lg:hidden">
           {slides.map((slide, i) => (
             <button
               key={slide.key}
@@ -174,8 +174,10 @@ export function ProductGallery({ ref, name, art, media, personalizable, state }:
               aria-label={t("thumbnail", { index: i + 1 })}
               aria-current={index === i || undefined}
               onClick={() => goTo(i)}
-              className={`size-2 rounded-full transition-colors ${index === i ? "bg-ink" : "bg-ink/25"}`}
-            />
+              className="flex size-6 items-center justify-center"
+            >
+              <span className={`size-2 rounded-full transition-colors ${index === i ? "bg-ink" : "bg-ink/25"}`} />
+            </button>
           ))}
         </div>
 

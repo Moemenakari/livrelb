@@ -31,7 +31,8 @@ export function Countdown({ endsAt, className = "", onDark = false }: { endsAt: 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       <p className={`tracking-caps text-[11px] font-medium uppercase ${onDark ? "text-white/85" : "text-muted"}`}>{t("label")}</p>
-      <ol className="flex gap-2" role="timer" aria-live="off">
+      <div role="timer" aria-live="off">
+        <ol className="flex gap-2">
         {parts.map(({ key, value }) => (
           <li
             key={key}
@@ -43,7 +44,8 @@ export function Countdown({ endsAt, className = "", onDark = false }: { endsAt: 
             <span className="mt-1 text-[11px] text-muted">{t(key)}</span>
           </li>
         ))}
-      </ol>
+        </ol>
+      </div>
     </div>
   );
 }

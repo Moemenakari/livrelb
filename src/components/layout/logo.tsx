@@ -21,7 +21,7 @@ export function Logo({ name, homeLabel, className = "", onDark = false }: Props)
       <CedarMark className={`h-[0.6em] w-auto ${onDark ? "text-gold" : "text-cedar"}`} />
       {/* Latin wordmark on every locale; the negative end margin cancels the
           trailing letter-spacing so the word stays optically centered. */}
-      <span lang="en" className="-me-[0.22em] tracking-[0.22em] text-gold">
+      <span lang="en" className={`-me-[0.22em] tracking-[0.22em] ${onDark ? "text-gold" : "text-gold-dark"}`}>
         {name}
       </span>
     </Link>

@@ -15,10 +15,19 @@ function detect(): CoinMode {
   let webgl = false;
   try {
     const canvas = document.createElement("canvas");
-    webgl = Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+    const gl = (canvas.getContext("webgl2") ?? canvas.getContext("webgl")) as WebGLRenderingContext | null;
+    webgl = Boolean(gl);
+    // Software rendering (no graphics chip) would freeze the page: use the photo.
+    const info = gl?.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    if (/swiftshader|llvmpipe|software/i.test(renderer)) webgl = false;
   } catch {
     webgl = false;
   }
+  // Very weak phones (2 cores or less, 2 GB of memory or less) also get the photo.
+  const weak =
+    (navigator.hardwareConcurrency ?? 8) <= 2 || ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 2;
+  if (weak) webgl = false;
   cached = reduced || !webgl ? "static" : "3d";
   return cached;
 }

@@ -6,6 +6,7 @@ import type { FontKey, MaterialKey, MetalTone, ChainConnection } from "@/lib/cat
 import { estimateInk, measureInk, type Ink, type Point } from "./measure-ink";
 import { MetalDefs, metalEdge, metalLight, toTone } from "./metal";
 import { isArabic, scriptFace } from "./script-fonts";
+import { useBevel } from "./use-bevel";
 
 export const NAME_MAX_LENGTH = 10;
 
@@ -142,6 +143,8 @@ export function NamePreview({
     ringPoints = [ringLeft, ringRight];
   }
 
+  const bevel = useBevel();
+
   // Restart the light sweep whenever the name, font or metal changes.
   const sweepRef = useRef<SVGAnimateTransformElement>(null);
   useEffect(() => {
@@ -184,7 +187,7 @@ export function NamePreview({
         )}
       </defs>
 
-      <g filter={`url(#${id}-metal)`}>
+      <g filter={bevel ? `url(#${id}-metal)` : undefined}>
         {chains.map((d) => (
           <g key={d} fill="none" strokeLinecap="round">
             <path d={d} stroke={metalEdge[tone]} strokeWidth="2.4" strokeDasharray="3.2 1.5" />
