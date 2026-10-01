@@ -54,6 +54,15 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 // categories, a price and an old price per material (Double Gold can be
 // pre-filled at 3× gold), sizes, chain connections, fonts + default,
 // badges, visibility, stock and 1–7 photos + a video.
+const styleOptions = [
+  { key: "cursive", label: "Cursive" },
+  { key: "arabic", label: "Arabic" },
+  { key: "bold", label: "Bold" },
+  { key: "dainty", label: "Dainty" },
+  { key: "initial", label: "Initial / letter" },
+  { key: "twoFonts", label: "Two fonts" },
+];
+
 export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Props) {
   const router = useRouter();
   const [f, setF] = useState<ProductForm>(initial);
@@ -79,6 +88,21 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
       ...f.materials,
       { key, price: prefill, compareAt: goldOld > 0 && factor !== 1 ? String(Math.round(goldOld * factor * 100) / 100) : "", isDefault: f.materials.length === 0 },
     ]);
+  };
+
+  // Typing the Gold price (or old price) fills the Silver / Rose rows that are
+  // still empty or still equal to it: they usually cost the same.
+  const setPrice = (key: MaterialKey, field: "price" | "compareAt", value: string) => {
+    const before = material("gold")?.[field] ?? "";
+    set(
+      "materials",
+      f.materials.map((m) => {
+        if (m.key === key) return { ...m, [field]: value };
+        const factor = lookups.materials.find((x) => x.key === m.key)?.factor ?? 1;
+        if (key === "gold" && factor === 1 && (m[field] === "" || m[field] === before)) return { ...m, [field]: value };
+        return m;
+      }),
+    );
   };
 
   const save = () =>
@@ -152,6 +176,16 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
               dir="ltr"
             />
           </Field>
+          <Field label="Style" hint="Groups the piece under a round style picture on its category page." htmlFor="p-style">
+            <select id="p-style" value={f.style} onChange={(e) => set("style", e.target.value)} className={inputClass}>
+              <option value="">No style</option>
+              {styleOptions.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </Field>
           <Field label="Shown in the shop" htmlFor="p-status">
             <select id="p-status" value={f.status} onChange={(e) => set("status", e.target.value as ProductForm["status"])} className={inputClass}>
               <option value="active">Visible</option>
@@ -174,7 +208,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
 
       <Card title="Photos & video">
         <MediaManager slug={f.slug} media={f.media} onChange={(m) => set("media", m)} />
-        <Field label="Drawing shown until there are photos" htmlFor="p-art" className="mt-4 sm:max-w-xs">
+        <Field label="Type of piece (drawing shown until there are photos)" htmlFor="p-art" className="mt-4 sm:max-w-xs">
           <select
             id="p-art"
             value={artKey(f.art)}
@@ -190,7 +224,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         </Field>
       </Card>
 
-      <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out, empty = no sale.</span>}>
+      <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver and Rose follow the Gold price until you change them.</span>}>
         <ul className="flex flex-col gap-2">
           {lookups.materials.map((m) => {
             const row = material(m.key);
@@ -212,10 +246,10 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
                 {row && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <Field label="Price" htmlFor={`price-${m.key}`}>
-                      <input id={`price-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" required value={row.price} onChange={(e) => setMaterial(m.key, { price: e.target.value })} className={inputClass} />
+                      <input id={`price-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" required value={row.price} onChange={(e) => setPrice(m.key, "price", e.target.value)} className={inputClass} />
                     </Field>
                     <Field label="Old price" htmlFor={`old-${m.key}`}>
-                      <input id={`old-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" value={row.compareAt} onChange={(e) => setMaterial(m.key, { compareAt: e.target.value })} className={inputClass} />
+                      <input id={`old-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" value={row.compareAt} onChange={(e) => setPrice(m.key, "compareAt", e.target.value)} className={inputClass} />
                     </Field>
                   </div>
                 )}

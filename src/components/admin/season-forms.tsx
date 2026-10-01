@@ -16,6 +16,16 @@ const ideas = [
   { slug: "ramadan", en: "Ramadan", ar: "رمضان" },
   { slug: "eid", en: "Eid", ar: "العيد" },
   { slug: "christmas", en: "Christmas", ar: "الميلاد" },
+  { slug: "halloween", en: "Halloween", ar: "الهالوين" },
+  { slug: "eid-al-fitr", en: "Eid al-Fitr", ar: "عيد الفطر" },
+  { slug: "eid-al-adha", en: "Eid al-Adha", ar: "عيد الأضحى" },
+  { slug: "easter", en: "Easter", ar: "الفصح" },
+  { slug: "womens-day", en: "Women's Day", ar: "يوم المرأة" },
+  { slug: "graduation", en: "Graduation", ar: "التخرّج" },
+  { slug: "back-to-school", en: "Back to school", ar: "العودة إلى المدرسة" },
+  { slug: "black-friday", en: "Black Friday", ar: "الجمعة السوداء" },
+  { slug: "new-year", en: "New Year", ar: "رأس السنة" },
+  { slug: "anniversary", en: "Anniversary", ar: "ذكرى سنوية" },
   { slug: "gifts", en: "Gifts", ar: "هدايا" },
 ];
 
