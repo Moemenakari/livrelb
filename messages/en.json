@@ -686,6 +686,15 @@
   "notFound": {
     "title": "Page not found",
     "description": "We couldn't find the page you were looking for.",
+    "backHome": "Back to home",
+    "charms": "Design your charms",
+    "track": "Track my order"
+  },
+  "serverError": {
+    "title": "Something went wrong",
+    "description": "It's on our side, not yours. Please try again in a moment.",
+    "reference": "Reference: {id}",
+    "retry": "Try again",
     "backHome": "Back to home"
   }
 }

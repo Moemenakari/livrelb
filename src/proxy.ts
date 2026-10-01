@@ -6,6 +6,11 @@ import { REF_CODE, REF_COOKIE, REF_MAX_AGE } from "./lib/checkout/cookies";
 
 const intl = createMiddleware(routing);
 
+// Admin session timeout: after this long without opening an admin page the
+// staff member is signed out and must log in again (phones get lost).
+const ADMIN_SEEN = "livre_admin_seen";
+const ADMIN_IDLE_MS = 2 * 60 * 60 * 1000;
+
 const refCookie = {
   maxAge: REF_MAX_AGE,
   path: "/",
@@ -26,6 +31,25 @@ export default async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const secure = process.env.NODE_ENV === "production";
+    const seen = Number(request.cookies.get(ADMIN_SEEN)?.value);
+    const loggedIn = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+
+    // Idle too long: sign out here and send to the login page.
+    if (url && key && loggedIn && seen && Date.now() - seen > ADMIN_IDLE_MS) {
+      const out = NextResponse.redirect(new URL("/admin/login?expired=1", request.url));
+      const supabase = createServerClient(url, key, {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (list) => list.forEach(({ name, value, options }) => out.cookies.set(name, value, options)),
+        },
+      });
+      await supabase.auth.signOut();
+      out.cookies.set(ADMIN_SEEN, "", { path: "/admin", maxAge: 0 });
+      out.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return out;
+    }
+
     if (url && key) {
       const supabase = createServerClient(url, key, {
         cookies: {
@@ -39,6 +63,9 @@ export default async function proxy(request: NextRequest) {
         },
       });
       await supabase.auth.getUser();
+    }
+    if (loggedIn) {
+      response.cookies.set(ADMIN_SEEN, String(Date.now()), { path: "/admin", httpOnly: true, sameSite: "lax", secure });
     }
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
