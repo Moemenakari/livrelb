@@ -117,6 +117,7 @@ Supabase ← مشروع `livrelb` ← **Authentication**:
 - [ ] **Backup**: سرّا GitHub (الخطوة 0) + تشغيل يدوي ناجح.
 - [ ] **Google login** (الخطوة 7) إذا بدنا ياه.
 - [ ] مفتاح **ANTHROPIC_API_KEY** إذا بدنا الرسالة الذكية.
+- [ ] **التشارمز التركية**: الأدمن ← Turkish charms ← Add photos (صورة + اسم عربي/إنكليزي لكل قطعة)، وسعر التشارم (الافتراضي 13$) من Settings ← Charms page.
 - [ ] **رسائل التشارمز**: صفحة Charms ← طلب تجريبي ← بيظهر بالأدمن ← Charm designs.
 - [ ] رفع **صور/فيديو الهيرو** (الأدمن ← Promotions ← Homepage slides). بدونهم بيظهر الـ 3D coin.
 - [ ] Lighthouse بعد النشر على الدومين الحقيقي.

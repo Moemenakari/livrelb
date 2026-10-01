@@ -27,6 +27,7 @@ export type SettingsInput = {
   announcements: { en: string; ar: string }[];
   whishOnline: boolean;
   cardOnline: boolean;
+  charmPrice: string;
   metaPixelId: string;
   ga4Id: string;
 };
@@ -90,6 +91,7 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
         whish_online_enabled: Boolean(input.whishOnline),
         card_online_enabled: Boolean(input.cardOnline),
+        charm_price_cents: centsOf(input.charmPrice, "Charm price"),
         meta_pixel_id: metaPixelId,
         ga4_id: ga4Id,
       })

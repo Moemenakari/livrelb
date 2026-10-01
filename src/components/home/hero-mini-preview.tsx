@@ -1,11 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useLocale } from "next-intl";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
-import { defaultFontFor } from "@/lib/catalog/materials";
+import { fonts as fontInfo, textScript } from "@/lib/catalog/materials";
 import type { ChainConnection, FontKey, MaterialKey } from "@/lib/catalog/types";
 import { NAME_MAX_LENGTH, NamePreview } from "@/components/preview/name-preview";
 
@@ -29,6 +30,15 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
   const [text, setText] = useState("");
   const [material, setMaterial] = useState<MaterialKey>("gold");
   const [connection, setConnection] = useState<ChainConnection>("sides");
+  const locale = useLocale() as "en" | "ar";
+  // Arrows step through the fonts that can write the typed name (Arabic names
+  // get the Arabic fonts, Latin names the Latin ones).
+  const [fontIndex, setFontIndex] = useState(0);
+  const script = textScript(text || "A");
+  const choices = fonts.filter((f) => fontInfo[f].script === script);
+  const list = choices.length > 0 ? choices : fonts;
+  const font = list[((fontIndex % list.length) + list.length) % list.length];
+  const step = (by: number) => setFontIndex((i) => i + by);
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-line bg-background/90 p-4 shadow-[0_12px_40px_-20px_rgba(43,38,34,0.35)] backdrop-blur sm:flex-row sm:items-center sm:p-5">
@@ -36,7 +46,7 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
         <NamePreview
           text={text}
           material={material}
-          font={defaultFontFor(fonts, text)}
+          font={font}
           connection={connection}
           aspect="strip"
           shine
@@ -87,11 +97,32 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
               </button>
             ))}
           </div>
+          <div role="group" aria-label={t("fontLabel")} className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              aria-label={t("prevFont")}
+              className="flex size-9 items-center justify-center rounded-full border border-line hover:border-muted"
+            >
+              <ChevronLeft className="size-4 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />
+            </button>
+            <span className="min-w-16 text-center text-xs" aria-live="polite">
+              {fontInfo[font].name[locale]}
+            </span>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              aria-label={t("nextFont")}
+              className="flex size-9 items-center justify-center rounded-full border border-line hover:border-muted"
+            >
+              <ChevronRight className="size-4 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
           <Link
             // Carry the design over so the product page opens already filled.
             href={{
               pathname: productHref(PRODUCT),
-              query: { ...(text.trim() && { name: text.trim() }), material, connection },
+              query: { ...(text.trim() && { name: text.trim() }), material, connection, font },
             }}
             className="ms-auto inline-flex items-center gap-1 text-sm font-medium text-gold-dark underline-offset-4 hover:underline"
           >

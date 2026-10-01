@@ -159,6 +159,66 @@ export type Database = {
           },
         ]
       }
+      charm_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string
+          in_stock: boolean
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          price_cents: number | null
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url: string
+          in_stock?: boolean
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          price_cents?: number | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          in_stock?: boolean
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          price_cents?: number | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charm_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charm_items_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charm_requests: {
         Row: {
           created_at: string
@@ -172,6 +232,7 @@ export type Database = {
           phone: string
           shapes: string[]
           status: string
+          total_cents: number | null
         }
         Insert: {
           created_at?: string
@@ -185,6 +246,7 @@ export type Database = {
           phone: string
           shapes?: string[]
           status?: string
+          total_cents?: number | null
         }
         Update: {
           created_at?: string
@@ -198,6 +260,7 @@ export type Database = {
           phone?: string
           shapes?: string[]
           status?: string
+          total_cents?: number | null
         }
         Relationships: [
           {
@@ -1622,6 +1685,7 @@ export type Database = {
         Row: {
           announcements: Json
           card_online_enabled: boolean
+          charm_price_cents: number
           created_at: string
           delivery_days_max: number
           delivery_days_min: number
@@ -1652,6 +1716,7 @@ export type Database = {
         Insert: {
           announcements?: Json
           card_online_enabled?: boolean
+          charm_price_cents?: number
           created_at?: string
           delivery_days_max?: number
           delivery_days_min?: number
@@ -1682,6 +1747,7 @@ export type Database = {
         Update: {
           announcements?: Json
           card_online_enabled?: boolean
+          charm_price_cents?: number
           created_at?: string
           delivery_days_max?: number
           delivery_days_min?: number

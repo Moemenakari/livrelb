@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
 import { track } from "@/lib/analytics/client";
-import { defaultFontFor, textScript } from "@/lib/catalog/materials";
+import { defaultFontFor, fonts as fontInfo, textScript } from "@/lib/catalog/materials";
 import type {
   ChainConnection,
   FontKey,
@@ -97,7 +97,9 @@ export function ProductView({ product, children }: { product: ProductViewData; c
     const q = new URLSearchParams(search);
     const material = q.get("material");
     const connection = q.get("connection");
+    const font = q.get("font");
     return {
+      font: p?.fonts.find((f) => f.key === font)?.key,
       text: p ? [...(q.get("name") ?? "")].slice(0, p.maxLength).join("") : "",
       material: product.materials.find((m) => m.key === material)?.key,
       connection: product.connections.find((c) => c === connection),
@@ -116,7 +118,8 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   // What the preview writes: the name, or the placeholder name when empty.
   const previewText = text.trim() || tPreview("placeholder");
   const script = textScript(previewText);
-  const font = fontChoice[script] ?? defaultFontFor(fontKeys, previewText);
+  const urlFont = fromUrl.font && fontInfo[fromUrl.font].script === script ? fromUrl.font : undefined;
+  const font = fontChoice[script] ?? urlFont ?? defaultFontFor(fontKeys, previewText);
   const connection =
     connectionChoice ??
     fromUrl.connection ??

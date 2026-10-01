@@ -137,6 +137,12 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
         </ul>
       </Card>
 
+      <Card title="Charms page">
+        <Field label="Price of one charm ($)" hint="Every charm a customer picks costs this, unless a Turkish charm has its own price." htmlFor="st-charm">
+          <input id="st-charm" type="number" min="0" step="0.01" value={s.charmPrice} onChange={(e) => set("charmPrice", e.target.value)} className={inputClass} />
+        </Field>
+      </Card>
+
       <Card title="Visa / Mastercard online">
         <Toggle
           label="Let customers pay by card on the website"

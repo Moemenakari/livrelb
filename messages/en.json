@@ -303,6 +303,9 @@
       "title": "Try your name",
       "inputLabel": "Your name",
       "metalLabel": "Metal",
+      "fontLabel": "Font",
+      "prevFont": "Previous font",
+      "nextFont": "Next font",
       "gold": "Gold",
       "silver": "Silver",
       "rose": "Rose",
@@ -526,14 +529,17 @@
   },
   "charms": {
     "nav": "Charms",
-    "eyebrow": "Design your own",
-    "title": "Your charms, your story",
-    "subtitle": "Pick from {count}+ shapes and letters, add your own letters or show us a photo of your idea. We make it by hand and message you the price.",
-    "stepShapes": "1. Pick your shapes",
-    "stepLetters": "2. Add your letters",
-    "stepIdea": "3. Or show us your idea",
-    "stepSend": "4. Send it to us",
+    "title": "Charms",
+    "subtitle": "Charms you design. Pick as many as you like, in gold or silver, {price} each.",
+    "tabs": {
+      "label": "How do you want to choose?",
+      "shapes": "Shapes",
+      "stock": "Turkish charms",
+      "photo": "My photo"
+    },
     "count": "{count} shapes, letters and numbers",
+    "each": "{price} each",
+    "total": "{count, plural, one {# charm} other {# charms}} × {price} = {total}",
     "search": "Search shapes (heart, star, A…)",
     "groups": {
       "all": "All",
@@ -555,59 +561,62 @@
     "add": "Add {name}",
     "remove": "Remove {name}",
     "clear": "Clear all",
-    "yourDesign": "Your design",
-    "empty": "Tap a shape to add it. Up to {max} charms.",
-    "picked": "{count} of {max} charms. Tap a charm on the chain to remove it.",
+    "yourDesign": "Your charms",
+    "empty": "Tap a charm to add it. Up to {max}.",
+    "picked": "Tap a charm on the chain to remove it.",
     "full": "You reached {max} charms.",
     "showMore": "Show {left} more",
     "noResults": "No shape found. Try another word, or send us a photo of what you want.",
-    "lettersLabel": "Letters or a short word (up to {max})",
-    "lettersHint": "It appears on your design as a small plate. English or Arabic.",
+    "stock": {
+      "hint": "Real Turkish charms we have in stock, photographed.",
+      "empty": "No Turkish charms listed yet. Pick shapes or send us a photo instead.",
+      "soldOut": "Out of stock"
+    },
     "photo": {
-      "title": "Upload a photo of your idea",
-      "hint": "A drawing, a screenshot or a photo. JPG, PNG or WebP, up to 5 MB.",
+      "title": "Upload a picture of the charms you want",
+      "hint": "A photo, a drawing or a screenshot. JPG, PNG or WebP, up to 5 MB.",
       "choose": "Choose a photo",
       "uploading": "Uploading…",
       "remove": "Remove photo",
-      "error": "We couldn't upload this photo. Please try another one."
-    },
-    "ai": {
-      "title": "AI charm designer",
-      "text": "Describe the charm you imagine and get a drawing of it.",
-      "soon": "Coming this week"
+      "error": "We couldn't upload this photo. Please try another one.",
+      "unavailable": "Photo upload isn't available yet. Send it to us on WhatsApp instead.",
+      "price": "We confirm the price after seeing your photo.",
+      "ai": "AI charm designer: coming this week."
     },
     "whatsapp": {
       "title": "Prefer WhatsApp?",
       "text": "Send us your idea or photo directly and we will help you.",
       "cta": "Chat on WhatsApp",
-      "message": "Hi LIVRE! I designed charms on your website:"
+      "message": "Hi LIVRE! I want to order charms:"
     },
     "summary": {
-      "shapes": "Shapes",
-      "letters": "Letters",
+      "shapes": "Charms",
       "metal": "Metal",
       "photo": "Photo",
-      "name": "Name"
+      "name": "Name",
+      "total": "Estimated total"
     },
     "form": {
+      "title": "Send it to us",
       "name": "Your name",
       "phone": "Phone number",
       "note": "Anything else we should know? (optional)",
-      "submit": "Send my charm design",
+      "submit": "Send my charms",
       "privacy": "We only use your name and phone to reply to this request."
     },
     "errors": {
       "name_required": "Please write your name.",
       "phone_invalid": "Please check your phone number.",
-      "empty_design": "Pick a shape, add letters or upload a photo first.",
+      "empty_design": "Pick a charm or upload a photo first.",
       "rate_limited": "Too many requests. Please wait a few minutes and try again.",
       "failed": "Something went wrong. Please try again."
     },
     "done": {
-      "title": "Thank you, we got your design!",
-      "text": "We will message you on WhatsApp with the price and the next step. Your reference: {ref}.",
+      "title": "Thank you, we got your charms!",
+      "text": "We will message you on WhatsApp to confirm and arrange payment and delivery. Your reference: {ref}.",
+      "total": "Estimated total: {total}",
       "whatsapp": "Send it on WhatsApp too",
-      "another": "Design another"
+      "another": "Choose more charms"
     }
   },
   "consent": {

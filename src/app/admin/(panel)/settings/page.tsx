@@ -46,6 +46,7 @@ export default async function SettingsPage() {
           announcements,
           whishOnline: s.whish_online_enabled,
           cardOnline: s.card_online_enabled,
+          charmPrice: d(s.charm_price_cents),
           metaPixelId: s.meta_pixel_id,
           ga4Id: s.ga4_id,
         }}

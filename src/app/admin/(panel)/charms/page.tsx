@@ -19,11 +19,14 @@ export default async function CharmsAdminPage() {
   const db = await createClient();
   const { data } = await db
     .from("charm_requests")
-    .select("id, name, phone, shapes, letters, metal, note, image_url, status, created_at")
+    .select("id, name, phone, shapes, letters, metal, note, image_url, status, created_at, total_cents")
     .order("status", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(100);
   const rows = data ?? [];
+  const { data: stock } = await db.from("charm_items").select("id, name_en");
+  const stockNames = new Map((stock ?? []).map((i) => [i.id, i.name_en]));
+  const label = (key: string) => (key.startsWith("stock:") ? `${stockNames.get(key.slice(6)) ?? "Turkish charm"} (stock)` : (findShape(key)?.name.en ?? key));
 
   return (
     <>
@@ -33,7 +36,7 @@ export default async function CharmsAdminPage() {
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((r) => {
-            const names = r.shapes.map((s) => findShape(s)?.name.en ?? s);
+            const names = r.shapes.map(label);
             const message = `Hi ${r.name}, this is LIVRE about your charm design${names.length ? ` (${names.join(", ")})` : ""}.`;
             return (
               <li key={r.id}>
@@ -50,6 +53,12 @@ export default async function CharmsAdminPage() {
                     <dd dir="ltr" className="text-start">
                       {prettyPhone(r.phone)}
                     </dd>
+                    {r.total_cents !== null && (
+                      <>
+                        <dt className="text-muted">Estimate</dt>
+                        <dd className="font-medium">${r.total_cents / 100}</dd>
+                      </>
+                    )}
                     <dt className="text-muted">Metal</dt>
                     <dd className="capitalize">{r.metal}</dd>
                     {names.length > 0 && (
