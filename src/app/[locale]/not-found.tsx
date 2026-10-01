@@ -11,7 +11,7 @@ export default function NotFound() {
     <section className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
       <CedarMark className="size-12 text-cedar" />
       <p className="font-display text-7xl leading-none text-gold lining-nums" lang="en" aria-hidden>
-        404
+        {"404"}
       </p>
       <h1 className="text-4xl">{t("title")}</h1>
       <p className="text-muted">{t("description")}</p>

@@ -64,7 +64,7 @@ export function TrackingPanel({ status, tracking }: { status: OrderStatus; track
         <p className="flex items-center gap-3 rounded-xl bg-surface px-4 py-3 text-sm">
           <CalendarClock className="size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
           <span>
-            {t("eta")} <strong className="font-semibold">{short(tracking.eta.from)} – {short(tracking.eta.to)}</strong>
+            {t("eta")} <strong className="font-semibold">{short(tracking.eta.from)} {"–"} {short(tracking.eta.to)}</strong>
           </span>
         </p>
       )}

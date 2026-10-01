@@ -17,26 +17,22 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const t = useTranslations("home.hero");
   const locale = useLocale() as "en" | "ar";
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const many = slides.length > 1;
-
-  useEffect(() => {
-    setPaused(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
 
   const next = () => setActive((i) => (i + 1) % slides.length);
 
   // Images advance on a timer; videos advance when they end (or after a cap).
   useEffect(() => {
-    if (!many || paused) return;
+    // Holds still for visitors who prefer reduced motion.
+    if (!many || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const slide = slides[active];
     timer.current = setTimeout(next, slide.type === "video" ? VIDEO_MAX_MS : IMAGE_MS);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, many, paused, slides]);
+  }, [active, many, slides]);
 
   return (
     <div className="absolute inset-0 -z-0 overflow-hidden bg-ink" aria-roledescription="carousel" aria-label={t("slidesLabel")}>

@@ -424,7 +424,7 @@ function ChainPreview({
 
   return (
     <div className="overflow-hidden rounded-xl bg-surface">
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="">
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block h-auto max-h-28 w-full sm:max-h-none" role="img" aria-label="">
         <path d={`M 0 10 Q ${W / 2} 100 ${W} 10`} fill="none" stroke={edge} strokeWidth="2.2" strokeDasharray="3.2 1.6" strokeLinecap="round" />
         {shapes.map((s, i) => {
           const { x, y } = point((i + 1) / (count + 1));
