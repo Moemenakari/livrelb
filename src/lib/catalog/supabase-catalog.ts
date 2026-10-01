@@ -8,6 +8,7 @@ import type {
   Catalog,
   Category,
   HeroOffer,
+  HeroSlide,
   Localized,
   MaterialKey,
   Product,
@@ -221,6 +222,12 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     ? { percent: hero.percent!, endsAt: hero.ends_at, headline: typed(hero.headline_en, hero.headline_ar) }
     : null;
 
+  const heroSlides: HeroSlide[] = running.flatMap((p) =>
+    p.placement === "hero_slide" && p.media_url && p.media_type
+      ? [{ id: p.id, url: p.media_url, type: p.media_type, headline: typed(p.headline_en, p.headline_ar), link: p.link_url ?? undefined }]
+      : [],
+  );
+
   return {
     products,
     categories,
@@ -256,6 +263,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     },
     promo,
     heroOffer,
+    heroSlides,
     areas: (areasRes.data ?? []).map((a) => ({
       slug: a.slug,
       name: loc(a.name_en, a.name_ar),

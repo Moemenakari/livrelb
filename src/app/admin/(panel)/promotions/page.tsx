@@ -4,6 +4,7 @@ import { staffNames } from "@/lib/admin/data";
 import { isLive, toLocalInput } from "@/lib/admin/format";
 import { can } from "@/lib/admin/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { HeroSlides } from "@/components/admin/hero-slides";
 import { PromotionsManager } from "@/components/admin/promo-forms";
 import { NoAccess, PageHeader } from "@/components/admin/ui";
 
@@ -22,6 +23,22 @@ export default async function PromotionsPage() {
   return (
     <>
       <PageHeader title="Promotions" subtitle="Changes show in the shop right away." />
+      <div className="mb-4">
+        <HeroSlides
+          slides={(promotions ?? [])
+            .filter((p) => p.placement === "hero_slide" && p.media_url && p.media_type)
+            .map((p) => ({
+              id: p.id,
+              url: p.media_url!,
+              type: p.media_type!,
+              headlineEn: p.headline_en ?? "",
+              headlineAr: p.headline_ar ?? "",
+              link: p.link_url ?? "",
+              order: String(p.sort_order),
+              isActive: p.is_active,
+            }))}
+        />
+      </div>
       <PromotionsManager
         staff={names.filter((s) => s.isActive).map((s) => ({ id: s.id, name: s.name }))}
         coupons={(coupons ?? []).map((c) => ({

@@ -62,7 +62,8 @@ function readAnchors(): Anchors {
     const r = el.getBoundingClientRect();
     return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 + window.scrollY, size: r.width };
   };
-  return { hero: read("hero"), lira: read("lira") };
+  // No hero slot (photos or videos replace the coin there): the coin first appears at the Lira section.
+  return { hero: read("hero") ?? read("lira"), lira: read("lira") };
 }
 
 /** True when every sample point of the coin is under a section that hides it. */

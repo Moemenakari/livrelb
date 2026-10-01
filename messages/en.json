@@ -294,7 +294,10 @@
       "titleDefault": "Personalized jewelry, made in Lebanon",
       "subtitle": "{percent}% off any order with code",
       "cta": "Design your necklace",
-      "ctaSecondary": "Shop bestsellers"
+      "ctaSecondary": "Shop bestsellers",
+      "slidesLabel": "Featured photos and videos",
+      "slideLink": "See this offer",
+      "goToSlide": "Show slide {n}"
     },
     "mini": {
       "title": "Try your name",

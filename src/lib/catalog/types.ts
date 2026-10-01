@@ -240,6 +240,16 @@ export type HeroOffer = {
   endsAt: string | null;
 };
 
+/** A photo or video behind the homepage headline (Promotions in the admin). */
+export type HeroSlide = {
+  id: string;
+  url: string;
+  type: "image" | "video";
+  headline?: Localized;
+  /** A page of this site, e.g. /category/bracelets. */
+  link?: string;
+};
+
 /** Everything the storefront reads, from Supabase or the sample files. */
 export type Catalog = {
   products: Product[];
@@ -250,6 +260,8 @@ export type Catalog = {
   /** null when no promo code is running. */
   promo: StorePromo | null;
   heroOffer: HeroOffer | null;
+  /** Empty = the homepage shows the 3D coin. */
+  heroSlides: HeroSlide[];
   areas: DeliveryArea[];
   /** Pieces sold per product slug (orders not cancelled). */
   sold: Record<string, number>;

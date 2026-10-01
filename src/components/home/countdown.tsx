@@ -13,7 +13,7 @@ function subscribe(onTick: () => void) {
 }
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 
-export function Countdown({ endsAt, className = "" }: { endsAt: string; className?: string }) {
+export function Countdown({ endsAt, className = "", onDark = false }: { endsAt: string; className?: string; onDark?: boolean }) {
   const t = useTranslations("countdown");
   const now = useSyncExternalStore(subscribe, nowSeconds, () => null);
   const end = Math.floor(new Date(endsAt).getTime() / 1000);
@@ -30,12 +30,12 @@ export function Countdown({ endsAt, className = "" }: { endsAt: string; classNam
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      <p className="tracking-caps text-[11px] font-medium text-muted uppercase">{t("label")}</p>
+      <p className={`tracking-caps text-[11px] font-medium uppercase ${onDark ? "text-white/85" : "text-muted"}`}>{t("label")}</p>
       <ol className="flex gap-2" role="timer" aria-live="off">
         {parts.map(({ key, value }) => (
           <li
             key={key}
-            className="flex w-16 flex-col items-center rounded-lg border border-line bg-background py-2"
+            className="flex w-16 flex-col items-center rounded-lg border border-line bg-background py-2 text-foreground"
           >
             <span className="font-display text-3xl leading-none lining-nums tabular-nums" lang="en">
               {value === null ? "--" : String(value).padStart(2, "0")}

@@ -4,6 +4,7 @@ import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 import { fromLocalInput } from "./format";
+import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -154,6 +155,75 @@ export async function saveSeason(input: SeasonInput): Promise<ActionResult> {
         .insert(products.map((product_id, i) => ({ collection_id: seasonId!, product_id, sort_order: i })));
       if (error) throw error;
     }
+    revalidateTag(CATALOG_TAG, { expire: 0 });
+    refresh();
+  });
+}
+
+export type SlideInput = {
+  id: string | null;
+  url: string;
+  type: "image" | "video";
+  headlineEn: string;
+  headlineAr: string;
+  /** Where a tap goes: a path on this site, e.g. /category/bracelets. */
+  link: string;
+  order: string;
+  isActive: boolean;
+};
+
+const MAX_SLIDE_IMAGE = 8 * 1024 * 1024;
+const MAX_SLIDE_VIDEO = 40 * 1024 * 1024;
+const slideTypes = ["image/webp", "image/jpeg", "image/png", "video/mp4", "video/webm"];
+
+/** A signed upload link for one homepage slide (photo or short video). */
+export async function createSlideUpload(input: { contentType: string; size: number }): Promise<ActionResult<{ uploadUrl: string; publicUrl: string }>> {
+  return run(async () => {
+    await authorize("coupons.manage");
+    if (!isR2Configured()) throw new AdminError("Photo storage (Cloudflare R2) isn't set up yet.");
+    if (!slideTypes.includes(input.contentType)) throw new AdminError("Use a photo (JPG, PNG, WebP) or a short video (MP4, WebM).");
+    const max = input.contentType.startsWith("video/") ? MAX_SLIDE_VIDEO : MAX_SLIDE_IMAGE;
+    if (!Number.isFinite(input.size) || input.size <= 0 || input.size > max) throw new AdminError(`This file is too big (max ${max / 1024 / 1024} MB).`);
+    const target = await createUploadUrl({ folder: "hero", contentType: input.contentType });
+    return { uploadUrl: target.uploadUrl, publicUrl: target.publicUrl };
+  });
+}
+
+/** Photo or video slides behind the homepage headline. No slides = the 3D coin. */
+export async function saveHeroSlide(input: SlideInput): Promise<ActionResult> {
+  return run(async () => {
+    const { db } = await authorize("coupons.manage");
+    const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.replace(/\/$/, "");
+    if (!base || !input.url.startsWith(`${base}/`) || input.url.length > 500) throw new AdminError("Upload the photo or video again.");
+    if (input.type !== "image" && input.type !== "video") throw new AdminError("Invalid file type.");
+    const link = str(input.link, 200);
+    if (link && !/^\/[A-Za-z0-9\-_/?=&.]*$/.test(link)) throw new AdminError("Link: a page of this site, like /category/bracelets.");
+    const order = Math.round(Number(input.order) || 0);
+    const row = {
+      placement: "hero_slide",
+      media_url: input.url,
+      media_type: input.type,
+      headline_en: str(input.headlineEn, 160) || null,
+      headline_ar: str(input.headlineAr, 160) || null,
+      link_url: link || null,
+      sort_order: order,
+      is_active: Boolean(input.isActive),
+    };
+    const slideId = id(input.id);
+    const { error } = slideId ? await db.from("promotions").update(row).eq("id", slideId).eq("placement", "hero_slide") : await db.from("promotions").insert(row);
+    if (error) throw error;
+    revalidateTag(CATALOG_TAG, { expire: 0 });
+    refresh();
+  });
+}
+
+export async function deleteHeroSlide(slideId: string): Promise<ActionResult> {
+  return run(async () => {
+    const { db } = await authorize("coupons.manage");
+    const target = id(slideId);
+    if (!target) throw new AdminError("Invalid slide.");
+    const { error } = await db.from("promotions").delete().eq("id", target).eq("placement", "hero_slide");
+    if (error) throw error;
     revalidateTag(CATALOG_TAG, { expire: 0 });
     refresh();
   });
