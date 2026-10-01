@@ -10,6 +10,9 @@ const intl = createMiddleware(routing);
 // staff member is signed out and must log in again (phones get lost).
 const ADMIN_SEEN = "livre_admin_seen";
 const ADMIN_IDLE_MS = 2 * 60 * 60 * 1000;
+// "Keep me signed in on this phone" (cookie set at login): 30 days.
+const ADMIN_KEEP = "livre_admin_keep";
+const ADMIN_KEEP_IDLE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const refCookie = {
   maxAge: REF_MAX_AGE,
@@ -36,7 +39,7 @@ export default async function proxy(request: NextRequest) {
     const loggedIn = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
 
     // Idle too long: sign out here and send to the login page.
-    if (url && key && loggedIn && seen && Date.now() - seen > ADMIN_IDLE_MS) {
+    if (url && key && loggedIn && seen && Date.now() - seen > (request.cookies.get(ADMIN_KEEP)?.value === "1" ? ADMIN_KEEP_IDLE_MS : ADMIN_IDLE_MS)) {
       const out = NextResponse.redirect(new URL("/admin/login?expired=1", request.url));
       const supabase = createServerClient(url, key, {
         cookies: {

@@ -35,6 +35,10 @@ export function LoginForm() {
           className={inputClass}
         />
       </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="keep" className="size-5 accent-[var(--cedar)]" />
+        Keep me signed in on this phone (30 days)
+      </label>
       {state.error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
           {state.error}

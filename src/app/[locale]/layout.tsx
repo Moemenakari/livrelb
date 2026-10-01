@@ -7,6 +7,7 @@ import { getCatalog } from "@/lib/catalog";
 import { siteConfig } from "@/config/site";
 import { defaultOgImage } from "@/lib/seo";
 import { Analytics } from "@/components/analytics/analytics";
+import { PwaRegister } from "@/components/layout/pwa";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
@@ -30,6 +31,9 @@ export async function generateMetadata({
 
   return {
     metadataBase: new URL(siteConfig.url),
+    applicationName: "LIVRE",
+    appleWebApp: { capable: true, title: "LIVRE", statusBarStyle: "default" },
+    formatDetection: { telephone: false },
     title: { default: t("title"), template: `%s · ${t("title")}` },
     description: t("description"),
     openGraph: {
@@ -87,6 +91,7 @@ export default async function LocaleLayout({
           <WhatsAppFloat />
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
           <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
+          <PwaRegister />
         </NextIntlClientProvider>
       </body>
     </html>

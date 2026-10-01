@@ -5,6 +5,7 @@ import { categoryHref, helpLinks, navCategories, policyLinks } from "@/config/na
 import { whatsappUrl } from "@/config/site";
 import { findCategory, getCatalog } from "@/lib/catalog";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
+import { InstallApp } from "./pwa";
 import { Logo } from "./logo";
 
 const socialButton =
@@ -71,6 +72,7 @@ export async function Footer() {
               onDark
             />
             <p className="max-w-xs">{t("about")}</p>
+            <InstallApp />
             {(whatsappNumber || instagramUrl) && (
               <div className="flex flex-wrap gap-3">
                 {whatsappNumber && (

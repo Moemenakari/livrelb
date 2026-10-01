@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { normalizePhone, staffAuthEmail } from "@/lib/phone";
 import { rateLimit } from "@/lib/security/rate-limit";
@@ -30,11 +31,20 @@ export async function login(_prev: LoginState, form: FormData): Promise<LoginSta
     await db.auth.signOut();
     return { error: "This account is disabled. Please ask the owner.", phone: rawPhone };
   }
+  // "Keep me signed in": the proxy then allows 30 days without activity
+  // instead of 2 hours (see ADMIN_KEEP in src/proxy.ts).
+  const jar = await cookies();
+  if (form.get("keep")) {
+    jar.set("livre_admin_keep", "1", { path: "/admin", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 24 * 30 });
+  } else {
+    jar.delete({ name: "livre_admin_keep", path: "/admin" });
+  }
   redirect("/admin");
 }
 
 export async function logout(): Promise<void> {
   const db = await createClient();
   await db.auth.signOut();
+  (await cookies()).delete({ name: "livre_admin_keep", path: "/admin" });
   redirect("/admin/login");
 }

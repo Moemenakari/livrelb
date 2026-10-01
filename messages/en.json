@@ -621,6 +621,10 @@
       "another": "Choose more charms"
     }
   },
+  "install": {
+    "cta": "Save on your phone",
+    "iosHint": "Tap the Share button, then “Add to Home Screen”."
+  },
   "consent": {
     "title": "Cookies",
     "text": "We use cookies to see which pages help you and to show you LIVRE offers. Nothing is loaded unless you accept.",
