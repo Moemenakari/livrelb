@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { artPresets, type ProductForm } from "./product-types";
 
 export type EditorLookups = {
-  materials: { key: MaterialKey; name: string; factor: number }[];
+  materials: { key: MaterialKey; name: string; factor: number | null }[];
   fonts: { key: FontKey; name: string; script: "latin" | "arabic" }[];
   categories: { slug: string; name: string }[];
 };
@@ -63,7 +63,6 @@ export function emptyProduct(): ProductForm {
     materials: [
       { key: "gold", price: "", compareAt: "", isDefault: true },
       { key: "silver", price: "", compareAt: "", isDefault: false },
-      { key: "rose", price: "", compareAt: "", isDefault: false },
     ],
     options: [35, 40, 45, 50, 55].map((v) => ({ kind: "chain" as const, value: String(v), modifier: "0", isDefault: v === 45 })),
     fonts: ["beirut"],

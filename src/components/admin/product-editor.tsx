@@ -13,7 +13,7 @@ import { RichTextarea } from "./rich-textarea";
 import { Card, Field, buttonClass, dangerButtonClass, inputClass, secondaryButtonClass, smallButtonClass } from "./ui";
 
 type Lookups = {
-  materials: { key: MaterialKey; name: string; factor: number }[];
+  materials: { key: MaterialKey; name: string; factor: number | null }[];
   fonts: { key: FontKey; name: string; script: "latin" | "arabic" }[];
   categories: { slug: string; name: string }[];
 };
@@ -80,17 +80,15 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
   const toggleMaterial = (key: MaterialKey, on: boolean) => {
     if (!on) return set("materials", f.materials.filter((m) => m.key !== key));
     // Double Gold: pre-filled at 3× the gold price (still editable).
+    // Materials with no factor (Double Silver, Steel) start empty.
     const gold = Number(material("gold")?.price);
-    const factor = lookups.materials.find((m) => m.key === key)?.factor ?? 1;
-    const prefill = gold > 0 && factor !== 1 ? String(Math.round(gold * factor * 100) / 100) : "";
+    const factor = lookups.materials.find((m) => m.key === key)?.factor ?? null;
+    const scaled = (n: number) => (n > 0 && factor && factor !== 1 ? String(Math.round(n * factor * 100) / 100) : "");
     const goldOld = Number(material("gold")?.compareAt);
-    set("materials", [
-      ...f.materials,
-      { key, price: prefill, compareAt: goldOld > 0 && factor !== 1 ? String(Math.round(goldOld * factor * 100) / 100) : "", isDefault: f.materials.length === 0 },
-    ]);
+    set("materials", [...f.materials, { key, price: scaled(gold), compareAt: scaled(goldOld), isDefault: f.materials.length === 0 }]);
   };
 
-  // Typing the Gold price (or old price) fills the Silver / Rose rows that are
+  // Typing the Gold price (or old price) fills the Silver row while it is
   // still empty or still equal to it: they usually cost the same.
   const setPrice = (key: MaterialKey, field: "price" | "compareAt", value: string) => {
     const before = material("gold")?.[field] ?? "";
@@ -98,7 +96,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
       "materials",
       f.materials.map((m) => {
         if (m.key === key) return { ...m, [field]: value };
-        const factor = lookups.materials.find((x) => x.key === m.key)?.factor ?? 1;
+        const factor = lookups.materials.find((x) => x.key === m.key)?.factor ?? null;
         if (key === "gold" && factor === 1 && (m[field] === "" || m[field] === before)) return { ...m, [field]: value };
         return m;
       }),
@@ -226,7 +224,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         </Field>
       </Card>
 
-      <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver and Rose follow the Gold price until you change them.</span>}>
+      <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver follows the Gold price until you change it; type the others by hand.</span>}>
         <ul className="flex flex-col gap-2">
           {lookups.materials.map((m) => {
             const row = material(m.key);
@@ -236,7 +234,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
                   <label className="flex items-center gap-2 text-sm font-medium">
                     <input type="checkbox" checked={Boolean(row)} onChange={(e) => toggleMaterial(m.key, e.target.checked)} className="size-4 accent-[var(--cedar)]" />
                     {m.name}
-                    {m.factor !== 1 && <span className="text-xs font-normal text-muted">(pre-filled at {m.factor}× gold)</span>}
+                    {m.factor !== null && m.factor !== 1 && <span className="text-xs font-normal text-muted">(pre-filled at {m.factor}× gold)</span>}
                   </label>
                   {row && (
                     <label className="flex items-center gap-1.5 text-xs text-muted">

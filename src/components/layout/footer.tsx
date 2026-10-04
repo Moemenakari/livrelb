@@ -2,7 +2,7 @@ import { Banknote, Smartphone } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { categoryHref, helpLinks, navCategories, policyLinks } from "@/config/navigation";
-import { whatsappUrl } from "@/config/site";
+import { developer, whatsappUrl } from "@/config/site";
 import { findCategory, getCatalog } from "@/lib/catalog";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand-icons";
 import { InstallApp } from "./pwa";
@@ -123,6 +123,12 @@ export async function Footer() {
             {/* Year as a string so it isn't number-formatted ("2,026"). */}
             <p>{t("copyright", { year: String(new Date().getFullYear()) })}</p>
             <p className="text-white/50">{t("madeIn")}</p>
+            <p className="text-white/50">
+              {t("owner")} · {t("programmedBy")}{" "}
+              <a href={developer.url} target="_blank" rel="noopener" className="underline underline-offset-4 hover:text-gold">
+                {developer.name}
+              </a>
+            </p>
           </div>
         </div>
       </div>

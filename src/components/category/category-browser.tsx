@@ -22,11 +22,11 @@ type Props = {
 };
 
 const sorts: Sort[] = ["featured", "priceLow", "priceHigh", "newest"];
-const metals: Metal[] = ["all", "gold", "silver", "rose"];
+const metals: Metal[] = ["all", "gold", "silver"];
 const metalSwatch: Record<MetalTone, string> = {
   gold: materials.gold.swatch,
   silver: materials.silver.swatch,
-  rose: materials.rose.swatch,
+  rose: "#e2a98f",
 };
 
 // Style thumbnails, filters, sort and the page-wide name preview for a

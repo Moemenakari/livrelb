@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { fonts as fontInfo, isArabic } from "@/lib/catalog/materials";
 import type { FontKey } from "@/lib/catalog/types";
 import { scriptFace } from "@/components/preview/script-fonts";
@@ -22,6 +23,7 @@ type Props = {
 // The fonts download only once the row is near the screen: until then the
 // cards show the name in the page font.
 export function FontPicker({ fonts, value, text, onChange, label }: Props) {
+  const locale = useLocale() as "en" | "ar";
   const rowRef = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -85,7 +87,10 @@ export function FontPicker({ fonts, value, text, onChange, label }: Props) {
             >
               {text}
             </span>
-            <span className="text-[11px] text-muted">{f.name}</span>
+            <span className="flex flex-col items-center leading-tight">
+              <span className="text-[11px] text-foreground">{f.name}</span>
+              <span className="text-[10px] text-muted">{fontInfo[f.key].style[locale]}</span>
+            </span>
           </button>
         );
       })}

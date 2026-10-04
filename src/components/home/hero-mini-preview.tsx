@@ -106,8 +106,9 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
             >
               <ChevronLeft className="size-4 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />
             </button>
-            <span className="min-w-16 text-center text-xs" aria-live="polite">
-              {fontInfo[font].name[locale]}
+            <span className="flex min-w-16 flex-col items-center text-center leading-tight" aria-live="polite">
+              <span className="text-xs">{fontInfo[font].name[locale]}</span>
+              <span className="text-[10px] text-muted">{fontInfo[font].style[locale]}</span>
             </span>
             <button
               type="button"

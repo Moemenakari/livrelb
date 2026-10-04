@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 export type Localized = Record<Locale, string>;
 
 /** materials table. */
-export type MaterialKey = "silver" | "gold" | "rose" | "doubleGold";
+export type MaterialKey = "gold" | "silver" | "doubleGold" | "doubleSilver" | "steel";
 
 /** The three metal colors the previews and art can render. */
 export type MetalTone = "gold" | "silver" | "rose";
@@ -48,7 +48,8 @@ export type FontKey =
 /** Which names a font is offered for: Arabic fonts only show for Arabic names. */
 export type FontScript = "latin" | "arabic";
 
-export type FontInfo = { name: Localized; script: FontScript };
+/** `style` tells the look in plain words (slanted, upright, capitals…) under our place name. */
+export type FontInfo = { name: Localized; style: Localized; script: FontScript };
 
 /** Where the chain attaches to the name: both ends, or one ring on top. */
 export type ChainConnection = "sides" | "center";

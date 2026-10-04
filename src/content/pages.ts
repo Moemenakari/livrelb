@@ -258,7 +258,7 @@ export const policies: Record<PolicySlug, Record<Lang, PageContent>> = {
         {
           heading: "Materials",
           paragraphs: [
-            "Pieces are sterling silver 925 or stainless steel with silver, gold or rose gold plating. Colors in photos can look a little different on your screen.",
+            "Pieces are stainless steel: gold, silver or plain, and Double Gold or Double Silver with a double layer for longer wear. Colors in photos can look a little different on your screen.",
           ],
         },
         {
@@ -297,7 +297,7 @@ export const policies: Record<PolicySlug, Record<Lang, PageContent>> = {
         },
         {
           heading: "المواد",
-          paragraphs: ["القطع من فضة استرلينية 925 أو ستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. قد تبدو الألوان في الصور مختلفة قليلاً على شاشتكِ."],
+          paragraphs: ["القطع من ستانلس ستيل: ذهبي أو فضي أو عادي، وبطلاء ذهب أو فضة مزدوج ليدوم أكثر. قد تبدو الألوان في الصور مختلفة قليلاً على شاشتكِ."],
         },
         {
           heading: "التواصل",
@@ -316,7 +316,7 @@ export const faq: Record<Lang, { title: string; intro: string; items: Faq[] }> =
     items: [
       { q: "How do I choose my chain length?", a: "Chains come in 35, 40, 45, 50 and 55 cm. 40 cm sits at the base of the neck, 45 cm is the most popular and falls just below the collarbone, 50 to 55 cm hangs lower. Every name necklace has a 5 cm extender. Open “Size guide” on the product page for details." },
       { q: "What size is the pendant?", a: "A name pendant is about 1.5 cm tall for capital letters; the width depends on the name. Coin pendants are 2 cm. Names up to 10 letters work well." },
-      { q: "What are the pieces made of?", a: "Stainless steel core with silver, gold or rose gold plating, or sterling silver 925 on some pieces. Double Gold Stainless Steel has a double layer of gold for longer wear. All pieces are hypoallergenic and water resistant." },
+      { q: "What are the pieces made of?", a: "Stainless steel in gold, silver or plain steel. Double Gold and Double Silver Stainless Steel have a double layer for longer wear. All pieces are hypoallergenic and water resistant." },
       { q: "How do I care for my jewelry?", a: "Put it on after perfume and lotion, take it off before swimming or sport when you can, wipe it with a soft dry cloth, and keep it in its box. This keeps the plating bright for much longer." },
       { q: "Can I write my name in Arabic?", a: "Yes. Type the name in Arabic and choose one of the Arabic fonts. You see a live preview before you order." },
       { q: "How long does delivery take?", a: "2 to 7 days after we confirm your order, anywhere in Lebanon. Delivery is $4, free over $50 and free on your first order." },
@@ -333,7 +333,7 @@ export const faq: Record<Lang, { title: string; intro: string; items: Faq[] }> =
     items: [
       { q: "كيف أختار طول السلسلة؟", a: "السلاسل بأطوال 35 و40 و45 و50 و55 سم. 40 سم عند أسفل الرقبة، و45 سم الأكثر طلباً وتقع تحت عظمة الترقوة مباشرة، و50 إلى 55 سم أطول. لكل عقد اسم وصلة تمديد 5 سم. افتحي «دليل المقاسات» في صفحة المنتج للتفاصيل." },
       { q: "ما حجم القلادة؟", a: "قلادة الاسم بارتفاع حوالي 1.5 سم للأحرف الكبيرة، والعرض حسب الاسم. قلادات العملة 2 سم. الأسماء حتى 10 أحرف تعمل بشكل جيد." },
-      { q: "مم تُصنع القطع؟", a: "ستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي، أو فضة استرلينية 925 في بعض القطع. الستانلس بالذهب المزدوج له طبقة ذهب مضاعفة لتدوم أكثر. كل القطع لا تسبب الحساسية ومقاومة للماء." },
+      { q: "مم تُصنع القطع؟", a: "ستانلس ستيل ذهبي أو فضي أو عادي. الستانلس بطلاء الذهب أو الفضة المزدوج له طبقة مضاعفة لتدوم أكثر. كل القطع لا تسبب الحساسية ومقاومة للماء." },
       { q: "كيف أعتني بمجوهراتي؟", a: "ضعيها بعد العطر والكريم، وانزعيها قبل السباحة أو الرياضة قدر الإمكان، وامسحيها بقطعة قماش ناعمة جافة، واحفظيها في علبتها. هكذا يبقى الطلاء لامعاً لوقت أطول." },
       { q: "هل يمكن كتابة اسمي بالعربية؟", a: "نعم. اكتبي الاسم بالعربية واختاري أحد الخطوط العربية. سترين معاينة مباشرة قبل الطلب." },
       { q: "كم يستغرق التوصيل؟", a: "من 2 إلى 7 أيام بعد تأكيد طلبكِ في كل لبنان. التوصيل 4$، ومجاني فوق 50$ ومجاني لطلبكِ الأول." },

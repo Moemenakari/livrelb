@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { CedarMark } from "@/components/icons/cedar-mark";
+import { ownerTagline } from "@/config/site";
 
 type Props = {
   name: string;
@@ -10,7 +11,8 @@ type Props = {
 };
 
 // Placeholder until the coin-badge logo is drawn (brief §2): a cedar in cedar
-// green over the LIVRE wordmark in gold. Sizes follow the font size.
+// green over the LIVRE wordmark in gold, "by Mrshop Nour" under it. Sizes
+// follow the font size.
 export function Logo({ name, homeLabel, className = "", onDark = false }: Props) {
   return (
     <Link
@@ -23,6 +25,10 @@ export function Logo({ name, homeLabel, className = "", onDark = false }: Props)
           trailing letter-spacing so the word stays optically centered. */}
       <span lang="en" className={`-me-[0.22em] tracking-[0.22em] ${onDark ? "text-gold" : "text-gold-dark"}`}>
         {name}
+      </span>
+      {/* Owner line under the wordmark, on every page. */}
+      <span lang="en" className={`mt-[0.1em] font-sans text-[length:max(0.34em,9px)] font-normal tracking-[0.08em] ${onDark ? "text-white/60" : "text-muted"}`}>
+        {ownerTagline}
       </span>
     </Link>
   );

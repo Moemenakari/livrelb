@@ -16,8 +16,8 @@ import type {
 // `media` stays empty until real photos exist.
 
 // Sample prices, as the owner would type them in the admin: every metal of
-// every product has its own price (product_materials). Here Silver, Gold
-// and Rose Gold share one price and Double Gold Stainless Steel is listed
+// every product has its own price (product_materials). Here Gold and
+// Silver share one price and Double Gold Stainless Steel is listed
 // separately; nothing is calculated from another price.
 const offers = (
   keys: MaterialKey[],
@@ -44,30 +44,30 @@ const nameNecklace = (sample: string, defaultFont: FontKey = "beirut"): Personal
   sample,
 });
 
-const plated: MaterialKey[] = ["silver", "gold", "rose"];
+const plated: MaterialKey[] = ["gold", "silver"];
 
 const nameDetails: Localized = {
-  en: "Pendant height: about 1.5 cm for capital letters, width depends on the name.\nChain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.\nSilver: sterling silver 925. Gold and Rose Gold: sterling silver with a thick gold or rose gold plating. Double Gold Stainless Steel: stainless steel with a double layer of gold, water resistant and made to last.",
-  ar: "ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.\nالسلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.\nالفضة: فضة إسترلينية 925. الذهب والذهب الوردي: فضة إسترلينية بطلاء سميك من الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج: ستانلس ستيل بطبقتين من الذهب، مقاوم للماء ويدوم طويلاً.",
+  en: "Pendant height: about 1.5 cm for capital letters, width depends on the name.\nChain: fine cable chain, 1 mm, with a 5 cm extender on 35–45 cm.\nGold, Silver and plain Stainless Steel: water resistant and made to last. Double Gold and Double Silver Stainless Steel: a double layer of plating for extra wear.",
+  ar: "ارتفاع الحرف الكبير نحو 1.5 سم، ويختلف العرض حسب الاسم.\nالسلسلة: سلسلة ناعمة 1 ملم، مع وصلة تطويل 5 سم للمقاسات 35–45 سم.\nستانلس ستيل ذهبي أو فضي أو عادي: مقاوم للماء ويدوم طويلاً. ستانلس ستيل بطلاء ذهب أو فضة مزدوج: طبقتان من الطلاء لتدوم أكثر.",
 };
 
 const coinDetails: Localized = {
-  en: "Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.\nChain: 1.5 mm cable chain.\nStainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.",
-  ar: "ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.\nالسلسلة: 1.5 ملم.\nأساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.",
+  en: "Coin pendant: 2 cm, both faces of the 1975 1 Livre coin in relief.\nChain: 1.5 mm cable chain.\nStainless steel in gold, silver or plain steel. Double Gold and Double Silver Stainless Steel have a double layer for extra wear. Water resistant.",
+  ar: "ميدالية الليرة: 2 سم، بوجهَي ليرة 1975 البارزين.\nالسلسلة: 1.5 ملم.\nستانلس ستيل ذهبي أو فضي أو عادي. الستانلس بطلاء الذهب أو الفضة المزدوج فيه طبقتان لتدوم أكثر. مقاوم للماء.",
 };
 
 const livresDetails = (value: 250 | 500, year: number, ar: string): Localized => ({
   en: `Coin pendant: 2.4 cm, both faces of the ${year} ${value} Livres coin in relief: the cedar and "مصرف لبنان" on one side, the big ${value} on the other.
 Chain: 1.5 mm cable chain.
-Stainless steel core with silver, gold or rose gold plating. Double Gold Stainless Steel has a double layer of gold for extra wear. Water resistant.`,
+Stainless steel in gold, silver or plain steel. Double Gold and Double Silver Stainless Steel have a double layer for extra wear. Water resistant.`,
   ar: `ميدالية الليرة: 2.4 سم، بوجهَي ${ar} ${year} البارزين: الأرزة و«مصرف لبنان» على وجه، والرقم ${value} الكبير على الآخر.
 السلسلة: 1.5 ملم.
-أساس من الستانلس ستيل مطلي بالفضة أو الذهب أو الذهب الوردي. ستانلس ستيل بطلاء ذهب مزدوج فيه طبقتان من الذهب لتدوم أكثر. مقاوم للماء.`,
+ستانلس ستيل ذهبي أو فضي أو عادي. الستانلس بطلاء الذهب أو الفضة المزدوج فيه طبقتان لتدوم أكثر. مقاوم للماء.`,
 });
 
 const simpleDetails: Localized = {
-  en: "Sterling silver 925, plain or plated with gold or rose gold, or Double Gold Stainless Steel with a double layer of gold. Hypoallergenic and nickel free.",
-  ar: "فضة إسترلينية 925، طبيعية أو مطلية بالذهب أو الذهب الوردي، أو ستانلس ستيل بطلاء ذهب مزدوج. لا تسبب الحساسية وخالية من النيكل.",
+  en: "Stainless steel in gold, silver or plain steel, or Double Gold / Double Silver Stainless Steel with a double layer. Hypoallergenic and nickel free.",
+  ar: "ستانلس ستيل ذهبي أو فضي أو عادي، أو بطلاء ذهب أو فضة مزدوج. لا تسبب الحساسية وخالية من النيكل.",
 };
 
 // Every necklace can also be ordered as a bracelet and every bracelet as a
@@ -214,7 +214,7 @@ export const products: Product[] = ([
     categories: ["bracelets", "gifts"],
     isBestSeller: true,
     offers: offers(plated, 34, 44, [102, 132]),
-    defaultMaterial: "rose",
+    defaultMaterial: "gold",
     personalization: { ...nameNecklace("Rami"), connections: [] },
     size: bracelet,
     art: { kind: "name", variant: "bracelet" },
@@ -328,7 +328,7 @@ export const products: Product[] = ([
     style: "twoFonts",
     isNew: true,
     offers: offers(plated, 50, 64, [150, 192]),
-    defaultMaterial: "rose",
+    defaultMaterial: "gold",
     personalization: nameNecklace("Sarah"),
     size: chain,
     art: { kind: "name", variant: "necklace" },
@@ -499,7 +499,7 @@ export const products: Product[] = ([
     categories: ["rings"],
     isNew: true,
     offers: offers(plated, 24, undefined, [72]),
-    defaultMaterial: "rose",
+    defaultMaterial: "gold",
     size: ring,
     art: { kind: "ring", engraving: "plain" },
     media: [],

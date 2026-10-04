@@ -5,8 +5,7 @@ import { requireStaff } from "@/lib/admin/auth";
 import { nameOf, staffNames } from "@/lib/admin/data";
 import { dateTime, money, prettyPhone, statusLabels, statusTones } from "@/lib/admin/format";
 import { can } from "@/lib/admin/permissions";
-import { isFontKey } from "@/lib/catalog/materials";
-import type { MaterialKey } from "@/lib/catalog/types";
+import { allMaterials, isFontKey } from "@/lib/catalog/materials";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPreview } from "@/components/admin/admin-preview";
 import { OrderControls } from "@/components/admin/order-controls";
@@ -24,7 +23,6 @@ const sources: Record<string, string> = {
   link: "Personal link",
 };
 
-const materialKeys: MaterialKey[] = ["silver", "gold", "rose", "doubleGold"];
 
 export default async function OrderPage({ params }: PageProps<"/admin/orders/[number]">) {
   const staff = await requireStaff();
@@ -75,7 +73,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
           <Card title={`Pieces (${order.order_items.reduce((s, i) => s + i.qty, 0)})`}>
             <ul className="divide-y divide-line">
               {order.order_items.map((i) => {
-                const material = materialKeys.find((m) => m === i.materials?.key) ?? "gold";
+                const material = allMaterials.find((m) => m === i.materials?.key) ?? "gold";
                 const font = isFontKey(i.fonts?.key) ? i.fonts!.key : undefined;
                 return (
                   <li key={i.id} className="flex gap-4 py-3 first:pt-0 last:pb-0">

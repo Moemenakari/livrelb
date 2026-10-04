@@ -50,8 +50,8 @@ export const reviews: Review[] = [
     city: { en: "Tripoli", ar: "طرابلس" },
     rating: 5,
     text: {
-      en: "Second order already. The rose gold is my favorite, I wear it every day and it still shines.",
-      ar: "هذا طلبي الثاني. الذهب الوردي المفضل عندي، ألبسه كل يوم وما زال يلمع.",
+      en: "Second order already. The gold one is my favorite, I wear it every day and it still shines.",
+      ar: "هذا طلبي الثاني. الذهبي المفضل عندي، ألبسه كل يوم وما زال يلمع.",
     },
     date: "2026-08-19",
     isSample: true,

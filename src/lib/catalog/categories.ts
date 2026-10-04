@@ -6,8 +6,8 @@ export const categories: Category[] = [
     slug: "name-necklaces",
     name: { en: "Name Necklaces", ar: "قلادات الأسماء" },
     description: {
-      en: "Your name, their name, a word that means everything. Written in gold, silver or rose, made to order and checked by hand before it reaches you.",
-      ar: "اسمكِ، اسم من تحبين، أو كلمة تعني لكِ الكثير. بالذهب أو الفضة أو الذهب الوردي، تُصنع حسب الطلب وتُفحص يدوياً قبل أن تصلكِ.",
+      en: "Your name, their name, a word that means everything. Written in gold or silver stainless steel, made to order and checked by hand before it reaches you.",
+      ar: "اسمكِ، اسم من تحبين، أو كلمة تعني لكِ الكثير. بالستانلس ستيل الذهبي أو الفضي، تُصنع حسب الطلب وتُفحص يدوياً قبل أن تصلكِ.",
     },
     parent: "necklaces",
     styles: ["cursive", "arabic", "bold", "dainty", "initial", "twoFonts"],

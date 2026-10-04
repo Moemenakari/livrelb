@@ -73,7 +73,9 @@
     "instagram": "Instagram",
     "paymentLabel": "We accept",
     "copyright": "© {year} LIVRE. All rights reserved.",
-    "madeIn": "Made with love in Lebanon"
+    "madeIn": "Made with love in Lebanon",
+    "owner": "LIVRE by Mrshop Nour",
+    "programmedBy": "Programmed by"
   },
   "payment": {
     "cod": "Cash on Delivery",
@@ -374,7 +376,7 @@
       },
       "quality": {
         "title": "Quality materials",
-        "text": "Silver, gold and rose gold plating, and Double Gold Stainless Steel."
+        "text": "Gold, silver and plain stainless steel, plus Double Gold and Double Silver for extra wear."
       },
       "trusted": {
         "title": "Trusted by Lebanese",

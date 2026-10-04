@@ -16,3 +16,8 @@ export function whatsappUrl(number: string, message?: string): string {
   const base = `https://wa.me/${number.replace(/\D/g, "")}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
+
+// Credit line in the footer and on Our story.
+export const developer = { name: "Moemen Akari", url: "https://github.com/Moemenakari" };
+// Small line under the LIVRE logo on every page.
+export const ownerTagline = "by Mrshop Nour";
