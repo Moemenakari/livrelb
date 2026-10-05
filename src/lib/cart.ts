@@ -37,8 +37,9 @@ export type CartItem = {
 export const MAX_QTY = 20;
 export const MAX_LINES = 30;
 
-// v2: metals and fonts changed (no 14K, no gift box option); older bags are dropped.
-const items = createLocalStore<CartItem[]>("livre:cart:v2", []);
+// v3: Rose Gold is gone (stainless steel metals only); older bags are dropped.
+// v2: metals and fonts changed (no 14K, no gift box option).
+const items = createLocalStore<CartItem[]>("livre:cart:v3", []);
 const coupon = createLocalStore<string>("livre:coupon", "");
 // The drawer is not saved: it opens when something is added.
 let drawerOpen = false;

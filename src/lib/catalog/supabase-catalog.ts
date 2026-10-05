@@ -97,7 +97,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       .order("review_date", { ascending: false }),
     db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("promotions").select("*").eq("is_active", true).order("sort_order"),
-    db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents").eq("is_active", true).order("sort_order"),
+    db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents, delivery_days_min, delivery_days_max").eq("is_active", true).order("sort_order"),
     admin ? admin.rpc("storefront_stats") : Promise.resolve({ data: null, error: null }),
   ]);
 
@@ -106,6 +106,13 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
   if (reviewsRes.error) fail("reviews", reviewsRes.error);
   if (settingsRes.error || !settingsRes.data) fail("site settings", settingsRes.error);
   if (promotionsRes.error) fail("promotions", promotionsRes.error);
+
+  // Before the delivery-days database update the day columns don't exist: ask
+  // again without them, so the areas (and their fees) never disappear.
+  const areaRows: { slug: string; name_en: string; name_ar: string; delivery_fee_cents: number | null; delivery_days_min?: number | null; delivery_days_max?: number | null }[] =
+    areasRes.error
+      ? ((await db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents").eq("is_active", true).order("sort_order")).data ?? [])
+      : (areasRes.data ?? []);
 
   const products = productsRes.data.flatMap((row): Product[] => {
     const offers = [...row.product_materials]
@@ -247,6 +254,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         : [],
       deliveryTime: loc(s.delivery_time_en, s.delivery_time_ar),
       deliveryDays: { min: s.delivery_days_min, max: s.delivery_days_max },
+      processingDays: { min: s.processing_days_min ?? 3, max: s.processing_days_max ?? 4 },
       points: {
         enabled: s.points_enabled,
         perStep: s.points_per_step,
@@ -266,10 +274,11 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     promo,
     heroOffer,
     heroSlides,
-    areas: (areasRes.data ?? []).map((a) => ({
+    areas: areaRows.map((a) => ({
       slug: a.slug,
       name: loc(a.name_en, a.name_ar),
       fee: a.delivery_fee_cents === null ? null : dollars(a.delivery_fee_cents),
+      days: a.delivery_days_min == null || a.delivery_days_max == null ? null : { min: a.delivery_days_min, max: a.delivery_days_max },
     })),
     sold: stats.sold ?? {},
     publicCoupons: (stats.coupons ?? []).map(

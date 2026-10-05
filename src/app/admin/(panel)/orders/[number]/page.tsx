@@ -73,7 +73,8 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
           <Card title={`Pieces (${order.order_items.reduce((s, i) => s + i.qty, 0)})`}>
             <ul className="divide-y divide-line">
               {order.order_items.map((i) => {
-                const material = allMaterials.find((m) => m === i.materials?.key) ?? "gold";
+                // Past Rose Gold orders still draw in rose gold.
+                const material = allMaterials.find((m) => m === i.materials?.key) ?? (i.materials?.key === "rose" ? "rose" : "gold");
                 const font = isFontKey(i.fonts?.key) ? i.fonts!.key : undefined;
                 return (
                   <li key={i.id} className="flex gap-4 py-3 first:pt-0 last:pb-0">

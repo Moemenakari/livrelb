@@ -186,9 +186,12 @@ export type StoreSettings = {
   /** Empty until the owner sets it: the Instagram link is hidden. */
   instagramUrl: string;
   announcements: Localized[];
-  /** "Estimated delivery" text; empty = built from deliveryDays. */
+  /** "Estimated delivery" text; empty = built from the days below. */
   deliveryTime: Localized;
-  deliveryDays: { min: number; max: number };
+  /** Delivery days of an area without its own (areas table). */
+  deliveryDays: DayRange;
+  /** Days we take to design and make a piece, before it ships. */
+  processingDays: DayRange;
   /** LIVRE Points rules (site_settings). */
   points: PointsRules;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
@@ -215,8 +218,14 @@ export type PointsRules = {
   redeemValue: number;
 };
 
-/** A delivery area and its own fee (null = the shop's delivery fee). */
-export type DeliveryArea = { slug: string; name: Localized; fee: number | null };
+/** From–to number of days (equal = an exact number). */
+export type DayRange = { min: number; max: number };
+
+/**
+ * A delivery area, its own fee (null = the shop's delivery fee) and its own
+ * delivery days (null = the shop's delivery days).
+ */
+export type DeliveryArea = { slug: string; name: Localized; fee: number | null; days: DayRange | null };
 
 /** A coupon the owner marked public: shown in the product page deals row. */
 export type PublicCoupon = {

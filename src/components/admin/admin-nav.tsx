@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BadgePercent,
   ClipboardList,
   Gem,
@@ -14,6 +15,7 @@ import {
   NotebookPen,
   Settings,
   Star,
+  Truck,
   Sparkles,
   UserCog,
   Users,
@@ -22,11 +24,13 @@ import {
 import { logout } from "@/lib/admin/session-actions";
 import { can, type Permission, type StaffSession } from "@/lib/admin/permissions";
 import { AdminLogo } from "./admin-logo";
+import { PushToggle, forgetThisPhone } from "./push-toggle";
 
 type Item = { href: string; label: string; icon: typeof Gem; need?: Permission | "owner"; main?: boolean };
 
 const items: Item[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, main: true },
+  { href: "/admin/activity", label: "Activity", icon: Activity },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList, need: "orders.view", main: true },
   { href: "/admin/products", label: "Products", icon: Gem, main: true },
   { href: "/admin/customers", label: "Customers", icon: Users, need: "customers.view", main: true },
@@ -37,6 +41,7 @@ const items: Item[] = [
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote, need: "reviews.manage" },
   { href: "/admin/sales", label: "Sales tools", icon: NotebookPen, need: "sales.view" },
   { href: "/admin/staff", label: "Staff", icon: UserCog, need: "owner" },
+  { href: "/admin/delivery", label: "Delivery & times", icon: Truck, need: "owner" },
   { href: "/admin/settings", label: "Settings", icon: Settings, need: "owner" },
 ];
 
@@ -50,7 +55,8 @@ function isActive(pathname: string, href: string) {
 
 // Sidebar on desktop; a bottom bar with the four main sections and a
 // "More" sheet on phones (Nour uses the admin on his phone).
-export function AdminNav({ staff }: { staff: StaffSession }) {
+// pushKey: the VAPID public key for "Notify me" (null when push isn't set up).
+export function AdminNav({ staff, pushKey }: { staff: StaffSession; pushKey: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const list = visible(staff);
@@ -76,16 +82,24 @@ export function AdminNav({ staff }: { staff: StaffSession }) {
   };
 
   const who = (
-    <div className="flex items-center justify-between gap-2 border-t border-line px-3 pt-4">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{staff.name}</p>
-        <p className="text-xs text-muted">{staff.isOwner ? "Owner" : "Staff"}</p>
+    <div className="border-t border-line px-3 pt-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{staff.name}</p>
+          <p className="text-xs text-muted">{staff.isOwner ? "Owner" : "Staff"}</p>
+        </div>
+        <form
+        action={async () => {
+          await forgetThisPhone();
+          await logout();
+        }}
+      >
+          <button type="submit" className="flex size-9 items-center justify-center rounded-lg hover:bg-surface" aria-label="Log out" title="Log out">
+            <LogOut className="size-4.5" strokeWidth={1.6} />
+          </button>
+        </form>
       </div>
-      <form action={logout}>
-        <button type="submit" className="flex size-9 items-center justify-center rounded-lg hover:bg-surface" aria-label="Log out" title="Log out">
-          <LogOut className="size-4.5" strokeWidth={1.6} />
-        </button>
-      </form>
+      <PushToggle publicKey={pushKey} className="mt-3" />
     </div>
   );
 

@@ -28,6 +28,29 @@ Product photos go to **Cloudflare R2**. Not deployed yet.
    `NEXT_PUBLIC_*` ones must also be present at build time.
 4. `npm run deploy`, then add the `livrelb.com` domain in the dashboard.
 
+## Phone notifications (Web Push)
+
+- Staff press **Notify me** in the admin (on iPhone: from the "LIVRE Admin"
+  home-screen app, iOS 16.4+) and get new orders, order cancellations,
+  reviews and every change by the team (prices, titles, product details...)
+  on their phone. Orders and reviews only reach staff who may see them;
+  changes by the team reach every staff member except the one who made them.
+  Signing out takes that phone off the list.
+- Keys: `node scripts/vapid-keys.mjs` → `VAPID_PUBLIC_KEY` and
+  `VAPID_PRIVATE_KEY` in `.env.local`, then the same two as Worker secrets
+  (`npx wrangler secret put VAPID_PUBLIC_KEY --name shop`, same for the
+  private one). The private one never goes in a `NEXT_PUBLIC_*` variable.
+- The database sends the signal: `private.push_enqueue()` (migration
+  `20261004130000_delivery_activity_push.sql`) queues each event in
+  `push_outbox` and calls `https://shop.livrelb.workers.dev/api/push/ping`
+  through `pg_net`, with a secret the migration makes by itself
+  (`private.push_config`; the shop checks it with `check_push_secret()`, so
+  there is nothing to copy). Without the right secret the address answers 404.
+  When the shop moves to its own domain, update that URL in the function
+  (Supabase → SQL Editor).
+- Only the browsers' own push services are accepted as a phone's address
+  (Google, Mozilla, Apple, Windows); see `isPushServiceUrl()`.
+
 ## Images (R2)
 
 - Bucket `livrelb-media` (created, public r2.dev address on). Public address (custom

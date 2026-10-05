@@ -3,17 +3,20 @@
 import { useId, useState, type ReactNode } from "react";
 import { Banknote, ChevronRight, Gift, ShieldCheck, Smartphone, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { PointsRules } from "@/lib/catalog/types";
+import type { DayRange, PointsRules } from "@/lib/catalog/types";
 import { formatMoney, formatPrice } from "@/lib/format";
 import { LivreCoin } from "@/components/icons/livre-coin";
 
 export type InfoCardsData = {
-  areas: { slug: string; name: string; fee: number | null }[];
+  areas: { slug: string; name: string; fee: number | null; days: DayRange | null }[];
   deliveryFee: number;
   freeShippingOver: number;
   firstOrderFreeDelivery: boolean;
-  /** "2–7 days", or the owner's own text from site_settings. */
+  /** The owner's own delivery text from site_settings; empty = built from the days. */
   deliveryTime: string;
+  processingDays: DayRange;
+  /** Delivery days of an area without its own. */
+  deliveryDays: DayRange;
   points: PointsRules;
   /** The gift box comes free with this piece (admin switch). */
   giftBox: boolean;
@@ -23,10 +26,17 @@ export type InfoCardsData = {
 // shopping security, LIVRE Points, gift box. Each opens for more detail.
 export function ProductInfoCards({ data }: { data: InfoCardsData }) {
   const t = useTranslations("productInfo");
+  const tTime = useTranslations("time");
   const tGift = useTranslations("giftBox");
   const id = useId();
   const [area, setArea] = useState(data.areas.find((a) => a.slug === "beirut")?.slug ?? data.areas[0]?.slug ?? "");
-  const fee = data.areas.find((a) => a.slug === area)?.fee ?? data.deliveryFee;
+  const selected = data.areas.find((a) => a.slug === area);
+  const fee = selected?.fee ?? data.deliveryFee;
+  const span = (r: DayRange) => (r.min === r.max ? tTime("exact", { n: r.min }) : tTime("days", { min: r.min, max: r.max }));
+  // The owner's own text (Settings) keeps its label; otherwise the making and delivery days.
+  const timeline = data.deliveryTime
+    ? t("delivery.estimate", { time: data.deliveryTime })
+    : tTime("timeline", { made: span(data.processingDays), ship: span(selected?.days ?? data.deliveryDays) });
   const p = data.points;
 
   return (
@@ -60,7 +70,7 @@ export function ProductInfoCards({ data }: { data: InfoCardsData }) {
         <p className="text-muted">
           {t("delivery.fee", { amount: formatPrice(data.freeShippingOver), fee: formatPrice(fee) })}
         </p>
-        <p className="text-muted">{t("delivery.estimate", { time: data.deliveryTime })}</p>
+        <p className="text-muted">{timeline}</p>
       </Card>
 
       <Card

@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       areas: {
         Row: {
+          delivery_days_max: number | null
+          delivery_days_min: number | null
           created_at: string
           delivery_fee_cents: number | null
           id: string
@@ -27,6 +29,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
           created_at?: string
           delivery_fee_cents?: number | null
           id?: string
@@ -38,6 +42,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
           created_at?: string
           delivery_fee_cents?: number | null
           id?: string
@@ -1687,8 +1693,108 @@ export type Database = {
           },
         ]
       }
+      page_views: {
+        Row: {
+          day: string
+          path: string
+          product_slug: string | null
+          views: number
+          visitors: number
+        }
+        Insert: {
+          day: string
+          path: string
+          product_slug?: string | null
+          views?: number
+          visitors?: number
+        }
+        Update: {
+          day?: string
+          path?: string
+          product_slug?: string | null
+          views?: number
+          visitors?: number
+        }
+        Relationships: []
+      }
+      push_outbox: {
+        Row: {
+          audit_id: number | null
+          created_at: string
+          id: number
+          order_id: string | null
+        }
+        Insert: {
+          audit_id?: number | null
+          created_at?: string
+          id?: never
+          order_id?: string | null
+        }
+        Update: {
+          audit_id?: number | null
+          created_at?: string
+          id?: never
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_outbox_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audit_log"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_outbox_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          staff_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          staff_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          staff_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
+          processing_days_max: number
+          processing_days_min: number
           announcements: Json
           card_online_enabled: boolean
           charm_price_cents: number
@@ -1721,6 +1827,8 @@ export type Database = {
           whish_online_enabled: boolean
         }
         Insert: {
+          processing_days_max?: number
+          processing_days_min?: number
           announcements?: Json
           card_online_enabled?: boolean
           charm_price_cents?: number
@@ -1753,6 +1861,8 @@ export type Database = {
           whish_online_enabled?: boolean
         }
         Update: {
+          processing_days_max?: number
+          processing_days_min?: number
           announcements?: Json
           card_online_enabled?: boolean
           charm_price_cents?: number
@@ -1905,6 +2015,11 @@ export type Database = {
       }
       admin_save_product: { Args: { p: Json }; Returns: string }
       approve_order_points: { Args: { p_order_id: string }; Returns: Json }
+      record_page_view: {
+        Args: { p_new_visitor?: boolean; p_path: string }
+        Returns: undefined
+      }
+      check_push_secret: { Args: { p_secret: string }; Returns: boolean }
       customer_profile: { Args: { p_customer_id: string }; Returns: Json }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }

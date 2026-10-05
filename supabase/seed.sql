@@ -202,7 +202,7 @@ from (values
   ('initial-signet-ring', 'gold', 4000, 5000, true, 1),
   ('initial-signet-ring', 'doubleGold', 12000, 15000, false, 3),
   ('dainty-stacking-ring', 'silver', 2400, null::integer, false, 0),
-  ('dainty-stacking-ring', 'gold', 2400, null::integer, false, 1),
+  ('dainty-stacking-ring', 'gold', 2400, null::integer, true, 1),
   ('dainty-stacking-ring', 'doubleGold', 7200, null::integer, false, 3),
   ('mini-huggie-hoops', 'silver', 3000, 3700, false, 0),
   ('mini-huggie-hoops', 'gold', 3000, 3700, true, 1),

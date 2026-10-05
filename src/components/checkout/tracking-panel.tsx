@@ -1,5 +1,6 @@
 import { CalendarClock, Check, Gem, PackageCheck, PackageOpen, Truck, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import type { DayRange } from "@/lib/catalog/types";
 import type { Tracking } from "@/lib/checkout/tracking";
 import type { OrderStatus } from "@/lib/checkout/types";
 
@@ -14,7 +15,9 @@ const stages = [
 
 export function TrackingPanel({ status, tracking }: { status: OrderStatus; tracking: Tracking }) {
   const t = useTranslations("tracking");
+  const tTime = useTranslations("time");
   const format = useFormatter();
+  const span = (r: DayRange) => (r.min === r.max ? tTime("exact", { n: r.min }) : tTime("days", { min: r.min, max: r.max }));
 
   if (status === "cancelled") {
     return (
@@ -63,8 +66,13 @@ export function TrackingPanel({ status, tracking }: { status: OrderStatus; track
       {tracking.eta && (
         <p className="flex items-center gap-3 rounded-xl bg-surface px-4 py-3 text-sm">
           <CalendarClock className="size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-          <span>
-            {t("eta")} <strong className="font-semibold">{short(tracking.eta.from)} {"–"} {short(tracking.eta.to)}</strong>
+          <span className="flex flex-col gap-0.5">
+            <span>
+              {t("eta")} <strong className="font-semibold">{short(tracking.eta.from)} {"–"} {short(tracking.eta.to)}</strong>
+            </span>
+            <span className="text-xs text-muted">
+              {tTime("made", { made: span(tracking.times.processing) })} {"·"} {tTime("ship", { ship: span(tracking.times.delivery) })}
+            </span>
           </span>
         </p>
       )}

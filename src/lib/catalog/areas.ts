@@ -3,6 +3,7 @@ import type { Localized } from "./types";
 // SAMPLE delivery areas (areas table): seed data, and the checkout's list
 // when Supabase is not configured.
 export const sampleAreas: { slug: string; name: Localized }[] = [
+  { slug: "tripoli", name: { en: "Tripoli", ar: "طرابلس" } },
   { slug: "beirut", name: { en: "Beirut", ar: "بيروت" } },
   { slug: "mount-lebanon", name: { en: "Mount Lebanon", ar: "جبل لبنان" } },
   { slug: "north", name: { en: "North", ar: "الشمال" } },

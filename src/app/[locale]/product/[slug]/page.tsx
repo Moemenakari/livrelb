@@ -68,7 +68,6 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
   const t = await getTranslations("product");
   const tCategory = await getTranslations("category");
   const tCommon = await getTranslations("common");
-  const tInfo = await getTranslations("productInfo");
   const trail = categoryTrail(catalog, product.categories[0]);
   const p = product.personalization;
   const { settings } = catalog;
@@ -133,13 +132,13 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     },
     info: {
       giftBox: product.freeGiftBox !== false,
-      areas: catalog.areas.map((a) => ({ slug: a.slug, name: a.name[locale], fee: a.fee })),
+      areas: catalog.areas.map((a) => ({ slug: a.slug, name: a.name[locale], fee: a.fee, days: a.days })),
       deliveryFee: settings.deliveryFee,
       freeShippingOver: settings.freeShippingOver,
       firstOrderFreeDelivery: settings.firstOrderFreeDelivery,
-      deliveryTime:
-        settings.deliveryTime[locale] ||
-        tInfo("delivery.days", { min: settings.deliveryDays.min, max: settings.deliveryDays.max }),
+      deliveryTime: settings.deliveryTime[locale],
+      processingDays: settings.processingDays,
+      deliveryDays: settings.deliveryDays,
       points: settings.points,
     },
   };

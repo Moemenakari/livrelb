@@ -267,7 +267,7 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
   const { data } = await db
     .from("orders")
     .select(
-      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number,
+      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number, area_id,
        order_items (product_slug, product_name, custom_text, qty)`,
     )
     .eq("number", Number(number))
@@ -277,7 +277,7 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
   const catalog = await getCatalog();
   const [points, tracking] = await Promise.all([
     orderPoints(db, data),
-    orderTracking(db, data, locale, catalog.settings.deliveryDays),
+    orderTracking(db, data, locale, catalog.settings),
   ]);
   return {
     status: "found",

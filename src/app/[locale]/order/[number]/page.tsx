@@ -8,7 +8,7 @@ import { resolveLocale } from "@/i18n/resolve-locale";
 import { whatsappUrl } from "@/config/site";
 import { findProduct, getCatalog } from "@/lib/catalog";
 import { fonts, isFontKey, materials } from "@/lib/catalog/materials";
-import { pieceOf, type MaterialKey } from "@/lib/catalog/types";
+import { pieceOf, type DayRange, type MaterialKey } from "@/lib/catalog/types";
 import { ORDERS_COOKIE } from "@/lib/checkout/cookies";
 import { orderPoints } from "@/lib/checkout/points";
 import { formatPrice } from "@/lib/format";
@@ -50,20 +50,21 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
   const tCart = await getTranslations("cart");
   const tCheckout = await getTranslations("checkout");
   const tProduct = await getTranslations("product");
+  const tTime = await getTranslations("time");
+  const span = (r: DayRange) => (r.min === r.max ? tTime("exact", { n: r.min }) : tTime("days", { min: r.min, max: r.max }));
 
   const mine = ((await cookies()).get(ORDERS_COOKIE)?.value ?? "").split(".");
-  const [{ data: order }, { data: settings }, catalog] = await Promise.all([
+  const [{ data: order }, catalog] = await Promise.all([
     db
       .from("orders")
       .select(
-        `id, number, status, created_at, carrier, tracking_number, customer_name, phone, payment_method, subtotal_cents, discount_cents,
+        `id, number, status, created_at, carrier, tracking_number, area_id, customer_name, phone, payment_method, subtotal_cents, discount_cents,
          points_used, points_discount_cents, delivery_fee_cents, total_cents,
          order_items (id, product_slug, product_name, custom_text, size_kind, size_value,
-           chain_connection, qty, line_total_cents, materials (key), fonts (key))`,
+           chain_connection, qty, line_total_cents, material_name, materials (key), fonts (key))`,
       )
       .eq("number", Number(number))
       .maybeSingle(),
-    db.from("site_settings").select("delivery_days_min, delivery_days_max").eq("id", 1).maybeSingle(),
     getCatalog(),
   ]);
 
@@ -82,7 +83,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
 
   const [points, tracking] = await Promise.all([
     orderPoints(db, order),
-    orderTracking(db, order, locale, { min: settings?.delivery_days_min ?? 2, max: settings?.delivery_days_max ?? 7 }),
+    orderTracking(db, order, locale, catalog.settings),
   ]);
   const whatsapp = catalog.settings.whatsappNumber;
   const firstName = order.customer_name.split(/\s+/)[0];
@@ -110,10 +111,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
         <div className="flex items-start gap-3 rounded-xl border border-line p-4">
           <CalendarClock className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
           <p className="text-sm">
-            {t("deliveryEstimate", {
-              min: settings?.delivery_days_min ?? 2,
-              max: settings?.delivery_days_max ?? 7,
-            })}
+            {tTime("timeline", { made: span(tracking.times.processing), ship: span(tracking.times.delivery) })}
           </p>
         </div>
         <div className="flex flex-col gap-1 rounded-xl border border-line p-4 text-sm">
@@ -149,7 +147,8 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
                   ? tProduct("usSize", { value: Number(item.size_value) })
                   : tProduct("cm", { value: Number(item.size_value) });
             const details = [
-              materials[material]?.name[locale],
+              // Past Rose Gold orders keep the name they were sold under.
+              materials[material]?.name[locale] ?? item.material_name,
               font && tCart("font", { font: fonts[font].name[locale] }),
               size && tCart(item.size_kind ?? "chain", { size }),
               item.chain_connection &&

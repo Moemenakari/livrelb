@@ -21,6 +21,7 @@ export const sampleSettings: StoreSettings = {
   ],
   deliveryTime: { en: "", ar: "" },
   deliveryDays: { min: 2, max: 7 },
+  processingDays: { min: 3, max: 4 },
   points: { enabled: true, perStep: 10, stepDollars: 15, perReview: 1, redeemPoints: 10, redeemValue: 1 },
   whishOnline: false,
   cardOnline: false,

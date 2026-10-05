@@ -106,7 +106,7 @@
     "freeShipping": "Free Shipping",
     "handcrafted": "Handcrafted to Order",
     "securePayment": "Secure Payment",
-    "delivery": "Delivery 2–7 days"
+    "delivery": "Handmade in 3–4 days · fast delivery"
   },
   "category": {
     "breadcrumb": "Breadcrumb",
@@ -169,7 +169,7 @@
     "nameRequired": "Please write a name first",
     "whatsapp": "Have a question? Talk to us on WhatsApp",
     "whatsappMessage": "Hi LIVRE! I have a question about the {product}: {url}",
-    "deliveryNote": "Order today, delivered in 2–7 days",
+    "deliveryNote": "Handmade for you in 3–4 days, then delivered in about 2 days",
     "freeShippingNote": "Free delivery on your first order and on orders over {amount}",
     "tabsLabel": "Product information",
     "tabs": {
@@ -177,7 +177,7 @@
       "details": "Size & Materials",
       "shipping": "Shipping Information"
     },
-    "shippingText": "We deliver everywhere in Lebanon in 2–7 working days. Personalized pieces are made to order, so please check the spelling before you order.\nDelivery is free on your first order and on every order over {amount}. Otherwise a small delivery fee is added at checkout.\nPay cash on delivery or with Whish. Need it faster? Message us on WhatsApp.",
+    "shippingText": "Every piece is designed and handmade for you in 3–4 days, so it comes out perfect. Then we deliver it: 2 days in Tripoli, a little longer elsewhere in Lebanon. Personalized pieces are made to order, so please check the spelling before you order.\nDelivery is free on your first order and on every order over {amount}. Otherwise a small delivery fee is added at checkout.\nPay cash on delivery or with Whish. Need it faster? Message us on WhatsApp.",
     "gallery": "Product photos",
     "zoom": "Zoom photo",
     "thumbnail": "Show photo {index}",
@@ -346,7 +346,7 @@
       },
       "deliver": {
         "title": "Delivered to you",
-        "text": "Free delivery on your first order and on orders over $50, delivered in 2–7 days."
+        "text": "Free delivery on your first order and on orders over $50. Handmade in 3–4 days, delivered in about 2."
       }
     },
     "reviews": {
@@ -647,6 +647,13 @@
     "trackingNumber": "Tracking number",
     "updates": "Updates",
     "cancelled": "This order was cancelled."
+  },
+  "time": {
+    "days": "{min}–{max} days",
+    "exact": "{n, plural, =0 {the same day} one {# day} other {# days}}",
+    "timeline": "Handmade for you in {made}, then delivered in {ship}.",
+    "made": "Designed and handmade in {made}",
+    "ship": "Delivered in {ship}"
   },
   "order": {
     "number": "Order #{number}",

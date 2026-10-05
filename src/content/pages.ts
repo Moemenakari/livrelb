@@ -18,7 +18,7 @@ export const policies: Record<PolicySlug, Record<Lang, PageContent>> = {
         {
           heading: "How long it takes",
           paragraphs: [
-            "Delivery takes 2 to 7 days after we confirm your order. Personalized pieces are made by hand, so a busy week or a long name can add a day or two. We will message you if anything changes.",
+            "We take 3 to 4 days to design and handmake your piece, so every letter comes out sharp and beautiful. Then it is delivered: 2 days in Tripoli, a little longer elsewhere in Lebanon. You can follow every step on the Track my order page, and we will message you if anything changes.",
           ],
         },
         {
@@ -52,9 +52,9 @@ export const policies: Record<PolicySlug, Record<Lang, PageContent>> = {
       intro: "كل قطعة من LIVRE تُصنع حسب الطلب ثم تصل إلى باب بيتكِ في أي مكان في لبنان.",
       blocks: [
         {
-          heading: "كم يستغرق التوصيل",
+          heading: "كم يستغرق طلبكِ",
           paragraphs: [
-            "يستغرق التوصيل من 2 إلى 7 أيام بعد تأكيد طلبكِ. القطع المخصصة تُصنع يدوياً، لذلك قد يضيف الضغط أو الاسم الطويل يوماً أو يومين. سنراسلكِ إذا تغيّر أي شيء.",
+            "نأخذ من 3 إلى 4 أيام لتصميم قطعتكِ وصنعها يدوياً، لتخرج كل الحروف واضحة وجميلة. ثم نوصلها: يومان في طرابلس، وأكثر بقليل في باقي مناطق لبنان. يمكنكِ متابعة كل خطوة في صفحة «تتبّع طلبي»، وسنراسلكِ إذا تغيّر أي شيء.",
           ],
         },
         {
@@ -319,7 +319,7 @@ export const faq: Record<Lang, { title: string; intro: string; items: Faq[] }> =
       { q: "What are the pieces made of?", a: "Stainless steel in gold, silver or plain steel. Double Gold and Double Silver Stainless Steel have a double layer for longer wear. All pieces are hypoallergenic and water resistant." },
       { q: "How do I care for my jewelry?", a: "Put it on after perfume and lotion, take it off before swimming or sport when you can, wipe it with a soft dry cloth, and keep it in its box. This keeps the plating bright for much longer." },
       { q: "Can I write my name in Arabic?", a: "Yes. Type the name in Arabic and choose one of the Arabic fonts. You see a live preview before you order." },
-      { q: "How long does delivery take?", a: "2 to 7 days after we confirm your order, anywhere in Lebanon. Delivery is $4, free over $50 and free on your first order." },
+      { q: "How long does delivery take?", a: "We design and handmake your piece in 3 to 4 days, then deliver it in 2 days in Tripoli (a little longer elsewhere in Lebanon). Delivery is $4, free over $50 and free on your first order." },
       { q: "How can I pay?", a: "Cash on delivery, Whish, or Visa / Mastercard when online payment is switched on. We never see your card details." },
       { q: "How do LIVRE Points work?", a: "For every $15 you spend you earn 10 points. After your order is delivered, our team approves the points and sends you a message with a thank-you coupon valid for 20 days. Every 10 points are worth $1 off your next order, and each review you write earns 1 point." },
       { q: "Is there a gift box?", a: "Yes, every order comes in a LIVRE gift box at no extra cost. You can add a short gift note at checkout." },
@@ -336,7 +336,7 @@ export const faq: Record<Lang, { title: string; intro: string; items: Faq[] }> =
       { q: "مم تُصنع القطع؟", a: "ستانلس ستيل ذهبي أو فضي أو عادي. الستانلس بطلاء الذهب أو الفضة المزدوج له طبقة مضاعفة لتدوم أكثر. كل القطع لا تسبب الحساسية ومقاومة للماء." },
       { q: "كيف أعتني بمجوهراتي؟", a: "ضعيها بعد العطر والكريم، وانزعيها قبل السباحة أو الرياضة قدر الإمكان، وامسحيها بقطعة قماش ناعمة جافة، واحفظيها في علبتها. هكذا يبقى الطلاء لامعاً لوقت أطول." },
       { q: "هل يمكن كتابة اسمي بالعربية؟", a: "نعم. اكتبي الاسم بالعربية واختاري أحد الخطوط العربية. سترين معاينة مباشرة قبل الطلب." },
-      { q: "كم يستغرق التوصيل؟", a: "من 2 إلى 7 أيام بعد تأكيد طلبكِ في كل لبنان. التوصيل 4$، ومجاني فوق 50$ ومجاني لطلبكِ الأول." },
+      { q: "كم يستغرق التوصيل؟", a: "نصمّم قطعتكِ ونصنعها يدوياً خلال 3 إلى 4 أيام، ثم تصلكِ خلال يومين في طرابلس (وأكثر بقليل في باقي لبنان). التوصيل 4$، ومجاني فوق 50$ ومجاني لطلبكِ الأول." },
       { q: "كيف أدفع؟", a: "الدفع عند الاستلام، أو Whish، أو فيزا / ماستركارد عند تفعيل الدفع الإلكتروني. لا نرى بيانات بطاقتكِ أبداً." },
       { q: "كيف تعمل نقاط LIVRE؟", a: "مقابل كل 15$ تدفعينها تربحين 10 نقاط. بعد تسليم طلبكِ يوافق فريقنا على النقاط ويرسل لكِ رسالة شكر مع كوبون صالح 20 يوماً. كل 10 نقاط تساوي خصم 1$ على طلبكِ القادم، وكل تقييم تكتبينه يمنحكِ نقطة واحدة." },
       { q: "هل توجد علبة هدية؟", a: "نعم، كل طلب يصل في علبة هدية LIVRE دون أي تكلفة إضافية. ويمكنكِ إضافة بطاقة إهداء قصيرة عند إتمام الطلب." },
