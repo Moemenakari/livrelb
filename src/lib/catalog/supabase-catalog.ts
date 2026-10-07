@@ -1,7 +1,7 @@
 import "server-only";
 import type { Json } from "@/lib/supabase/database.types";
 import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
-import { styleKeys } from "./categories";
+import { defaultHomeTiles, styleKeys } from "./categories";
 import { isFontKey, materials } from "./materials";
 import { reviews as sampleReviews, showSampleReviews } from "./reviews";
 import type {
@@ -9,6 +9,7 @@ import type {
   Category,
   HeroOffer,
   HeroSlide,
+  HomeSection,
   Localized,
   MaterialKey,
   Product,
@@ -68,7 +69,7 @@ function fail(what: string, error: { message: string } | null): never {
 
 const productColumns = `
   slug, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
-  details_en, details_ar, style, is_best_seller, is_new, free_delivery, free_gift_box, personalization, max_length,
+  details_en, details_ar, style, is_best_seller, best_seller_sort, is_new, free_delivery, free_gift_box, personalization, max_length,
   sample_text, chain_connections, art, sort_order, stock_qty,
   product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
   product_options (kind, value, price_modifier_cents, is_default, sort_order),
@@ -85,7 +86,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
 
   // Sales counts and public coupons: server-only numbers (secret key).
   const admin = createAdminClient();
-  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes] = await Promise.all([
+  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes, homeRes] = await Promise.all([
     db.from("products").select(productColumns).eq("status", "active").order("sort_order"),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
     (reviewReader ?? db)
@@ -99,9 +100,17 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     db.from("promotions").select("*").eq("is_active", true).order("sort_order"),
     db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents, delivery_days_min, delivery_days_max").eq("is_active", true).order("sort_order"),
     admin ? admin.rpc("storefront_stats") : Promise.resolve({ data: null, error: null }),
+    db
+      .from("home_sections")
+      .select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible, home_section_products (sort_order, products (slug))"),
   ]);
 
-  if (productsRes.error) fail("products", productsRes.error);
+  // Before the homepage-controls database update the new columns don't exist:
+  // ask again without them, so the shop never goes blank.
+  const productRows = productsRes.error
+    ? ((await db.from("products").select(productColumns.replace(" best_seller_sort,", "") as typeof productColumns).eq("status", "active").order("sort_order")) as typeof productsRes)
+    : productsRes;
+  if (productRows.error) fail("products", productRows.error);
   if (categoriesRes.error) fail("categories", categoriesRes.error);
   if (reviewsRes.error) fail("reviews", reviewsRes.error);
   if (settingsRes.error || !settingsRes.data) fail("site settings", settingsRes.error);
@@ -114,7 +123,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       ? ((await db.from("areas").select("slug, name_en, name_ar, delivery_fee_cents").eq("is_active", true).order("sort_order")).data ?? [])
       : (areasRes.data ?? []);
 
-  const products = productsRes.data.flatMap((row): Product[] => {
+  const products = productRows.data.flatMap((row): Product[] => {
     const offers = [...row.product_materials]
       .sort(bySort)
       .filter((pm) => isMaterialKey(pm.materials?.key))
@@ -146,6 +155,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
           .flatMap((pc) => (pc.categories ? [pc.categories.slug] : [])),
         style: isStyleKey(row.style) ? row.style : undefined,
         isBestSeller: row.is_best_seller,
+        bestSellerSort: row.best_seller_sort ?? 0,
         isNew: row.is_new,
         freeDelivery: row.free_delivery,
         freeGiftBox: row.free_gift_box,
@@ -175,6 +185,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
   });
 
   const slugById = new Map(categoriesRes.data.map((c) => [c.id, c.slug]));
+  // Before the homepage-controls database update there is no show_on_home:
+  // the tiles are the ones the homepage always had.
+  const hasHomeTiles = categoriesRes.data.some((c) => c.show_on_home !== undefined);
   const categories = categoriesRes.data.flatMap((row): Category[] => {
     const art = asArt(row.art);
     if (!art) return [];
@@ -190,6 +203,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         styles: row.styles.filter(isStyleKey),
         art,
         artSample: row.art_sample ?? undefined,
+        image: row.image_url ?? undefined,
+        showOnHome: hasHomeTiles ? row.show_on_home : defaultHomeTiles.includes(row.slug),
+        homeSort: hasHomeTiles ? row.home_sort : defaultHomeTiles.indexOf(row.slug),
       },
     ];
   });
@@ -237,6 +253,18 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       : [],
   );
 
+  const home: Record<string, HomeSection> = {};
+  for (const row of homeRes.error ? [] : (homeRes.data ?? [])) {
+    home[row.key] = {
+      key: row.key,
+      title: typed(row.title_en, row.title_ar),
+      subtitle: typed(row.subtitle_en, row.subtitle_ar),
+      ctaHref: row.cta_href || undefined,
+      visible: row.is_visible,
+      products: [...row.home_section_products].sort(bySort).flatMap((p) => (p.products ? [p.products.slug] : [])),
+    };
+  }
+
   return {
     products,
     categories,
@@ -263,6 +291,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         redeemPoints: s.points_redeem_points,
         redeemValue: dollars(s.points_redeem_cents),
       },
+      // Before the homepage-controls database update there is no deposit_percent.
+      depositPercent: s.deposit_percent ?? 50,
       whishOnline: s.whish_online_enabled,
       cardOnline: s.card_online_enabled,
       metaPixelId: s.meta_pixel_id,
@@ -274,6 +304,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     promo,
     heroOffer,
     heroSlides,
+    home,
     areas: areaRows.map((a) => ({
       slug: a.slug,
       name: loc(a.name_en, a.name_ar),

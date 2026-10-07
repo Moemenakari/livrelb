@@ -387,18 +387,37 @@
       "title": "Create something personal",
       "text": "A name, an initial, a coin from home. Design it in a minute and see it before you buy.",
       "cta": "Start designing",
-      "payTitle": "Pay the way you like"
+      "payTitle": "Pay the way you like",
+      "payTransfer": "Whish / OMT / Suyool transfer",
+      "payDeposit": "{percent}% deposit, rest on delivery",
+      "payWhatsapp": "Order on WhatsApp"
     },
     "trustBar": {
       "label": "Why shop with us",
       "freeShipping": "Free shipping",
       "freeShippingText": "On your first order and over $50",
       "securePayment": "Secure payment",
-      "securePaymentText": "Cash on delivery or Whish",
+      "securePaymentText": "Whish, OMT or Suyool transfer",
       "bestPrice": "Best price",
       "bestPriceText": "Fine jewelry, fair prices",
       "sales": "Sales all the time",
       "salesText": "New codes every season"
+    },
+    "photo": {
+      "title": "Try your picture",
+      "subtitle": "See your photo inside a pendant before you order. It never leaves your phone.",
+      "previewLabel": "Preview of your photo inside a pendant",
+      "empty": "Add your photo",
+      "choose": "Choose a photo",
+      "change": "Change photo",
+      "shapeLabel": "Pendant shape",
+      "round": "Round",
+      "square": "Square",
+      "heart": "Heart",
+      "zoom": "Zoom",
+      "hint": "Drag the photo to move it. Pinch or use the slider to zoom.",
+      "privacy": "Your photo stays on your phone until you order.",
+      "cta": "Order this photo pendant"
     }
   },
   "cart": {

@@ -116,6 +116,8 @@ export type Product = {
   categories: CategorySlug[];
   style?: StyleKey;
   isBestSeller?: boolean;
+  /** Place in the Best sellers grid (smaller first); 0 = the shop's default order. */
+  bestSellerSort?: number;
   isNew?: boolean;
   /** An order with this piece pays no delivery (set in the admin). */
   freeDelivery?: boolean;
@@ -159,6 +161,11 @@ export type Category = {
   /** Art for the category tile until a photo exists. */
   art: ProductArt;
   artSample?: string;
+  /** Tile photo (admin); the drawn art is only the fallback. */
+  image?: string;
+  /** A tile of "Shop by style" on the homepage, in this order. */
+  showOnHome?: boolean;
+  homeSort?: number;
 };
 
 export type Review = {
@@ -194,6 +201,8 @@ export type StoreSettings = {
   processingDays: DayRange;
   /** LIVRE Points rules (site_settings). */
   points: PointsRules;
+  /** Percent of the total paid now by transfer on a "cash on delivery" order (default 50). */
+  depositPercent: number;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
   whishOnline: boolean;
   /** Visa / Mastercard on the website (also needs the gateway keys). */
@@ -264,6 +273,19 @@ export type HeroSlide = {
   link?: string;
 };
 
+/** home_sections: one homepage section's texts, visibility and hand-picked products (Home page in the admin). */
+export type HomeSection = {
+  key: string;
+  /** Typed in the admin; the default text of the language files when missing. */
+  title?: Localized;
+  subtitle?: Localized;
+  /** A page of this site for the section's button; the default when missing. */
+  ctaHref?: string;
+  visible: boolean;
+  /** Product slugs picked by hand, in order. */
+  products: string[];
+};
+
 /** Everything the storefront reads, from Supabase or the sample files. */
 export type Catalog = {
   products: Product[];
@@ -276,6 +298,8 @@ export type Catalog = {
   heroOffer: HeroOffer | null;
   /** Empty = the homepage shows the 3D coin. */
   heroSlides: HeroSlide[];
+  /** Homepage sections by key; a missing key = visible with the default texts. */
+  home: Record<string, HomeSection>;
   areas: DeliveryArea[];
   /** Pieces sold per product slug (orders not cancelled). */
   sold: Record<string, number>;

@@ -62,6 +62,8 @@ const things: Record<string, [label: string, href: string]> = {
   areas: ["the delivery areas", "/admin/delivery"],
   collections: ["a season page", "/admin/seasons"],
   collection_products: ["a season page", "/admin/seasons"],
+  home_sections: ["the home page", "/admin/home"],
+  home_section_products: ["the home page", "/admin/home"],
   promotions: ["a promotion", "/admin/promotions"],
   coupons: ["a coupon", "/admin/promotions"],
   reviews: ["a review", "/admin/reviews"],

@@ -101,6 +101,7 @@ export type Database = {
           created_at: string
           description_ar: string
           description_en: string
+          home_sort: number
           id: string
           image_url: string | null
           is_active: boolean
@@ -110,6 +111,7 @@ export type Database = {
           nav_name_en: string | null
           parent_id: string | null
           rule: string | null
+          show_on_home: boolean
           slug: string
           sort_order: number
           styles: string[]
@@ -121,6 +123,7 @@ export type Database = {
           created_at?: string
           description_ar?: string
           description_en?: string
+          home_sort?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -130,6 +133,7 @@ export type Database = {
           nav_name_en?: string | null
           parent_id?: string | null
           rule?: string | null
+          show_on_home?: boolean
           slug: string
           sort_order?: number
           styles?: string[]
@@ -141,6 +145,7 @@ export type Database = {
           created_at?: string
           description_ar?: string
           description_en?: string
+          home_sort?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -150,6 +155,7 @@ export type Database = {
           nav_name_en?: string | null
           parent_id?: string | null
           rule?: string | null
+          show_on_home?: boolean
           slug?: string
           sort_order?: number
           styles?: string[]
@@ -569,6 +575,75 @@ export type Database = {
           preview_image_url?: string | null
           script?: string
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      home_section_products: {
+        Row: {
+          product_id: string
+          section_key: string
+          sort_order: number
+        }
+        Insert: {
+          product_id: string
+          section_key: string
+          sort_order?: number
+        }
+        Update: {
+          product_id?: string
+          section_key?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_section_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_section_products_section_key_fkey"
+            columns: ["section_key"]
+            isOneToOne: false
+            referencedRelation: "home_sections"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      home_sections: {
+        Row: {
+          created_at: string
+          cta_href: string
+          is_visible: boolean
+          key: string
+          subtitle_ar: string
+          subtitle_en: string
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_href?: string
+          is_visible?: boolean
+          key: string
+          subtitle_ar?: string
+          subtitle_en?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_href?: string
+          is_visible?: boolean
+          key?: string
+          subtitle_ar?: string
+          subtitle_en?: string
+          title_ar?: string
+          title_en?: string
           updated_at?: string
         }
         Relationships: []
@@ -1394,6 +1469,7 @@ export type Database = {
       products: {
         Row: {
           art: Json
+          best_seller_sort: number
           chain_connections: Database["public"]["Enums"]["chain_connection"][]
           created_at: string
           created_by: string | null
@@ -1427,6 +1503,7 @@ export type Database = {
         }
         Insert: {
           art: Json
+          best_seller_sort?: number
           chain_connections?: Database["public"]["Enums"]["chain_connection"][]
           created_at?: string
           created_by?: string | null
@@ -1460,6 +1537,7 @@ export type Database = {
         }
         Update: {
           art?: Json
+          best_seller_sort?: number
           chain_connections?: Database["public"]["Enums"]["chain_connection"][]
           created_at?: string
           created_by?: string | null
@@ -1793,6 +1871,7 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          deposit_percent: number
           processing_days_max: number
           processing_days_min: number
           announcements: Json
@@ -1827,6 +1906,7 @@ export type Database = {
           whish_online_enabled: boolean
         }
         Insert: {
+          deposit_percent?: number
           processing_days_max?: number
           processing_days_min?: number
           announcements?: Json
@@ -1861,6 +1941,7 @@ export type Database = {
           whish_online_enabled?: boolean
         }
         Update: {
+          deposit_percent?: number
           processing_days_max?: number
           processing_days_min?: number
           announcements?: Json

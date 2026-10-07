@@ -8,6 +8,7 @@ import type {
   Catalog,
   Category,
   CategorySlug,
+  HomeSection,
   MaterialKey,
   MaterialOffer,
   Product,
@@ -59,12 +60,28 @@ export function productsIn(catalog: Catalog, slug: CategorySlug): Product[] {
   return catalog.products.filter((p) => p.categories.includes(slug));
 }
 
+/** Best sellers in the admin's order (best_seller_sort), then the shop's default order. */
 export function bestSellers(catalog: Catalog, limit = 8): Product[] {
-  return catalog.products.filter((p) => p.isBestSeller).slice(0, limit);
+  return catalog.products
+    .filter((p) => p.isBestSeller)
+    .sort((a, b) => (a.bestSellerSort ?? 0) - (b.bestSellerSort ?? 0))
+    .slice(0, limit);
 }
 
 export function newArrivals(catalog: Catalog, limit = 8): Product[] {
   return catalog.products.filter((p) => p.isNew).slice(0, limit);
+}
+
+/** A homepage section: the admin's texts and visibility, or the defaults when it has no row. */
+export function homeSection(catalog: Catalog, key: string): HomeSection {
+  return catalog.home[key] ?? { key, visible: true, products: [] };
+}
+
+/** Homepage "Shop by style" tiles, in the admin's order. */
+export function homeCategories(catalog: Catalog): Category[] {
+  return catalog.categories
+    .filter((c) => c.showOnHome)
+    .sort((a, b) => (a.homeSort ?? 0) - (b.homeSort ?? 0));
 }
 
 /** Same first category first, then the rest of the catalog. */

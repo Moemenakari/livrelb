@@ -15,6 +15,7 @@ export function loadStaticCatalog(): Catalog {
     promo: samplePromo,
     heroOffer: sampleHeroOffer,
     heroSlides: [],
+    home: {},
     areas: sampleAreas.map((a) => ({ ...a, fee: null, days: a.slug === "tripoli" ? { min: 2, max: 2 } : null })),
     sold: {},
     publicCoupons: [],
