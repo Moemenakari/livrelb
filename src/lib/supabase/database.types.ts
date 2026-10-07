@@ -612,6 +612,44 @@ export type Database = {
           },
         ]
       }
+      home_section_items: {
+        Row: {
+          position: number
+          section_key: string
+          text_ar: string
+          text_en: string
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          position: number
+          section_key: string
+          text_ar?: string
+          text_en?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          position?: number
+          section_key?: string
+          text_ar?: string
+          text_en?: string
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_section_items_section_key_fkey"
+            columns: ["section_key"]
+            isOneToOne: false
+            referencedRelation: "home_sections"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       home_sections: {
         Row: {
           created_at: string

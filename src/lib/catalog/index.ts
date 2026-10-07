@@ -53,10 +53,15 @@ export function findCategory(catalog: Catalog, slug: string): Category | undefin
   return catalog.categories.find((c) => c.slug === slug);
 }
 
+/** Newest first by created_at; pieces without a date keep their order after the dated ones. */
+function newestFirst(products: Product[]): Product[] {
+  return [...products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+}
+
 export function productsIn(catalog: Catalog, slug: CategorySlug): Product[] {
   const category = findCategory(catalog, slug);
   if (category?.rule === "bestsellers") return catalog.products.filter((p) => p.isBestSeller);
-  if (category?.rule === "new") return catalog.products.filter((p) => p.isNew);
+  if (category?.rule === "new") return newestFirst(catalog.products.filter((p) => p.isNew));
   return catalog.products.filter((p) => p.categories.includes(slug));
 }
 
@@ -69,12 +74,12 @@ export function bestSellers(catalog: Catalog, limit = 8): Product[] {
 }
 
 export function newArrivals(catalog: Catalog, limit = 8): Product[] {
-  return catalog.products.filter((p) => p.isNew).slice(0, limit);
+  return newestFirst(catalog.products.filter((p) => p.isNew)).slice(0, limit);
 }
 
 /** A homepage section: the admin's texts and visibility, or the defaults when it has no row. */
 export function homeSection(catalog: Catalog, key: string): HomeSection {
-  return catalog.home[key] ?? { key, visible: true, products: [] };
+  return catalog.home[key] ?? { key, visible: true, products: [], items: {} };
 }
 
 /** Homepage "Shop by style" tiles, in the admin's order. */

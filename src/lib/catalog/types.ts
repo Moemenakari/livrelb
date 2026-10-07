@@ -119,6 +119,8 @@ export type Product = {
   /** Place in the Best sellers grid (smaller first); 0 = the shop's default order. */
   bestSellerSort?: number;
   isNew?: boolean;
+  /** When the piece was added (ISO); the New arrivals list shows the newest first. */
+  createdAt?: string;
   /** An order with this piece pays no delivery (set in the admin). */
   freeDelivery?: boolean;
   /** The LIVRE gift box comes free with this piece (default on). */
@@ -284,6 +286,8 @@ export type HomeSection = {
   visible: boolean;
   /** Product slugs picked by hand, in order. */
   products: string[];
+  /** Texts of the items inside the section (How it works steps), by position starting at 1. */
+  items: Record<number, { title?: Localized; text?: Localized }>;
 };
 
 /** Everything the storefront reads, from Supabase or the sample files. */

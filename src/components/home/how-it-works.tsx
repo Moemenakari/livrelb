@@ -22,14 +22,14 @@ export async function HowItWorks({ catalog, locale }: { catalog: Catalog; locale
       <div className={`${homeInner} py-16 lg:py-24`}>
         <SectionTitle title={section.title?.[locale] ?? t("title")} />
         <ol className="grid gap-10 md:grid-cols-3 md:gap-8">
-          {steps.map(({ n, key, icon: Icon }) => (
+          {steps.map(({ n, key, icon: Icon }, i) => (
             <li key={key} className="flex flex-col items-center gap-3 text-center">
               <span className="font-display text-6xl leading-none text-gold" lang="en">
                 {n}
               </span>
               <Icon className="size-5 text-cedar" strokeWidth={1.5} aria-hidden />
-              <h3 className="text-2xl">{t(`${key}.title`)}</h3>
-              <p className="max-w-xs text-muted">{t(`${key}.text`)}</p>
+              <h3 className="text-2xl">{section.items[i + 1]?.title?.[locale] ?? t(`${key}.title`)}</h3>
+              <p className="max-w-xs text-muted">{section.items[i + 1]?.text?.[locale] ?? t(`${key}.text`)}</p>
             </li>
           ))}
         </ol>

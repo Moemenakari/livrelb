@@ -68,7 +68,7 @@ function fail(what: string, error: { message: string } | null): never {
 }
 
 const productColumns = `
-  slug, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
+  slug, created_at, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
   details_en, details_ar, style, is_best_seller, best_seller_sort, is_new, free_delivery, free_gift_box, personalization, max_length,
   sample_text, chain_connections, art, sort_order, stock_qty,
   product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
@@ -86,7 +86,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
 
   // Sales counts and public coupons: server-only numbers (secret key).
   const admin = createAdminClient();
-  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes, homeRes] = await Promise.all([
+  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes, homeRes, itemsRes] = await Promise.all([
     db.from("products").select(productColumns).eq("status", "active").order("sort_order"),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
     (reviewReader ?? db)
@@ -103,6 +103,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     db
       .from("home_sections")
       .select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible, home_section_products (sort_order, products (slug))"),
+    db.from("home_section_items").select("section_key, position, title_en, title_ar, text_en, text_ar"),
   ]);
 
   // Before the homepage-controls database update the new columns don't exist:
@@ -157,6 +158,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         isBestSeller: row.is_best_seller,
         bestSellerSort: row.best_seller_sort ?? 0,
         isNew: row.is_new,
+        createdAt: row.created_at,
         freeDelivery: row.free_delivery,
         freeGiftBox: row.free_gift_box,
         offers,
@@ -262,7 +264,13 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       ctaHref: row.cta_href || undefined,
       visible: row.is_visible,
       products: [...row.home_section_products].sort(bySort).flatMap((p) => (p.products ? [p.products.slug] : [])),
+      items: {},
     };
+  }
+  // The item texts come from a later database update: without it they stay empty.
+  for (const row of itemsRes.error ? [] : (itemsRes.data ?? [])) {
+    const section = home[row.section_key];
+    if (section) section.items[row.position] = { title: typed(row.title_en, row.title_ar), text: typed(row.text_en, row.text_ar) };
   }
 
   return {

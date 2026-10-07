@@ -3,10 +3,10 @@
 import { useRef, useState } from "react";
 import { ArrowDown, ArrowUp, ImagePlus, Loader2, Plus, X } from "lucide-react";
 import { createTileUpload, saveHomePage } from "@/lib/admin/home-actions";
-import type { HomeSectionInput, HomeSectionKey } from "@/lib/admin/home-types";
+import type { HomeSectionInput, HomeSectionKey, HomeStepInput } from "@/lib/admin/home-types";
 import { toWebp } from "./media-manager";
 import { FormError, useSave } from "./promo-forms";
-import { Card, Field, buttonClass, inputClass, secondaryButtonClass, smallButtonClass } from "./ui";
+import { Card, Field, buttonClass, inputClass, secondaryButtonClass, smallButtonClass, textareaClass } from "./ui";
 
 type Tile = { slug: string; name: string; show: boolean; imageUrl: string };
 type ProductOption = { slug: string; name: string };
@@ -16,6 +16,11 @@ export type HomeFormData = {
   liraSlugs: string[];
   tiles: Tile[];
   bestSellers: string[];
+  steps: HomeStepInput[];
+  /** The texts the shop shows when a step field is empty. */
+  stepDefaults: HomeStepInput[];
+  /** false until the "home section items" database update is applied. */
+  stepsReady: boolean;
   products: ProductOption[];
 };
 
@@ -26,7 +31,7 @@ const sectionInfo: Record<HomeSectionKey, { label: string; subtitle?: string; ct
   lira: { label: "Lira Collection (after the first screen)", subtitle: "Text", cta: "Button opens (default: the Lira Collection page)" },
   shop_by_style: { label: "Shop by style", subtitle: "Line under the title" },
   best_sellers: { label: "Best sellers", subtitle: "Line under the title", cta: "Button opens (default: Bestsellers page)" },
-  steps: { label: "How it works" },
+  steps: { label: "How it works (title and the 3 steps)" },
   new_arrivals: { label: "New arrivals", subtitle: "Line under the title", cta: "Button opens (default: New Arrivals page)" },
   try_picture: { label: "Try your picture", subtitle: "Line under the title", cta: "Order button opens: the photo pendant product, e.g. /product/photo-pendant (default: Gifts page)" },
   create: { label: "Create something personal", subtitle: "Text", cta: "Button opens (default: the name necklace)" },
@@ -96,7 +101,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
       onSubmit={(e) => {
         e.preventDefault();
         save(
-          () => saveHomePage({ sections: d.sections, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers }),
+          () => saveHomePage({ sections: d.sections, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers, steps: d.steps }),
           () => setSaved(true),
         );
       }}
@@ -198,6 +203,25 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
                         </Field>
                       </>
                     )}
+                    {s.key === "steps" && (
+                      <div className="grid gap-3 sm:col-span-2">
+                        {!d.stepsReady && (
+                          <p className="rounded-lg bg-surface px-3 py-2 text-xs text-muted">
+                            The step texts need the database update <b>20261007110000_home_section_items.sql</b> (Supabase → SQL Editor).
+                          </p>
+                        )}
+                        {d.steps.map((step, i) => (
+                          <StepFields
+                            key={i}
+                            n={i + 1}
+                            step={step}
+                            defaults={d.stepDefaults[i]}
+                            disabled={!d.stepsReady}
+                            onChange={(patch) => change({ steps: d.steps.map((x, j) => (j === i ? { ...x, ...patch } : x)) })}
+                          />
+                        ))}
+                      </div>
+                    )}
                     {info.cta && (
                       <Field label={info.cta} className="sm:col-span-2" htmlFor={`hs-cta-${s.key}`}>
                         <input id={`hs-cta-${s.key}`} dir="ltr" maxLength={200} placeholder="/category/bracelets" value={s.ctaHref} onChange={(e) => setSection(s.key, { ctaHref: e.target.value })} className={inputClass} />
@@ -222,6 +246,26 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
         </div>
       </div>
     </form>
+  );
+}
+
+function StepFields({ n, step, defaults, disabled, onChange }: { n: number; step: HomeStepInput; defaults: HomeStepInput; disabled: boolean; onChange: (patch: Partial<HomeStepInput>) => void }) {
+  return (
+    <fieldset disabled={disabled} className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-2">
+      <legend className="px-1 text-sm font-medium">Step 0{n}</legend>
+      <Field label="Title (English)" htmlFor={`hs-st-te-${n}`}>
+        <input id={`hs-st-te-${n}`} maxLength={80} placeholder={defaults.titleEn} value={step.titleEn} onChange={(e) => onChange({ titleEn: e.target.value })} className={inputClass} />
+      </Field>
+      <Field label="Title (Arabic)" htmlFor={`hs-st-ta-${n}`}>
+        <input id={`hs-st-ta-${n}`} dir="rtl" maxLength={80} placeholder={defaults.titleAr} value={step.titleAr} onChange={(e) => onChange({ titleAr: e.target.value })} className={inputClass} />
+      </Field>
+      <Field label="Text (English)" htmlFor={`hs-st-xe-${n}`}>
+        <textarea id={`hs-st-xe-${n}`} rows={3} maxLength={300} placeholder={defaults.textEn} value={step.textEn} onChange={(e) => onChange({ textEn: e.target.value })} className={textareaClass} />
+      </Field>
+      <Field label="Text (Arabic)" htmlFor={`hs-st-xa-${n}`}>
+        <textarea id={`hs-st-xa-${n}`} dir="rtl" rows={3} maxLength={300} placeholder={defaults.textAr} value={step.textAr} onChange={(e) => onChange({ textAr: e.target.value })} className={textareaClass} />
+      </Field>
+    </fieldset>
   );
 }
 

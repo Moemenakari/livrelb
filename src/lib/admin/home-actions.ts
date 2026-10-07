@@ -4,7 +4,7 @@ import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
-import { homeSectionKeys, type HomePageInput } from "./home-types";
+import { STEP_COUNT, homeSectionKeys, type HomePageInput } from "./home-types";
 import { can } from "./permissions";
 
 const MAX_LIRA = 8;
@@ -64,12 +64,34 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
       return { slug: tile.slug, show_on_home: Boolean(tile.show), home_sort: i, image_url: imageUrl || null };
     });
 
+    const rawSteps = Array.isArray(input.steps) ? input.steps.slice(0, STEP_COUNT) : [];
+    const steps = rawSteps.map((s, i) => ({
+      section_key: "steps",
+      position: i + 1,
+      title_en: str(s.titleEn, 80),
+      title_ar: str(s.titleAr, 80),
+      text_en: str(s.textEn, 300),
+      text_ar: str(s.textAr, 300),
+    }));
+    const stepsUsed = steps.some((s) => s.title_en || s.title_ar || s.text_en || s.text_ar);
+
     const { data: products, error: productsError } = await db.from("products").select("id, slug").in("slug", [...liraSlugs, ...bestSlugs]);
     if (productsError) throw productsError;
     const idOf = new Map((products ?? []).map((p) => [p.slug, p.id]));
     for (const slug of liraSlugs) if (!idOf.has(slug)) throw new AdminError("A picked product doesn't exist anymore. Reload the page.");
 
     try {
+      // The step texts need the second database update; with it missing and
+      // nothing typed there is nothing to save.
+      if (steps.length > 0) {
+        const { error } = await db.from("home_section_items").upsert(steps, { onConflict: "section_key,position" });
+        if (error) {
+          const missing = error.code === "PGRST205" || error.code === "42P01";
+          if (!missing) throw error;
+          if (stepsUsed) throw new AdminError("The step texts need the database update 20261007110000_home_section_items.sql (Supabase → SQL Editor).");
+        }
+      }
+
       const { error: sectionsError } = await db.from("home_sections").upsert(sections, { onConflict: "key" });
       if (sectionsError) throw sectionsError;
 

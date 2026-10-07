@@ -15,6 +15,10 @@ export type HomeSectionInput = {
   ctaHref: string;
 };
 
+/** The three "How it works" steps; empty text = the default text. */
+export const STEP_COUNT = 3;
+export type HomeStepInput = { titleEn: string; titleAr: string; textEn: string; textAr: string };
+
 export type HomeTileInput = { slug: string; show: boolean; imageUrl: string };
 
 export type HomePageInput = {
@@ -25,4 +29,6 @@ export type HomePageInput = {
   tiles: HomeTileInput[];
   /** Best sellers, in order (slugs). */
   bestSellers: string[];
+  /** The "How it works" steps, in order. */
+  steps: HomeStepInput[];
 };

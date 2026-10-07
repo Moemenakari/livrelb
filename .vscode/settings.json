@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.sql": "pgsql"
+  },
+  "mssql.intelliSense.enableErrorChecking": false
+}
