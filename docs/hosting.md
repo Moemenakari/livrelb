@@ -68,7 +68,8 @@ Product photos go to **Cloudflare R2**. Not deployed yet.
 ## What behaves differently from Vercel
 
 - **Free plan limits**: the worker must stay under **3 MiB compressed**
-  (today: about 2.6 MiB, measured with `npx wrangler deploy --dry-run`) and
+  (today: about 2.1 MiB, measured with `npx wrangler deploy --dry-run`; keep the
+  middleware as `src/middleware.ts` (edge): a Node `proxy.ts` adds about 0.9 MiB) and
   gets **10 ms of CPU per request**. Cached pages are cheap, but rendering a
   page on a cache miss can exceed 10 ms. If you see "exceeded CPU" errors, or
   the bundle grows past 3 MiB with checkout and admin, Workers Paid ($5/month)

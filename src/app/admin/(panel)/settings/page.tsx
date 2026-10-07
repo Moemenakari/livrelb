@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin/auth";
-import { whish } from "@/lib/payments/whish";
 import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { NoAccess, PageHeader } from "@/components/admin/ui";
@@ -22,7 +21,6 @@ export default async function SettingsPage() {
     <>
       <PageHeader title="Settings" subtitle="Owner only." />
       <SettingsForm
-        whishReady={whish.isConfigured()}
         initial={{
           deliveryFee: d(s.delivery_fee_cents),
           freeShippingOver: d(s.free_shipping_threshold_cents),
@@ -44,8 +42,6 @@ export default async function SettingsPage() {
           redeemPoints: String(s.points_redeem_points),
           redeemDollars: d(s.points_redeem_cents),
           announcements,
-          whishOnline: s.whish_online_enabled,
-          cardOnline: s.card_online_enabled,
           charmPrice: d(s.charm_price_cents),
           requireLogin: s.checkout_requires_login,
           charmMax: String(s.charm_max),

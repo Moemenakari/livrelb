@@ -18,7 +18,7 @@ function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange
   );
 }
 
-export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; whishReady: boolean }) {
+export function SettingsForm({ initial }: { initial: SettingsInput }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(false);
   const { pending, error, save } = useSave();
@@ -152,15 +152,6 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
         />
       </Card>
 
-      <Card title="Visa / Mastercard online">
-        <Toggle
-          label="Let customers pay by card on the website"
-          hint="Hidden until the bank's card gateway keys (CARD_GATEWAY_*) are added on the server."
-          checked={s.cardOnline}
-          onChange={(v) => set("cardOnline", v)}
-        />
-      </Card>
-
       <Card title="Analytics (off while empty)">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Meta Pixel ID" hint="Digits only. Loads only after the visitor accepts cookies." htmlFor="st-pixel">
@@ -170,15 +161,6 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
             <input id="st-ga" value={s.ga4Id} onChange={(e) => set("ga4Id", e.target.value)} className={inputClass} dir="ltr" />
           </Field>
         </div>
-      </Card>
-
-      <Card title="Online payment (Whish with OTP)">
-        <Toggle
-          label="Let customers pay online with Whish"
-          hint={whishReady ? "The Whish merchant keys are set." : "Hidden until the Whish merchant account and API keys are added. Whish stays manual meanwhile."}
-          checked={s.whishOnline}
-          onChange={(v) => set("whishOnline", v)}
-        />
       </Card>
 
       <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t border-line bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:start-60">

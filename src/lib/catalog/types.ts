@@ -209,10 +209,6 @@ export type StoreSettings = {
   charmsNavSort: number;
   /** Checkout needs an account (Settings). */
   requireLogin: boolean;
-  /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
-  whishOnline: boolean;
-  /** Visa / Mastercard on the website (also needs the gateway keys). */
-  cardOnline: boolean;
   /** Analytics IDs from the admin; empty = off. */
   metaPixelId: string;
   ga4Id: string;

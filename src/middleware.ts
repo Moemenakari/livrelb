@@ -1,10 +1,12 @@
-import createMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-import { routing } from "./i18n/routing";
+// This file is `middleware.ts` (edge), NOT `proxy.ts` (Node): OpenNext adds the OG image library (satori +
+// resvg.wasm, +0.9 MiB gzip) to every Node middleware, and the Worker must stay under 3 MiB on the free
+// plan (2.1 MiB with this). Next prints a "deprecated" notice for it; that is expected.
+// NextResponse comes from its own file: "next/server" (and next-intl's middleware, which imports it) also
+// carries the OG image library (satori + resvg.wasm, about 1.4 MB gzip-heavy) into the Worker.
+import { NextResponse } from "next/dist/server/web/spec-extension/response";
+import type { NextRequest } from "next/dist/server/web/spec-extension/request";
 import { REF_CODE, REF_COOKIE, REF_FLAG_COOKIE, REF_MAX_AGE } from "./lib/checkout/cookies";
-
-const intl = createMiddleware(routing);
 
 // Admin session timeout: after this long without opening an admin page the
 // staff member is signed out and must log in again (phones get lost).
@@ -22,7 +24,7 @@ const refCookie = {
   secure: process.env.NODE_ENV === "production",
 };
 
-// Adds the locale prefix (/en, /ar) to every page request, and remembers
+// Sends every page request to its /en address, and remembers
 // an employee's ref link (brief §5): livrelb.com/r/amal opens the home page,
 // any URL with ?ref=amal opens as usual; both save the code in a cookie that
 // the checkout sends with the order. Browsers signed in with Google get
@@ -92,7 +94,18 @@ export default async function proxy(request: NextRequest) {
     return response;
   }
 
-  const response = intl(request);
+  // English only: /en/... is the website; anything else goes to its /en twin ("/" opens /en).
+  const { pathname } = request.nextUrl;
+  let response: NextResponse;
+  if (/^\/en(\/|$)/.test(pathname)) {
+    const headers = new Headers(request.headers);
+    headers.set("X-NEXT-INTL-LOCALE", "en");
+    response = NextResponse.next({ request: { headers } });
+  } else {
+    const url = request.nextUrl.clone();
+    url.pathname = `/en${pathname === "/" ? "" : pathname}`;
+    response = NextResponse.redirect(url);
+  }
   const ref = request.nextUrl.searchParams.get("ref")?.toLowerCase();
   if (ref && REF_CODE.test(ref)) {
     response.cookies.set(REF_COOKIE, ref, refCookie);

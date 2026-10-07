@@ -25,8 +25,6 @@ export type SettingsInput = {
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
-  whishOnline: boolean;
-  cardOnline: boolean;
   charmPrice: string;
   /** Checkout needs an account (Google or email). */
   requireLogin: boolean;
@@ -92,8 +90,6 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
         reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
         reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
-        whish_online_enabled: Boolean(input.whishOnline),
-        card_online_enabled: Boolean(input.cardOnline),
         charm_price_cents: centsOf(input.charmPrice, "Charm price"),
         checkout_requires_login: Boolean(input.requireLogin),
         ...(input.charmMax !== undefined ? { charm_max: whole(input.charmMax, "Most charms on a chain", 1, 30) } : {}),

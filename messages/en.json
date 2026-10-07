@@ -265,36 +265,6 @@
       "detail": "Every piece ships in our LIVRE gift box with a pouch, ready to give. No extra cost."
     }
   },
-  "cardPay": {
-    "title": "Pay now by card",
-    "intro": "Visa or Mastercard. You pay on your bank's secure page.",
-    "pay": "Pay by card",
-    "secure": "Secure payment. LIVRE never sees or stores your card number.",
-    "paid": "Payment received. Thank you!",
-    "errors": {
-      "declined": "The payment wasn't completed. You can try again or pay another way.",
-      "not_available": "Card payment isn't available right now.",
-      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
-      "failed": "Something went wrong. Please try again."
-    }
-  },
-  "whishPay": {
-    "title": "Pay now with Whish",
-    "intro": "Enter your Whish phone number. Whish sends you a code to confirm the payment.",
-    "wallet": "Whish phone number",
-    "send": "Send code",
-    "otp": "Code from Whish",
-    "confirm": "Confirm payment · {total}",
-    "paid": "Payment received. Thank you!",
-    "errors": {
-      "not_available": "Online Whish payment isn't available right now. We'll send you our Whish details instead.",
-      "wallet_invalid": "Please check your Whish phone number.",
-      "otp_invalid": "This code isn't right. Please check it and try again.",
-      "otp_expired": "This code expired. Please ask for a new one.",
-      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
-      "failed": "Something went wrong. Please try again."
-    }
-  },
   "giftBox": {
     "free": "Special LIVRE gift box: <strong>FREE</strong> with every order"
   },

@@ -17,11 +17,7 @@ import { createAdminClient } from "@/lib/supabase/public";
 import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { TrackingPanel } from "@/components/checkout/tracking-panel";
 import { orderTracking } from "@/lib/checkout/tracking";
-import { WhishPayment } from "@/components/checkout/whish-payment";
-import { whish } from "@/lib/payments/whish";
-import { cardConfigured } from "@/lib/payments/card";
 import { TrackOnMount } from "@/components/analytics/analytics";
-import { CardPayment } from "@/components/checkout/card-payment";
 import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -38,10 +34,9 @@ const dollars = (cents: number) => cents / 100;
 // Thank-you page (brief §8.4). Only the browser that placed the order sees
 // it (its id is in an httpOnly cookie); anyone else is sent to "Track my
 // order", which asks for the phone number.
-export default async function OrderPage({ params, searchParams }: PageProps<"/[locale]/order/[number]">) {
+export default async function OrderPage({ params }: PageProps<"/[locale]/order/[number]">) {
   const locale = await resolveLocale(params);
   const { number } = await params;
-  const paidFlag = (await searchParams).paid;
   if (!/^\d{1,12}$/.test(number) || !isSupabaseConfigured()) notFound();
   const db = createAdminClient();
   if (!db) notFound();
@@ -118,15 +113,6 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
           <p className="text-muted">{t("codNote", { total: formatPrice(dollars(order.total_cents)) })}</p>
         </div>
       </div>
-
-      {order.payment_method === "card" && order.status !== "cancelled" && catalog.settings.cardOnline && cardConfigured() && (
-        <CardPayment orderNumber={order.number} paid={paidFlag === "1" ? true : paidFlag === "0" ? false : null} />
-      )}
-
-      {order.payment_method === "whish" &&
-        order.status !== "cancelled" &&
-        catalog.settings.whishOnline &&
-        whish.isConfigured() && <WhishPayment orderNumber={order.number} total={dollars(order.total_cents)} />}
 
       <section className="flex flex-col gap-4">
         <h2 className="text-2xl">{t("itemsTitle")}</h2>

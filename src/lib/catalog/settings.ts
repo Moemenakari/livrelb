@@ -25,8 +25,6 @@ export const sampleSettings: StoreSettings = {
   points: { enabled: true, perStep: 10, stepDollars: 15, perReview: 1, redeemPoints: 10, redeemValue: 1 },
   charmsNavSort: 20,
   requireLogin: false,
-  whishOnline: false,
-  cardOnline: false,
   metaPixelId: "",
   ga4Id: "",
 };
