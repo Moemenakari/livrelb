@@ -178,9 +178,6 @@ export function OrderControls({ orderId, status, canEdit, canCancel, isOwner, st
               <Field label="New update (English)" hint="Shown on the customer's tracking page, e.g. Driver is on the way." htmlFor="note-en">
                 <input id="note-en" value={noteEn} maxLength={140} onChange={(e) => setNoteEn(e.target.value)} className={inputClass} />
               </Field>
-              <Field label="Same update (Arabic)" hint="Empty = the English text is shown." htmlFor="note-ar">
-                <input id="note-ar" dir="rtl" value={noteAr} maxLength={140} onChange={(e) => setNoteAr(e.target.value)} className={inputClass} />
-              </Field>
               <button type="submit" disabled={pending || !noteEn.trim()} className={secondaryButtonClass}>
                 Add update
               </button>

@@ -45,8 +45,9 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
 
     const rows = list.map((a, i) => {
       const nameEn = str(a.nameEn, 60);
-      const nameAr = str(a.nameAr, 60);
-      if (!nameEn || !nameAr) throw new AdminError(`Area ${i + 1}: write the name in English and Arabic.`);
+      // The website is English only: the Arabic column keeps what was there, else the English name.
+      const nameAr = str(a.nameAr, 60) || nameEn;
+      if (!nameEn) throw new AdminError(`Area ${i + 1}: write the name.`);
       if (a.id !== null && !UUID.test(String(a.id))) throw new AdminError("Reload the page and try again.");
       const feeText = str(a.fee, 12);
       const fee = feeText === "" ? null : Number(feeText);

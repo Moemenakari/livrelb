@@ -68,9 +68,6 @@ export function DeliveryForm({ initial, defaults }: { initial: DeliveryInput; de
                   <Field label="Name (English)" htmlFor={`dl-en-${i}`}>
                     <input id={`dl-en-${i}`} required maxLength={60} value={a.nameEn} onChange={(e) => setArea(i, { nameEn: e.target.value })} className={inputClass} />
                   </Field>
-                  <Field label="Name (Arabic)" htmlFor={`dl-ar-${i}`}>
-                    <input id={`dl-ar-${i}`} required dir="rtl" maxLength={60} value={a.nameAr} onChange={(e) => setArea(i, { nameAr: e.target.value })} className={inputClass} />
-                  </Field>
                   <Field label="Fee ($)" htmlFor={`dl-fee-${i}`}>
                     <input id={`dl-fee-${i}`} type="number" min="0" step="0.01" placeholder={defaults.fee} value={a.fee} onChange={(e) => setArea(i, { fee: e.target.value })} className={inputClass} />
                   </Field>

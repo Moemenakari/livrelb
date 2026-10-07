@@ -94,7 +94,7 @@ function toPayload(f: ProductForm, existingMedia: Set<string>) {
     id: f.id && UUID.test(f.id) ? f.id : null,
     slug,
     name_en: text(f.nameEn, 120, "Name (English)", true),
-    name_ar: text(f.nameAr, 120, "Name (Arabic)", true),
+    name_ar: text(f.nameAr || f.nameEn, 120, "Name", true),
     summary_en: text(f.summaryEn, 300, "Tagline (English)"),
     summary_ar: text(f.summaryAr, 300, "Tagline (Arabic)"),
     description_en: text(f.descriptionEn, 5000, "Description (English)"),

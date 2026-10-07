@@ -151,14 +151,8 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
               className={inputClass}
             />
           </Field>
-          <Field label="Name (Arabic)" htmlFor="p-name-ar">
-            <input id="p-name-ar" required dir="rtl" maxLength={120} value={f.nameAr} onChange={(e) => set("nameAr", e.target.value)} className={inputClass} />
-          </Field>
           <Field label="Short tagline (English)" hint="One line under the name on the product page." htmlFor="p-sum-en">
             <input id="p-sum-en" maxLength={300} value={f.summaryEn} onChange={(e) => set("summaryEn", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Short tagline (Arabic)" htmlFor="p-sum-ar">
-            <input id="p-sum-ar" dir="rtl" maxLength={300} value={f.summaryAr} onChange={(e) => set("summaryAr", e.target.value)} className={inputClass} />
           </Field>
           <Field label="Link" hint={`${siteConfig.host}/en/product/${f.slug || "…"}`} htmlFor="p-slug">
             <input
@@ -426,14 +420,8 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
           <Field label="Description (English)" htmlFor="p-desc-en">
             <RichTextarea id="p-desc-en" value={f.descriptionEn} onChange={(v) => set("descriptionEn", v)} />
           </Field>
-          <Field label="Description (Arabic)" htmlFor="p-desc-ar">
-            <RichTextarea id="p-desc-ar" dir="rtl" value={f.descriptionAr} onChange={(v) => set("descriptionAr", v)} />
-          </Field>
           <Field label="Size & Materials tab (English)" htmlFor="p-det-en">
             <RichTextarea id="p-det-en" rows={4} maxLength={3000} value={f.detailsEn} onChange={(v) => set("detailsEn", v)} />
-          </Field>
-          <Field label="Size & Materials tab (Arabic)" htmlFor="p-det-ar">
-            <RichTextarea id="p-det-ar" dir="rtl" rows={4} maxLength={3000} value={f.detailsAr} onChange={(v) => set("detailsAr", v)} />
           </Field>
         </div>
       </Card>

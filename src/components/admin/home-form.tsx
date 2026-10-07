@@ -210,16 +210,10 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
                     <Field label="Title (English)" htmlFor={`hs-te-${s.key}`}>
                       <input id={`hs-te-${s.key}`} maxLength={120} value={s.titleEn} onChange={(e) => setSection(s.key, { titleEn: e.target.value })} className={inputClass} />
                     </Field>
-                    <Field label="Title (Arabic)" htmlFor={`hs-ta-${s.key}`}>
-                      <input id={`hs-ta-${s.key}`} dir="rtl" maxLength={120} value={s.titleAr} onChange={(e) => setSection(s.key, { titleAr: e.target.value })} className={inputClass} />
-                    </Field>
                     {info.subtitle && (
                       <>
                         <Field label={`${info.subtitle} (English)`} htmlFor={`hs-se-${s.key}`}>
                           <input id={`hs-se-${s.key}`} maxLength={300} value={s.subtitleEn} onChange={(e) => setSection(s.key, { subtitleEn: e.target.value })} className={inputClass} />
-                        </Field>
-                        <Field label={`${info.subtitle} (Arabic)`} htmlFor={`hs-sa-${s.key}`}>
-                          <input id={`hs-sa-${s.key}`} dir="rtl" maxLength={300} value={s.subtitleAr} onChange={(e) => setSection(s.key, { subtitleAr: e.target.value })} className={inputClass} />
                         </Field>
                       </>
                     )}
@@ -276,14 +270,8 @@ function StepFields({ n, step, defaults, disabled, onChange }: { n: number; step
       <Field label="Title (English)" htmlFor={`hs-st-te-${n}`}>
         <input id={`hs-st-te-${n}`} maxLength={80} placeholder={defaults.titleEn} value={step.titleEn} onChange={(e) => onChange({ titleEn: e.target.value })} className={inputClass} />
       </Field>
-      <Field label="Title (Arabic)" htmlFor={`hs-st-ta-${n}`}>
-        <input id={`hs-st-ta-${n}`} dir="rtl" maxLength={80} placeholder={defaults.titleAr} value={step.titleAr} onChange={(e) => onChange({ titleAr: e.target.value })} className={inputClass} />
-      </Field>
       <Field label="Text (English)" htmlFor={`hs-st-xe-${n}`}>
         <textarea id={`hs-st-xe-${n}`} rows={3} maxLength={300} placeholder={defaults.textEn} value={step.textEn} onChange={(e) => onChange({ textEn: e.target.value })} className={textareaClass} />
-      </Field>
-      <Field label="Text (Arabic)" htmlFor={`hs-st-xa-${n}`}>
-        <textarea id={`hs-st-xa-${n}`} dir="rtl" rows={3} maxLength={300} placeholder={defaults.textAr} value={step.textAr} onChange={(e) => onChange({ textAr: e.target.value })} className={textareaClass} />
       </Field>
     </fieldset>
   );

@@ -79,7 +79,7 @@ export function CharmItems({ items, defaultPrice }: { items: CharmItemInput[]; d
         }
       >
         <p className="mb-3 text-xs text-muted">
-          Each photo is a charm customers can pick on the Charms page. Write its name (English and Arabic). Empty price = the standard charm price ($
+          Each photo is a charm customers can pick on the Charms page. Write its name. Empty price = the standard charm price ($
           {defaultPrice}). Mark it &quot;Out of stock&quot; when it sells out.
         </p>
         <FormError error={error ?? saveError} />
@@ -299,9 +299,6 @@ function ItemRow({ item, hasFamilies, onSave }: { item: CharmItemInput; hasFamil
       <div className="grid flex-1 gap-2 sm:grid-cols-2">
         <Field label="Name (English)" htmlFor={`ci-en-${id}`}>
           <input id={`ci-en-${id}`} maxLength={80} value={s.nameEn} onChange={(e) => set("nameEn", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Name (Arabic)" htmlFor={`ci-ar-${id}`}>
-          <input id={`ci-ar-${id}`} dir="rtl" maxLength={80} value={s.nameAr} onChange={(e) => set("nameAr", e.target.value)} className={inputClass} />
         </Field>
         {hasFamilies && (
           <>

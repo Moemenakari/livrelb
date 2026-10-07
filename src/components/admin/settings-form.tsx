@@ -58,14 +58,8 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
           <Field label="Delivery time text (English)" hint={`Empty = "${s.daysMin}–${s.daysMax} days"`} htmlFor="st-dten">
             <input id="st-dten" maxLength={120} value={s.deliveryTimeEn} onChange={(e) => set("deliveryTimeEn", e.target.value)} className={inputClass} />
           </Field>
-          <Field label="Delivery time text (Arabic)" htmlFor="st-dtar">
-            <input id="st-dtar" dir="rtl" maxLength={120} value={s.deliveryTimeAr} onChange={(e) => set("deliveryTimeAr", e.target.value)} className={inputClass} />
-          </Field>
           <Field label="Shipping information (English)" hint="Shown in the product page's Shipping tab." htmlFor="st-shen">
             <textarea id="st-shen" rows={4} maxLength={3000} value={s.shippingInfoEn} onChange={(e) => set("shippingInfoEn", e.target.value)} className={textareaClass} />
-          </Field>
-          <Field label="Shipping information (Arabic)" htmlFor="st-shar">
-            <textarea id="st-shar" rows={4} dir="rtl" maxLength={3000} value={s.shippingInfoAr} onChange={(e) => set("shippingInfoAr", e.target.value)} className={textareaClass} />
           </Field>
         </div>
       </Card>
@@ -131,7 +125,6 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
               <button type="button" onClick={() => set("announcements", s.announcements.filter((_, j) => j !== i))} className="row-span-2 self-center rounded p-2 text-muted hover:text-red-700 sm:order-last sm:row-span-1" aria-label="Remove">
                 <X className="size-4" />
               </button>
-              <input aria-label="Arabic" placeholder="العربية" dir="rtl" value={a.ar} maxLength={160} onChange={(e) => set("announcements", s.announcements.map((x, j) => (j === i ? { ...x, ar: e.target.value } : x)))} className={inputClass} />
             </li>
           ))}
         </ul>

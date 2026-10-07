@@ -125,8 +125,8 @@ export async function saveSeason(input: SeasonInput): Promise<ActionResult> {
     const slug = str(input.slug, 60).toLowerCase();
     if (!SLUG.test(slug)) throw new AdminError("Link: a-z, 0-9 and dashes, e.g. mothers-day.");
     const titleEn = str(input.titleEn, 120);
-    const titleAr = str(input.titleAr, 120);
-    if (!titleEn || !titleAr) throw new AdminError("Write the title in English and Arabic.");
+    const titleAr = str(input.titleAr, 120) || titleEn;
+    if (!titleEn) throw new AdminError("Write the title.");
     const row = {
       slug,
       title_en: titleEn,

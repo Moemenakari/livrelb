@@ -58,17 +58,11 @@ function SeasonForm({ initial, products, onDone }: { initial: SeasonInput; produ
         <Field label="Title (English)" htmlFor={`s-en-${idp}`}>
           <input id={`s-en-${idp}`} required maxLength={120} value={s.titleEn} onChange={(e) => set("titleEn", e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Title (Arabic)" htmlFor={`s-ar-${idp}`}>
-          <input id={`s-ar-${idp}`} required dir="rtl" maxLength={120} value={s.titleAr} onChange={(e) => set("titleAr", e.target.value)} className={inputClass} />
-        </Field>
         <Field label="Link" hint={`${siteConfig.host}/en/${s.slug || "…"}`} htmlFor={`s-slug-${idp}`}>
           <input id={`s-slug-${idp}`} required maxLength={60} value={s.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} className={inputClass} dir="ltr" />
         </Field>
         <Field label="Text (English)" htmlFor={`s-den-${idp}`}>
           <textarea id={`s-den-${idp}`} rows={2} maxLength={2000} value={s.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} className={textareaClass} />
-        </Field>
-        <Field label="Text (Arabic)" htmlFor={`s-dar-${idp}`}>
-          <textarea id={`s-dar-${idp}`} rows={2} dir="rtl" maxLength={2000} value={s.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} className={textareaClass} />
         </Field>
         <Field label="Code shown (optional)" htmlFor={`s-code-${idp}`}>
           <input id={`s-code-${idp}`} maxLength={30} value={s.couponCode} onChange={(e) => set("couponCode", e.target.value.toUpperCase())} className={`${inputClass} uppercase`} />

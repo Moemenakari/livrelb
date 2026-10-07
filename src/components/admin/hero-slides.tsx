@@ -93,9 +93,6 @@ function SlideRow({ slide, onSave }: { slide: SlideInput; onSave: (s: SlideInput
         <Field label="Text (English, optional)" htmlFor={`sl-en-${id}`}>
           <input id={`sl-en-${id}`} maxLength={160} value={s.headlineEn} onChange={(e) => set("headlineEn", e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Text (Arabic, optional)" htmlFor={`sl-ar-${id}`}>
-          <input id={`sl-ar-${id}`} dir="rtl" maxLength={160} value={s.headlineAr} onChange={(e) => set("headlineAr", e.target.value)} className={inputClass} />
-        </Field>
         <Field label="Opens (page of the shop)" hint="e.g. /category/bracelets" htmlFor={`sl-ln-${id}`}>
           <input id={`sl-ln-${id}`} dir="ltr" maxLength={200} value={s.link} onChange={(e) => set("link", e.target.value)} className={inputClass} />
         </Field>

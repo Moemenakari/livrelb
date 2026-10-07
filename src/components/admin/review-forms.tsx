@@ -87,9 +87,6 @@ function AddReview({ products, onDone }: { products: { id: string; name: string 
         <Field label="Review (as she wrote it)" htmlFor="rv-text">
           <textarea id="rv-text" required rows={3} maxLength={2000} dir="auto" value={r.text} onChange={(e) => set("text", e.target.value)} className={textareaClass} />
         </Field>
-        <Field label="Arabic translation (optional)" htmlFor="rv-ar">
-          <textarea id="rv-ar" rows={3} maxLength={2000} dir="rtl" value={r.textAr} onChange={(e) => set("textAr", e.target.value)} className={textareaClass} />
-        </Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Product (optional)" htmlFor="rv-prod">

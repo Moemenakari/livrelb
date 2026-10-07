@@ -135,9 +135,6 @@ export function PromotionForm({ initial, onDone }: { initial: PromotionInput; on
         <Field label={hero ? "Headline (English)" : "Bar text (English)"} hint={hero ? `Empty = "${p.percent || 25}% OFF your first order"` : 'Empty = "Your Story, Your Jewelry ✨"'} htmlFor={`p-en-${idp}`}>
           <input id={`p-en-${idp}`} value={p.headlineEn} maxLength={160} onChange={(e) => set("headlineEn", e.target.value)} className={inputClass} />
         </Field>
-        <Field label={hero ? "Headline (Arabic)" : "Bar text (Arabic)"} htmlFor={`p-ar-${idp}`}>
-          <input id={`p-ar-${idp}`} dir="rtl" value={p.headlineAr} maxLength={160} onChange={(e) => set("headlineAr", e.target.value)} className={inputClass} />
-        </Field>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="Percent" htmlFor={`p-pc-${idp}`}>

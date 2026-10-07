@@ -65,9 +65,8 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
     const ga4Id = str(input.ga4Id, 20).replace(/\s/g, "").toUpperCase();
     if (ga4Id && !/^G-[A-Z0-9]{4,20}$/.test(ga4Id)) throw new AdminError("GA4 ID: looks like G-XXXXXXXXXX.");
     const announcements = (input.announcements ?? [])
-      .map((a) => ({ en: str(a.en, 160), ar: str(a.ar, 160) }))
-      .filter((a) => a.en || a.ar);
-    if (announcements.some((a) => !a.en || !a.ar)) throw new AdminError("Each announcement needs English and Arabic.");
+      .map((a) => ({ en: str(a.en, 160), ar: str(a.ar, 160) || str(a.en, 160) }))
+      .filter((a) => a.en);
     if (announcements.length > 8) throw new AdminError("Up to 8 announcements.");
 
     const { error } = await db
