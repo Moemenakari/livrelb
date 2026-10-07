@@ -6,7 +6,6 @@ import { whatsappUrl } from "@/config/site";
 import { findCategory, getCatalog, navItems } from "@/lib/catalog";
 import { WhatsAppIcon } from "@/components/icons/brand-icons";
 import { CartButton } from "./cart-button";
-import { LocaleSwitcher } from "./locale-switcher";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { SearchButton, type SearchIndex } from "./search-button";
@@ -91,7 +90,6 @@ export async function Navbar() {
                   {tFooter("whatsapp")}
                 </a>
               )}
-              <LocaleSwitcher className={`${drawerAction} font-medium`} />
             </div>
           </MobileMenu>
 
@@ -122,7 +120,6 @@ export async function Navbar() {
 
         <div className="ms-auto flex items-center">
           <SearchButton index={searchIndex} className={iconButton} />
-          <LocaleSwitcher className="hidden h-10 min-w-10 items-center justify-center px-1.5 text-sm transition-colors hover:text-gold-dark sm:flex" />
           <Link href="/account" aria-label={t("account")} className={iconButton}>
             <UserRound className="size-5" strokeWidth={1.5} />
           </Link>

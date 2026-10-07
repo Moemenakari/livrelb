@@ -28,18 +28,11 @@
   --sale: #7a5c30; /* gold, not red: the palette is gold + silver */
 }
 
-/* Font stacks. Each Latin font's generated fallback is a local font that
-   also has Arabic glyphs, so Arabic text must list its Arabic font first or
-   it never reaches it. Hence one stack per language (element lang attr). */
-:root,
-:lang(en) {
+/* Font stacks. Arabic names on the pieces come from their own fonts; the Naskh serif catches any
+   Arabic letter that reaches the page text. */
+:root {
   --serif-stack: var(--font-cormorant), var(--font-naskh), ui-serif, Georgia, serif;
-  --sans-stack: var(--font-jost), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
-}
-
-:lang(ar) {
-  --serif-stack: var(--font-naskh), var(--font-cormorant), ui-serif, Georgia, serif;
-  --sans-stack: var(--font-plex-arabic), var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --sans-stack: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {

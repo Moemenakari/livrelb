@@ -15,15 +15,15 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/[locale]/policies/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isPolicy(slug) || (locale !== "en" && locale !== "ar")) return {};
-  const page = policies[slug][locale];
+  const page = policies[slug].en;
   return { title: page.title, description: page.intro, alternates: alternates(locale, `/policies/${slug}`) };
 }
 
 // Shipping, returns, privacy and terms: draft templates (Nour reviews them).
 export default async function PolicyPage({ params }: PageProps<"/[locale]/policies/[slug]">) {
-  const locale = await resolveLocale(params);
+  await resolveLocale(params);
   const { slug } = await params;
   if (!isPolicy(slug)) notFound();
-  const page = policies[slug][locale];
+  const page = policies[slug].en;
   return <InfoPage title={page.title} intro={page.intro} blocks={page.blocks} draft />;
 }

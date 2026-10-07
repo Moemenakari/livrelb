@@ -74,6 +74,13 @@ export default async function proxy(request: NextRequest) {
     return response;
   }
 
+  // The Arabic website is gone: /ar/... opens the same page in English.
+  if (/^\/ar(\/|$)/.test(request.nextUrl.pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = request.nextUrl.pathname.replace(/^\/ar/, "/en");
+    return NextResponse.redirect(url, 308);
+  }
+
   const personal = request.nextUrl.pathname.match(/^\/r\/([^/]+)\/?$/);
   if (personal) {
     const code = personal[1].toLowerCase();

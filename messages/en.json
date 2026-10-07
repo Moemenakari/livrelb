@@ -41,10 +41,6 @@
     "cartCount": "Cart, {count, plural, =0 {empty} one {# item} other {# items}}",
     "charms": "Charms"
   },
-  "localeSwitcher": {
-    "label": "عربي",
-    "ariaLabel": "العربية"
-  },
   "whatsapp": {
     "float": "Chat with us on WhatsApp",
     "hello": "Hi LIVRE! I have a question.",

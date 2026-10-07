@@ -1,12 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getCatalog } from "@/lib/catalog";
 import { policies } from "@/content/pages";
-import { alternates, pageUrl } from "@/lib/seo";
+import { pageUrl } from "@/lib/seo";
 
-const locales = ["en", "ar"] as const;
-
-// sitemap.xml: every public page in English and Arabic, each pointing at
-// its twin (hreflang). Products and categories come from the catalog.
+// sitemap.xml: every public page (English). Products and categories come from the catalog.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const catalog = await getCatalog();
   const paths = [
@@ -21,12 +18,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...catalog.products.map((p) => ({ path: `/product/${p.slug}`, priority: 0.9 })),
   ];
 
-  return paths.flatMap(({ path, priority }) =>
-    locales.map((locale) => ({
-      url: pageUrl(locale, path),
-      changeFrequency: "weekly" as const,
-      priority,
-      alternates: { languages: alternates(locale, path).languages as Record<string, string> },
-    })),
-  );
+  return paths.map(({ path, priority }) => ({ url: pageUrl("en", path), changeFrequency: "weekly" as const, priority }));
 }

@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/server";
 import { HomeForm, type HomeFormData } from "@/components/admin/home-form";
 import { Card, NoAccess, PageHeader } from "@/components/admin/ui";
 import en from "../../../../../messages/en.json";
-import ar from "../../../../../messages/ar.json";
 
 export const metadata: Metadata = { title: "Home page" };
 
@@ -80,9 +79,9 @@ export default async function HomeAdminPage() {
     }),
     stepDefaults: stepKeys.map((k) => ({
       titleEn: en.home.steps[k].title,
-      titleAr: ar.home.steps[k].title,
+      titleAr: "",
       textEn: en.home.steps[k].text,
-      textAr: ar.home.steps[k].text,
+      textAr: "",
     })),
     stepsReady: !itemsRes.error,
     menu: menu.map(({ key, name }) => ({ key, name })),

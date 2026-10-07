@@ -1,24 +1,16 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
 
-// Search and sharing basics: canonical address, English/Arabic alternates
-// (hreflang) and the picture shown when a link is shared.
+// Search and sharing basics: canonical address and the picture shown when a link is shared.
 
 type Locale = "en" | "ar";
 
 /** Full address of a path in a language, e.g. url("ar", "/faq"). */
 export const pageUrl = (locale: Locale, path: string) => `${siteConfig.url}/${locale}${path === "/" ? "" : path}`;
 
-/** `alternates` for a page's metadata: canonical + hreflang en / ar / x-default. */
+/** `alternates` for a page's metadata: just the canonical address (English only). */
 export function alternates(locale: Locale, path: string): NonNullable<Metadata["alternates"]> {
-  return {
-    canonical: pageUrl(locale, path),
-    languages: {
-      en: pageUrl("en", path),
-      ar: pageUrl("ar", path),
-      "x-default": pageUrl("en", path),
-    },
-  };
+  return { canonical: pageUrl(locale, path) };
 }
 
 /** Default share picture (public/og-default.png, made by scripts/build-og.mjs). */

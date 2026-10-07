@@ -1,8 +1,7 @@
-// Fails when messages/en.json and messages/ar.json don't have the same keys,
-// so no page ships with a missing Arabic (or English) string.
+// The website is English only: this only checks that messages/en.json is valid.
 import { readFileSync } from "node:fs";
 
-const locales = ["en", "ar"];
+const locales = ["en"];
 
 function load(locale) {
   const file = new URL(`../messages/${locale}.json`, import.meta.url);

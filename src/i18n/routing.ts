@@ -1,13 +1,15 @@
 import { defineRouting } from "next-intl/routing";
 
+// The website is in English only. Arabic stays where it belongs: the products (Arabic names,
+// letters and fonts). Old /ar links are sent to /en by the proxy.
 export const routing = defineRouting({
-  locales: ["en", "ar"],
+  locales: ["en"],
   defaultLocale: "en",
-  // "/" always opens English; Arabic only via /ar or the language switch.
   localeDetection: false,
 });
 
-export type Locale = (typeof routing.locales)[number];
+/** "ar" stays in the type for the Arabic product names kept in the data. */
+export type Locale = "en" | "ar";
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
   return locale === "ar" ? "rtl" : "ltr";

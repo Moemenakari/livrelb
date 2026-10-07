@@ -8,12 +8,12 @@ import { InfoPage } from "@/components/ui/info-page";
 export async function generateMetadata({ params }: PageProps<"/[locale]/faq">): Promise<Metadata> {
   const { locale } = await params;
   if (locale !== "en" && locale !== "ar") return {};
-  return { title: faq[locale].title, description: faq[locale].intro, alternates: alternates(locale, "/faq") };
+  return { title: faq.en.title, description: faq.en.intro, alternates: alternates(locale, "/faq") };
 }
 
 export default async function FaqPage({ params }: PageProps<"/[locale]/faq">) {
-  const locale = await resolveLocale(params);
-  const page = faq[locale];
+  await resolveLocale(params);
+  const page = faq.en;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
