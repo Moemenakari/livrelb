@@ -93,13 +93,7 @@ function Panel({ id, active, children }: { id: AccountTab; active: boolean; chil
 
 function StatusBadge({ order }: { order: AccountOrder }) {
   const t = useTranslations("orderStatus");
-  const tOrder = useTranslations("order");
-  const awaiting = order.payment && !order.payment.confirmed && order.status === "pending";
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${awaiting ? "bg-sale/10 text-sale" : "bg-surface"}`}>
-      {awaiting ? tOrder("payAwaiting") : t(order.status)}
-    </span>
-  );
+  return <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium">{t(order.status)}</span>;
 }
 
 function Empty() {
@@ -148,11 +142,6 @@ function LastOrder({ order }: { order?: AccountOrder }) {
         <span>{tTrack("total")}</span>
         <span>{formatPrice(order.total)}</span>
       </p>
-      {order.payment && !order.payment.confirmed && (
-        <p className="rounded-lg bg-sale/5 px-4 py-3 text-sm font-medium text-sale">
-          {order.payment.reported ? tOrder("payReported") : tOrder("payAmount", { amount: formatMoney(order.payment.due) })}
-        </p>
-      )}
       <Link href={`/order/${order.number}`} className={`${secondaryButton} w-full`}>
         {t("openOrder")}
       </Link>

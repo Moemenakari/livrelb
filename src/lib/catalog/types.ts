@@ -207,12 +207,8 @@ export type StoreSettings = {
   points: PointsRules;
   /** Place of the Charms page in the shop menu (smaller first). */
   charmsNavSort: number;
-  /** How she can pay and log in (Settings). */
-  payments: PaymentSettings;
-  /** LIVRE Points given once when she verifies her phone on WhatsApp. */
-  phoneVerifyPoints: number;
-  /** Percent of the total paid now by transfer on a "cash on delivery" order (default 50). */
-  depositPercent: number;
+  /** Checkout needs an account (Settings). */
+  requireLogin: boolean;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
   whishOnline: boolean;
   /** Visa / Mastercard on the website (also needs the gateway keys). */
@@ -222,25 +218,6 @@ export type StoreSettings = {
   ga4Id: string;
   /** Shipping tab text from the admin; empty = the default text. */
   shippingInfo?: Localized;
-};
-
-/**
- * Ways to pay and the checkout login. `ready` is false until the Phase 1 database
- * update is applied: the checkout then keeps its previous options.
- */
-export type PaymentSettings = {
-  ready: boolean;
-  /** Full payment by a Whish / OMT / Suyool transfer. */
-  transfer: boolean;
-  /** A deposit by transfer now, the rest in cash on delivery. */
-  deposit: boolean;
-  /** "Order on WhatsApp" (no order is created on the site). */
-  whatsapp: boolean;
-  /** Where the money goes, shown after she orders. */
-  transferNumber: string;
-  transferName: string;
-  /** Checkout needs a login (when Google sign-in is on). */
-  requireLogin: boolean;
 };
 
 export type PointsRules = {

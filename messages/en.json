@@ -406,17 +406,15 @@
       "title": "Create something personal",
       "text": "A name, an initial, a coin from home. Design it in a minute and see it before you buy.",
       "cta": "Start designing",
-      "payTitle": "Pay the way you like",
-      "payTransfer": "Whish / OMT / Suyool transfer",
-      "payDeposit": "{percent}% deposit, rest on delivery",
-      "payWhatsapp": "Order on WhatsApp"
+      "payTitle": "Your order goes straight to our WhatsApp",
+      "payWhatsapp": "We confirm every order on WhatsApp"
     },
     "trustBar": {
       "label": "Why shop with us",
       "freeShipping": "Free shipping",
       "freeShippingText": "On your first order and over $50",
       "securePayment": "Secure payment",
-      "securePaymentText": "Whish, OMT or Suyool transfer",
+      "securePaymentText": "We confirm every order on WhatsApp",
       "bestPrice": "Best price",
       "bestPriceText": "Fine jewelry, fair prices",
       "sales": "Sales all the time",
@@ -424,7 +422,7 @@
     },
     "photo": {
       "title": "Try your picture",
-      "subtitle": "See your photo inside a pendant before you order. It never leaves your phone.",
+      "subtitle": "See your photo engraved in a pendant before you order. It never leaves your phone until you send it to us.",
       "previewLabel": "Preview of your photo inside a pendant",
       "empty": "Add your photo",
       "choose": "Choose a photo",
@@ -435,8 +433,16 @@
       "heart": "Heart",
       "zoom": "Zoom",
       "hint": "Drag the photo to move it. Pinch or use the slider to zoom.",
-      "privacy": "Your photo stays on your phone until you order.",
-      "cta": "Order this photo pendant"
+      "privacy": "Your photo stays on your phone until you send it to us on WhatsApp.",
+      "cta": "Order on WhatsApp",
+      "pieceLabel": "Worn as",
+      "necklace": "Necklace",
+      "keychain": "Keychain",
+      "ringsLabel": "Rings",
+      "oneRing": "One ring",
+      "twoRings": "Two rings",
+      "message": "Hi LIVRE! I want a photo pendant:",
+      "sendPhoto": "I'm sending my photo in this chat."
     }
   },
   "cart": {
@@ -502,13 +508,6 @@
     "notesPlaceholder": "Anything we should know?",
     "helper": "Who helped you? (optional)",
     "helperNone": "No one / I don't know",
-    "payment": "Payment",
-    "cod": "Cash on Delivery",
-    "codHint": "Pay when your order arrives.",
-    "whish": "Whish",
-    "whishHint": "We'll send you the Whish details after confirming your order.",
-    "card": "Visa / Mastercard",
-    "cardHint": "Pay now on your bank's secure page. We never see your card details.",
     "summary": "Order summary",
     "placeOrder": "Place order · {total}",
     "placing": "Placing your order…",
@@ -526,11 +525,9 @@
       "unavailable": "We can't take orders right now. Please try again in a moment.",
       "failed": "Something went wrong. Please try again.",
       "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
-      "login_required": "Please sign in to place your order.",
-      "payment_invalid": "This payment option isn't available. Please choose another."
+      "login_required": "Please sign in to place your order."
     },
     "notYou": "Not you? Clear",
-    "google": "Continue with Google",
     "googleSignedIn": "You're signed in with Google. Your details will be saved with this order for next time, on any device.",
     "pointsHave": "You have {points} points = {value}",
     "pointsUse": "Use my points on this order",
@@ -541,41 +538,13 @@
       "confirm": "Confirm",
       "done": "Done"
     },
-    "weAccept": "We accept",
     "secure": "Secure checkout. Your information is protected.",
     "loginTitle": "Sign in to place your order",
-    "loginText": "It takes one tap with Google. Your details are saved for next time, and you can follow every order from your account. Your bag is kept.",
-    "transfer": "Pay by transfer",
-    "transferHint": "Send the full total by Whish, OMT or Suyool, then tap “I sent the transfer”. We confirm and start making your piece.",
-    "deposit": "{percent}% deposit, rest on delivery",
-    "depositHint": "Send {percent}% now by Whish, OMT or Suyool and pay the rest in cash when your order arrives.",
-    "dueNow": "Pay now",
-    "restOnDelivery": "Rest on delivery",
-    "methodTransfer": "Transfer (Whish / OMT / Suyool)",
-    "methodDeposit": "Deposit + cash on delivery",
-    "whatsappOrder": "Order on WhatsApp",
-    "whatsappIntro": "Hi LIVRE! I'd like to order:",
+    "loginText": "Sign in with Google or your email. Your details are saved for next time and you can follow every order from your account. Your bag is kept.",
+    "whatsappIntro": "Hi LIVRE! New order #{number}:",
     "whatsappTotal": "Total",
-    "whatsappWho": "Name, phone, address",
-    "whatsappOnly": "Online payment is off right now. Please order on WhatsApp.",
-    "verify": {
-      "title": "Verify your phone on WhatsApp.",
-      "reward": "You get {points} LIVRE Points ({value} off).",
-      "send": "Send me the code on WhatsApp",
-      "codeLabel": "The 6-digit code we sent you",
-      "check": "Verify",
-      "resend": "Send the code again",
-      "done": "Phone verified",
-      "errors": {
-        "not_available": "Phone verification isn't available right now. You can still place your order.",
-        "login_required": "Please sign in first.",
-        "phone_invalid": "Please check your phone number.",
-        "rate_limited": "Too many attempts. Please wait a few minutes.",
-        "send_failed": "We couldn't send the code. Please check the number and try again.",
-        "code_invalid": "This code isn't right. Please try again.",
-        "code_expired": "This code expired. Please send a new one."
-      }
-    }
+    "loginButton": "Sign up or log in",
+    "whatsappCustomer": "{name} · {phone} · {area} · {address}"
   },
   "pages": {
     "breadcrumbLabel": "Breadcrumb",
@@ -719,30 +688,7 @@
     "locked": "To see this order, track it with the phone number it was placed with.",
     "pointsToEarn": "You'll earn {points} LIVRE Points after your order is delivered.",
     "pointsEarned": "This order earned you {points} LIVRE Points.",
-    "payTitle": "Complete your payment",
-    "payAmount": "Send {amount} now",
-    "payHow": "By Whish, OMT or Suyool to:",
-    "payAccount": "Account name: {name}",
-    "payCopy": "Copy the number",
-    "payCopied": "Copied",
-    "payRest": "The rest, {amount}, is paid in cash on delivery.",
-    "payReceipt": "Add a screenshot of the receipt (optional)",
-    "payReceiptAdded": "Receipt added",
-    "payReceiptRemove": "Remove",
-    "paySent": "I sent the transfer",
-    "payReported": "Thank you! We received your message and will check the transfer and confirm your order shortly.",
-    "payConfirmed": "Payment confirmed. Thank you!",
-    "payAwaiting": "Awaiting payment",
-    "payNoNumber": "We will send you the transfer details on WhatsApp.",
-    "payErrors": {
-      "not_found": "We couldn't find this order in this browser.",
-      "rate_limited": "Too many attempts. Please wait a few minutes.",
-      "invalid_file": "Please use a picture (JPG, PNG or WebP) up to 5 MB.",
-      "unavailable": "Receipts can't be uploaded right now. You can still tap “I sent the transfer”.",
-      "failed": "Something went wrong. Please try again."
-    },
-    "methodTransfer": "Payment: transfer (Whish / OMT / Suyool)",
-    "methodDeposit": "Payment: deposit now, the rest on delivery"
+    "confirmWhatsapp": "We confirm your order on WhatsApp"
   },
   "orderStatus": {
     "pending": "New",
@@ -810,6 +756,17 @@
     "ruleRedeem": "{points} points = {value} off your next order.",
     "signInTitle": "Sign in to see your account",
     "signInText": "Your last order, your LIVRE Points and the tracking of your orders, in one place. Signing in takes one tap with Google.",
-    "trackWithPhone": "Track an order with its number and phone"
+    "trackWithPhone": "Track an order with its number and phone",
+    "signIn": "Sign up or log in"
+  },
+  "auth": {
+    "title": "Sign up or log in",
+    "text": "One tap with Google, or we send a link to your email. Then your bag and your orders are all in one place.",
+    "google": "Continue with Google",
+    "emailLabel": "Or your email",
+    "emailSend": "Send me a link",
+    "sent": "We sent a link to {email}. Open it on this phone to continue.",
+    "error": "Something went wrong. Please try again.",
+    "close": "Close"
   }
 }

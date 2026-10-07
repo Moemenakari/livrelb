@@ -70,12 +70,6 @@ export type CheckoutInput = {
   notes: string;
   coupon: string;
   helper: string;
-  /**
-   * "transfer": all of it by Whish / OMT / Suyool. "deposit": a deposit now, the rest on
-   * delivery. "card": online. "cod" / "whish": the previous options (until the Phase 1 database
-   * update is applied).
-   */
-  payment: "transfer" | "deposit" | "card" | "cod" | "whish";
   usePoints: boolean;
   /** Honeypot field: empty for people. */
   website?: string;
@@ -95,7 +89,6 @@ export type CheckoutError =
   | "cart_changed"
   | "unavailable"
   | "login_required"
-  | "payment_invalid"
   | "rate_limited"
   | "failed";
 
@@ -110,8 +103,6 @@ export type SavedCustomer = {
   google: boolean;
   /** The email Google shares (kept with her account). */
   email?: string;
-  /** Her phone is already verified on WhatsApp. */
-  phoneVerified?: boolean;
   name?: string;
   phone?: string;
   area?: string;

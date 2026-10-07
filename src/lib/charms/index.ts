@@ -31,8 +31,6 @@ export const allShapes: CharmShape[] = [...iconShapes, ...glyphs];
 
 export const groupOrder: CharmGroup[] = ["love", "sky", "nature", "animals", "symbols", "fun", "letters", "arabic", "numbers"];
 
-export const MAX_CHARMS = 12;
-export const LETTERS_MAX = 10;
 
 const bySlug = new Map(allShapes.map((s) => [s.slug, s]));
 export const findShape = (slug: string) => bySlug.get(slug);

@@ -37,7 +37,7 @@ const sectionInfo: Record<HomeSectionKey, { label: string; subtitle?: string; ct
   best_sellers: { label: "Best sellers", subtitle: "Line under the title", cta: "Button opens (default: Bestsellers page)" },
   steps: { label: "How it works (title and the 3 steps)" },
   new_arrivals: { label: "New arrivals", subtitle: "Line under the title", cta: "Button opens (default: New Arrivals page)" },
-  try_picture: { label: "Try your picture", subtitle: "Line under the title", cta: "Order button opens: the photo pendant product, e.g. /product/photo-pendant (default: Gifts page)" },
+  try_picture: { label: "Try your picture", subtitle: "Line under the title" },
   create: { label: "Create something personal", subtitle: "Text", cta: "Button opens (default: the name necklace)" },
 };
 

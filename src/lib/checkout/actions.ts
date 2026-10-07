@@ -9,9 +9,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
-import { forgetCustomer, googleLoginEnabled, rememberCustomer, verifiedCustomer } from "./customer";
-import { cardConfigured } from "@/lib/payments/card";
-import { grantPhoneVerification, verifiedPhoneOfBrowser } from "@/lib/otp/verified";
+import { forgetCustomer, rememberCustomer, verifiedCustomer } from "./customer";
 import { orderPoints } from "./points";
 import { orderTracking, type Tracking } from "./tracking";
 import type {
@@ -34,13 +32,6 @@ const dollars = (cents: number) => cents / 100;
 
 function admin() {
   return isSupabaseConfigured() ? createAdminClient() : null;
-}
-
-/** Card payment is on in the admin and the bank gateway keys are set. */
-async function cardAvailable(db: NonNullable<ReturnType<typeof admin>>): Promise<boolean> {
-  if (!cardConfigured()) return false;
-  const { data } = await db.from("site_settings").select("card_online_enabled").eq("id", 1).maybeSingle();
-  return Boolean(data?.card_online_enabled);
 }
 
 const str = (value: unknown, max: number): string =>
@@ -176,70 +167,6 @@ const dbErrors: Partial<Record<string, CheckoutError>> = {
   cart_invalid: "cart_invalid",
 };
 
-type PaymentSettings = {
-  ready: boolean;
-  transfer: boolean;
-  deposit: boolean;
-  requireLogin: boolean;
-  depositPercent: number;
-};
-
-/**
- * The payment options and login rule from Settings. `ready` is false until the Phase 1
- * database update is applied: the old options (cash on delivery, Whish) then stay.
- */
-async function paymentSettings(db: NonNullable<ReturnType<typeof admin>>): Promise<PaymentSettings> {
-  const { data, error } = await db
-    .from("site_settings")
-    .select("pay_transfer_enabled, pay_deposit_enabled, checkout_requires_login, deposit_percent, transfer_number")
-    .eq("id", 1)
-    .maybeSingle();
-  if (error || !data) return { ready: false, transfer: false, deposit: false, requireLogin: false, depositPercent: 50 };
-  return {
-    ready: true,
-    // A transfer with no number to send it to is not offered.
-    transfer: data.pay_transfer_enabled && data.transfer_number.trim() !== "",
-    deposit: data.pay_deposit_enabled && data.transfer_number.trim() !== "",
-    requireLogin: data.checkout_requires_login,
-    depositPercent: data.deposit_percent,
-  };
-}
-
-/**
- * What she must pay now, and her email. The whole total for a transfer, the deposit for a
- * deposit order, nothing for a card (the bank takes it). The order stays "pending"
- * (awaiting payment) until staff confirm it. Never blocks the order itself.
- */
-async function recordPayment(
-  db: NonNullable<ReturnType<typeof admin>>,
-  order: { order_id: string; customer_id: string },
-  method: "cod" | "whish" | "card",
-  depositPercent: number,
-  email: string | null,
-) {
-  // Twice: a failed write leaves an order she cannot pay or report (the order page then works
-  // it out from the total, and staff can still confirm it).
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      if (method !== "card") {
-        const { data } = await db.from("orders").select("total_cents").eq("id", order.order_id).maybeSingle();
-        const total = data?.total_cents ?? 0;
-        const due = method === "whish" ? total : Math.round((total * depositPercent) / 100);
-        const { error } = await db.from("orders").update({ deposit_cents: due }).eq("id", order.order_id);
-        if (error) throw error;
-      }
-      break;
-    } catch (error) {
-      console.error("recordPayment failed", attempt, (error as { code?: string })?.code ?? "");
-    }
-  }
-  try {
-    if (email) await db.from("customers").update({ email }).eq("id", order.customer_id);
-  } catch {
-    // The email is only for us to know her; the order does not depend on it.
-  }
-}
-
 /** Creates the order (place_order) and remembers it in this browser. */
 export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> {
   const db = admin();
@@ -264,31 +191,23 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
   const items = cleanItems(input.items);
   if (!items || items.length === 0) return { ok: false, error: "cart_invalid" };
-  // How she pays. After the Phase 1 database update: a transfer for all of it ("whish" in the
-  // database), or a deposit now and the rest on delivery ("cod" always carries a deposit).
-  const pay = await paymentSettings(db);
-  let payment: "cod" | "whish" | "card";
-  if (pay.ready) {
-    if (input.payment === "card" && (await cardAvailable(db))) payment = "card";
-    else if (input.payment === "transfer" && pay.transfer) payment = "whish";
-    else if (input.payment === "deposit" && pay.deposit) payment = "cod";
-    else return { ok: false, error: "payment_invalid" };
-  } else {
-    payment = input.payment === "whish" ? "whish" : input.payment === "card" && (await cardAvailable(db)) ? "card" : "cod";
-  }
   const helper = UUID.test(str(input.helper, 40)) ? str(input.helper, 40) : undefined;
   const requestId = UUID.test(str(input.requestId, 40)) ? str(input.requestId, 40) : crypto.randomUUID();
 
   const jar = await cookies();
   const ref = jar.get(REF_COOKIE)?.value;
   const { customerId, authUserId, authEmail } = await verifiedCustomer();
-  // Checkout needs an account (Google) when the owner asks for it and Google sign-in is on.
-  if (pay.ready && pay.requireLogin && !authUserId && (await googleLoginEnabled())) return { ok: false, error: "login_required" };
+  // Checkout needs an account (Google or email) unless the owner switched that off in Settings.
+  if (!authUserId) {
+    const { data: rule } = await db.from("site_settings").select("checkout_requires_login").eq("id", 1).maybeSingle();
+    if (rule?.checkout_requires_login ?? true) return { ok: false, error: "login_required" };
+  }
 
   const { data, error } = await db.rpc("place_order", {
     p_customer: { name, phone: str(input.phone, 30), area, address: building ? `${address}\n${building}` : address },
     p_items: items as unknown as Json,
-    p_payment_method: payment,
+    // Nothing is paid on the site: the team confirms every order on WhatsApp.
+    p_payment_method: "cod",
     p_coupon_code: str(input.coupon, 30) || undefined,
     p_helper_staff_id: helper,
     p_ref_code: ref && REF_CODE.test(ref) ? ref : undefined,
@@ -306,9 +225,8 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
 
   const order = data as { order_id: string; number: number; customer_id: string; trusted: boolean };
-  if (pay.ready) await recordPayment(db, order, payment, pay.depositPercent, authUserId && order.trusted ? authEmail : null);
-  // A phone she verified on WhatsApp before ordering: her account is marked and the points given (once).
-  if ((await verifiedPhoneOfBrowser()) === e164) await grantPhoneVerification(db, order.customer_id, e164);
+  // We keep her email (Google or email login), to know the real person.
+  if (authUserId && authEmail && order.trusted) await db.from("customers").update({ email: authEmail }).eq("id", order.customer_id);
   // Next time this browser's checkout is prefilled (only when the database
   // trusts it with this customer: see place_order).
   if (order.trusted) await rememberCustomer(order.customer_id);

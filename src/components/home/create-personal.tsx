@@ -1,4 +1,3 @@
-import { Percent, Smartphone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
@@ -19,13 +18,12 @@ function WhatsAppIcon() {
   );
 }
 
-// "Create something personal" + how she can pay (no plain cash on delivery:
-// transfer, or a deposit with the rest on delivery).
+// "Create something personal" + how it works: we confirm every order on WhatsApp.
 export async function CreatePersonal({ catalog, locale }: { catalog: Catalog; locale: Locale }) {
   const t = await getTranslations("home.create");
   const section = homeSection(catalog, "create");
   if (!section.visible) return null;
-  const { depositPercent, whatsappNumber } = catalog.settings;
+  const { whatsappNumber } = catalog.settings;
 
   return (
     <section data-coin-cover className={`${homeCover} bg-background`}>
@@ -40,14 +38,6 @@ export async function CreatePersonal({ catalog, locale }: { catalog: Catalog; lo
             <div className="mt-2 flex flex-col items-center gap-2 lg:items-start">
               <p className="text-sm text-muted">{t("payTitle")}</p>
               <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
-                <span className={chipClass}>
-                  <Smartphone className="size-4 text-cedar" strokeWidth={1.5} aria-hidden />
-                  {t("payTransfer")}
-                </span>
-                <span className={chipClass}>
-                  <Percent className="size-4 text-cedar" strokeWidth={1.5} aria-hidden />
-                  {t("payDeposit", { percent: depositPercent })}
-                </span>
                 {whatsappNumber && (
                   <span className={chipClass}>
                     <WhatsAppIcon />

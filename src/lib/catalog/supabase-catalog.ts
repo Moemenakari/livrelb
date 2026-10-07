@@ -307,20 +307,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         redeemPoints: s.points_redeem_points,
         redeemValue: dollars(s.points_redeem_cents),
       },
-      // Before the homepage-controls database update there is no deposit_percent.
-      depositPercent: s.deposit_percent ?? 50,
       charmsNavSort: s.charms_nav_sort ?? defaultNavSort("charms"),
-      phoneVerifyPoints: s.phone_verify_points ?? 10,
-      // Before the Phase 1 database update these columns don't exist: the checkout keeps its old options.
-      payments: {
-        ready: s.pay_transfer_enabled !== undefined,
-        transfer: (s.pay_transfer_enabled ?? true) && (s.transfer_number ?? "").trim() !== "",
-        deposit: (s.pay_deposit_enabled ?? true) && (s.transfer_number ?? "").trim() !== "",
-        whatsapp: s.pay_whatsapp_enabled ?? true,
-        transferNumber: s.transfer_number ?? "",
-        transferName: s.transfer_name ?? "",
-        requireLogin: s.checkout_requires_login ?? false,
-      },
+      requireLogin: s.checkout_requires_login ?? true,
       whishOnline: s.whish_online_enabled,
       cardOnline: s.card_online_enabled,
       metaPixelId: s.meta_pixel_id,

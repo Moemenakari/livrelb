@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
-import { Banknote, CreditCard, Loader2, Lock, MessageCircle, Percent, Smartphone } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { whatsappUrl } from "@/config/site";
-import type { PaymentSettings } from "@/lib/catalog/types";
 import { useWhatsappNumber } from "@/lib/use-whatsapp";
 import { clearCart, toInput, useCart, useCoupon } from "@/lib/cart";
 import { clearSavedCustomer, placeOrder } from "@/lib/checkout/actions";
@@ -16,10 +15,10 @@ import { CartLine } from "@/components/cart/cart-line";
 import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
 import { TrackOnMount } from "@/components/analytics/analytics";
-import { primaryButton, secondaryButton } from "@/components/ui/styles";
-import { CheckoutSteps, PaymentBadges } from "./checkout-steps";
-import { GoogleButton } from "./google-button";
-import { PhoneVerify } from "./phone-verify";
+import { primaryButton } from "@/components/ui/styles";
+import { materials } from "@/lib/catalog/materials";
+import { CheckoutSteps } from "./checkout-steps";
+import { LoginButton } from "@/components/auth/login-dialog";
 
 type Props = {
   areas: AreaOption[];
@@ -27,23 +26,11 @@ type Props = {
   freeShippingOver: number;
   /** The customer this browser is verified as: prefills the form. */
   saved: SavedCustomer | null;
-  /** Show "Continue with Google" (the provider is switched on in Supabase). */
-  googleEnabled: boolean;
-  /** Visa / Mastercard is on and the bank gateway is set up. */
-  cardEnabled: boolean;
-  /** How she can pay (Settings); `ready` false = the previous options. */
-  payments: PaymentSettings;
-  /** Percent of the total sent now on a deposit order. */
-  depositPercent: number;
-  /** Checkout needs a login first (Google sign-in is on and the owner asked for it). */
+  /** Checkout needs a login first (Settings). */
   loginRequired: boolean;
-  /** The shop's WhatsApp number (empty hides the WhatsApp button). */
+  /** The shop's WhatsApp number: the order goes there once it is saved. */
   whatsapp: string;
-  /** Phone verification on WhatsApp: on when its keys are set; the phone this browser verified. */
-  phoneVerification: { enabled: boolean; verifiedPhone: string | null; points: number; pointValue: number };
 };
-
-type Method = "transfer" | "deposit" | "card" | "cod" | "whish";
 
 type Field = "name" | "phone" | "area" | "address";
 
@@ -62,7 +49,7 @@ const legend = "mb-1 font-display text-2xl";
 // Checkout (brief §8.4): one page, no account and no email. Prices, the
 // discount and delivery come from the server (quote_order) and are
 // recalculated again when the order is placed (place_order).
-export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEnabled, cardEnabled, payments, depositPercent, loginRequired, whatsapp, phoneVerification }: Props) {
+export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginRequired, whatsapp }: Props) {
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
   const router = useRouter();
@@ -84,17 +71,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
   const [helper, setHelper] = useState("");
   // Honeypot: hidden from people, bots fill it; the server drops those orders.
   const [website, setWebsite] = useState("");
-  // Ways to pay: a transfer (all of it) or a deposit now and the rest on delivery. Plain cash on
-  // delivery only exists until the Phase 1 database update is applied.
-  const methods: Method[] = payments.ready
-    ? [...(cardEnabled ? (["card"] as const) : []), ...(payments.transfer ? (["transfer"] as const) : []), ...(payments.deposit ? (["deposit"] as const) : [])]
-    : cardEnabled
-      ? ["card", "cod", "whish"]
-      : ["cod", "whish"];
-  const [paymentChoice, setPayment] = useState<Method | null>(null);
-  const payment: Method = paymentChoice && methods.includes(paymentChoice) ? paymentChoice : (methods[0] ?? "transfer");
   const number = useWhatsappNumber(whatsapp);
-  const [verifiedNow, setVerifiedNow] = useState<string | null>(null);
   const [error, setError] = useState<CheckoutError | null>(null);
   const [placed, setPlaced] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -104,8 +81,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
   const formRef = useRef<HTMLFormElement>(null);
 
   const e164 = normalizePhone(phone);
-  // This phone was verified on WhatsApp (now, earlier in this browser, or on her account).
-  const phoneVerified = Boolean(e164 && (verifiedNow === e164 || phoneVerification.verifiedPhone === e164 || (saved?.phoneVerified && known?.phone === e164)));
   const { quote, fresh, failed } = useQuote({
     items: items.map(toInput),
     coupon,
@@ -113,6 +88,8 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
     area: area || undefined,
     usePoints,
   });
+
+  const total = quote?.total ?? items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
 
   const forget = () =>
     startClearing(async () => {
@@ -128,6 +105,24 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
 
   const errorField = error ? fieldFor[error] : undefined;
   const border = (field: Field) => (errorField === field ? "border-red-700" : "border-line");
+
+  const orderMessage = (orderNumber: number) => {
+    const who = locale as "en" | "ar";
+    const line = (i: (typeof items)[number]) => {
+      const what = i.charmNames?.length ? i.charmNames.map((n) => n[who]).join(", ") : i.text;
+      const size = i.size ? ` ${i.size} cm` : "";
+      return `• ${i.name[who]}${what ? ` (${what})` : ""}${size} ${materials[i.material]?.name[who] ?? ""} ×${i.qty}`.replace(/\s+/g, " ");
+    };
+    return [
+      t("whatsappIntro", { number: orderNumber }),
+      ...items.map(line),
+      `${t("whatsappTotal")}: ${formatMoney(total)}`,
+      t("whatsappCustomer", { name, phone: e164 ?? phone, area: areas.find((a) => a.slug === area)?.name ?? area, address: building ? `${address}, ${building}` : address }),
+      notes.trim() && `${t("notes")}: ${notes.trim()}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  };
 
   const submit = () => {
     if (submitting.current || pending) return;
@@ -159,15 +154,17 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
         notes,
         coupon,
         helper,
-        payment,
         usePoints,
         website,
         items: items.map(toInput),
       });
       if (result.ok) {
         setPlaced(true);
-        router.replace(`/order/${result.number}`);
         clearCart();
+        // The order is saved: its number goes to the shop's WhatsApp (or the employee's) with
+        // everything the team needs. Without a WhatsApp number she sees her order page instead.
+        if (number) window.location.assign(whatsappUrl(number, orderMessage(result.number)));
+        else router.replace(`/order/${result.number}`);
         return;
       }
       submitting.current = false;
@@ -203,18 +200,11 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
         <Lock className="size-8 text-gold-dark" strokeWidth={1.25} aria-hidden />
         <h2 className="text-3xl">{t("loginTitle")}</h2>
         <p className="text-muted">{t("loginText")}</p>
-        {googleEnabled && <GoogleButton locale={locale} />}
-        <Link href="/cart" className="text-sm text-muted underline underline-offset-4 hover:text-foreground">
-          {tCart("viewCart")}
-        </Link>
+        <LoginButton label={t("loginButton")} className={`${primaryButton} w-full py-4`} />
       </div>
     );
   }
 
-  const total = quote?.total ?? items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-  // What she sends now and what she pays at the door (the server works the same out in cents).
-  const dueNow =
-    payment === "transfer" ? total : payment === "deposit" ? Math.round(total * depositPercent) / 100 : null;
   const hasLineErrors = fresh && quote?.lines.some((l) => l.error);
   const ready = Boolean(name.trim() && e164 && area && address.trim());
 
@@ -259,9 +249,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
           </p>
         ) : saved?.google ? (
           <p className="rounded-lg bg-surface px-4 py-3 text-sm text-muted">{t("googleSignedIn")}</p>
-        ) : (
-          googleEnabled && <GoogleButton locale={locale} />
-        )}
+        ) : null}
 
         <fieldset className={section}>
           <legend className={legend}>{t("details")}</legend>
@@ -307,16 +295,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
               />
             </div>
           </Labeled>
-          {phoneVerification.enabled && e164 && (
-            <PhoneVerify
-              phone={e164}
-              locale={locale}
-              verified={phoneVerified}
-              points={phoneVerification.points}
-              pointValue={phoneVerification.pointValue}
-              onVerified={setVerifiedNow}
-            />
-          )}
         </fieldset>
 
         <fieldset className={section}>
@@ -383,43 +361,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
           </Labeled>
         </fieldset>
 
-        <fieldset className={section}>
-          <legend className={legend}>{t("payment")}</legend>
-          <div className="flex flex-col gap-2">
-            {methods.length === 0 && <p className="rounded-lg bg-surface px-4 py-3 text-sm text-muted">{t("whatsappOnly")}</p>}
-            {methods.map((method) => (
-              <label
-                key={method}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3.5 transition-colors ${
-                  payment === method ? "border-gold bg-gold/5 ring-1 ring-gold" : "border-line hover:border-muted"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value={method}
-                  checked={payment === method}
-                  onChange={() => setPayment(method)}
-                  className="mt-1 size-4 accent-[var(--gold)]"
-                />
-                {method === "cod" ? (
-                  <Banknote className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-                ) : method === "deposit" ? (
-                  <Percent className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-                ) : method === "card" ? (
-                  <CreditCard className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-                ) : (
-                  <Smartphone className="mt-0.5 size-5 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-                )}
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{method === "deposit" ? t("deposit", { percent: depositPercent }) : t(method)}</span>
-                  <span className="text-xs text-muted">{method === "deposit" ? t("depositHint", { percent: depositPercent }) : t(`${method}Hint`)}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
         {helpers.length > 0 && (
           <fieldset className={section}>
             <Labeled label={t("helper")} id="co-helper">
@@ -469,21 +410,6 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
           points={{ on: usePoints, onChange: setUsePoints }}
         />
 
-        {dueNow !== null && (
-          <dl className="flex flex-col gap-1.5 rounded-lg border border-line bg-surface px-4 py-3 text-sm">
-            <div className="flex items-center justify-between gap-4 font-medium">
-              <dt>{t("dueNow")}</dt>
-              <dd className="text-sale lining-nums">{formatMoney(dueNow)}</dd>
-            </div>
-            {payment === "deposit" && (
-              <div className="flex items-center justify-between gap-4 text-muted">
-                <dt>{t("restOnDelivery")}</dt>
-                <dd className="lining-nums">{formatMoney(Math.max(0, total - dueNow))}</dd>
-              </div>
-            )}
-          </dl>
-        )}
-
         {error && !errorField && (
           <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
             {t(`errors.${error}`)}
@@ -491,7 +417,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
         )}
         <button
           type="submit"
-          disabled={pending || Boolean(hasLineErrors) || methods.length === 0}
+          disabled={pending || Boolean(hasLineErrors)}
           className={`${primaryButton} w-full py-4 text-base disabled:opacity-60`}
         >
           {pending ? (
@@ -506,29 +432,9 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, googleEn
             </>
           )}
         </button>
-        {number && (!payments.ready || payments.whatsapp) && (
-          <a
-            href={whatsappUrl(
-              number,
-              [
-                t("whatsappIntro"),
-                ...items.map((i) => `• ${i.charmNames?.length ? i.charmNames.map((n) => n[locale as "en" | "ar"]).join(", ") : (i.text ?? i.name[locale as "en" | "ar"])} (${i.name[locale as "en" | "ar"]}) ×${i.qty}`),
-                `${t("whatsappTotal")}: ${formatMoney(total)}`,
-                [name, phone, address].filter(Boolean).join(" · ") || t("whatsappWho"),
-              ].join("\n"),
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${secondaryButton} w-full`}
-          >
-            <MessageCircle className="size-4.5" strokeWidth={1.5} aria-hidden />
-            {t("whatsappOrder")}
-          </a>
-        )}
         <p className="flex items-center justify-center gap-2 text-center text-xs text-muted">
           {"🔒"} {t("secure")}
         </p>
-        <PaymentBadges />
       </div>
     </form>
     </>

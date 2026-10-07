@@ -23,8 +23,6 @@ export type AccountOrder = {
   items: { name: string; text: string | null; qty: number }[];
   points: { earned: number; toEarn: number };
   tracking: Tracking;
-  /** A transfer or deposit still to be confirmed by the team; null when nothing is due. */
-  payment: { due: number; reported: boolean; confirmed: boolean } | null;
 };
 
 export type Account = {
@@ -38,11 +36,13 @@ export type Account = {
 /** null = nobody is signed in on this browser. */
 export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> {
   if (!isSupabaseConfigured()) return null;
-  const { customerId } = await verifiedCustomer();
+  const { customerId, authUserId, authName } = await verifiedCustomer();
   const db = createAdminClient();
-  if (!customerId || !db) return null;
-
   const catalog = await getCatalog();
+  if (!customerId || !db) {
+    return authUserId ? { name: authName ?? "", points: { balance: 0, value: 0 }, rules: catalog.settings.points, orders: [] } : null;
+  }
+
   const [{ data: profile }, { data: s }, { data: orders }] = await Promise.all([
     db.rpc("customer_profile", { p_customer_id: customerId }),
     db.from("site_settings").select("points_redeem_points, points_redeem_cents").eq("id", 1).maybeSingle(),
@@ -60,17 +60,9 @@ export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> 
   const balance = Math.max(0, me?.points ?? 0);
   const value = s ? Math.floor(balance / s.points_redeem_points) * dollars(s.points_redeem_cents) : 0;
 
-  // What is still to pay by transfer (after the Phase 1 database update; before it, nothing).
-  const ids = (orders ?? []).map((o) => o.id);
-  const { data: pay, error: payError } = ids.length
-    ? await db.from("orders").select("id, deposit_cents, payment_reported_at, payment_confirmed_at").in("id", ids)
-    : { data: null, error: null };
-  const payById = new Map((payError ? [] : (pay ?? [])).map((p) => [p.id, p]));
-
   const list = await Promise.all(
     (orders ?? []).map(async (o): Promise<AccountOrder> => {
       const [points, tracking] = await Promise.all([orderPoints(db, o), orderTracking(db, o, locale, catalog.settings)]);
-      const p = payById.get(o.id);
       return {
         number: o.number,
         status: o.status,
@@ -83,10 +75,6 @@ export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> 
         })),
         points,
         tracking,
-        payment:
-          p && p.deposit_cents > 0 && o.status !== "cancelled"
-            ? { due: dollars(p.deposit_cents), reported: Boolean(p.payment_reported_at), confirmed: Boolean(p.payment_confirmed_at) }
-            : null,
       };
     }),
   );

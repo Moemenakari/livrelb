@@ -5,6 +5,7 @@ import { MessageCircle, Search, ShoppingBag, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
+import { ensureLogin } from "@/components/auth/login-dialog";
 import { allShapes, findShape, groupOrder, type CharmGroup, type CharmShape } from "@/lib/charms";
 import type { CharmFamily, StockCharm } from "@/lib/charms/data";
 import type { Localized, MetalTone, ProductArt } from "@/lib/catalog/types";
@@ -111,8 +112,9 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
   const add = (key: string) => setPicked((p) => (p.length >= max ? p : [...p, key]));
   const removeAt = (i: number) => setPicked((p) => p.filter((_, j) => j !== i));
 
-  const toBag = () => {
+  const toBag = async () => {
     if (!design || entries.length === 0) return;
+    if (!(await ensureLogin())) return;
     addToCart({
       slug: design.slug,
       name: design.name,

@@ -1,11 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Google sends the customer back here: swap the code for a session
-// (cookies), then back to the checkout, now prefilled from her account.
+// Google (or the link sent to her email) brings the customer back here: swap the code
+// for a session (cookies), then back to the page she was on (cookie livre_next).
 export async function GET(request: NextRequest, { params }: RouteContext<"/[locale]/auth/callback">) {
   const { locale } = await params;
   const code = request.nextUrl.searchParams.get("code");
   if (code) await (await createClient()).auth.exchangeCodeForSession(code);
-  return NextResponse.redirect(new URL(`/${locale === "ar" ? "ar" : "en"}/checkout`, request.url));
+  const next = request.cookies.get("livre_next")?.value;
+  // Only a page of this site.
+  const back = next && /^\/(en|ar)(\/[A-Za-z0-9\-_/%.?=&]*)?$/.test(next) ? next : `/${locale === "ar" ? "ar" : "en"}/checkout`;
+  const response = NextResponse.redirect(new URL(back, request.url));
+  response.cookies.delete("livre_next");
+  return response;
 }

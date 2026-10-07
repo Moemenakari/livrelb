@@ -81,35 +81,15 @@ Agreed order: Name Necklaces, Charms, Necklaces, Lira Collection, 500 & 250 Lira
 
 The product page offers **Name, Letter, Number, Zodiac sign** (letter pieces offer the last three). Prices per metal are in the product editor. The category pages of name categories show a piece **once for each font** it allows (turn fonts off in the product to hide them).
 
-## Payment and checkout / الدفع
+## Login and orders on WhatsApp / الدخول والطلبات
 
-Settings → **Payment at checkout** (needs the Phase 1 database update):
-
-- **Full payment by transfer** (Whish / OMT / Suyool), **Deposit now + rest on delivery** (percent in the same card, 50 by default), **Order on WhatsApp** button. Plain cash on delivery is gone.
-- **Send the money to:** your number (and the name on the account): shown to the customer after she orders.
-- **Checkout needs a login:** she signs in with Google first (only works when Google sign-in is on in Supabase).
+- **Login:** before she adds a piece to the bag, goes to checkout or places the order, she signs up / logs in with **Google or her email** (a link is sent to her email). We keep her email. Turn this off in Settings → **Checkout** (“Checkout needs an account”).
+- **Place order:** the order is saved (it gets its number, you see it in **Orders**) and WhatsApp opens at once with the order written for you (pieces, total, name, phone, area, address) to **your WhatsApp number** (Settings → Contacts), or to the **employee's own number** when she came by that employee's link. Nothing is paid on the site: you confirm and arrange payment in the chat.
 - Delivery fees: Admin → **Delivery & times** (Tripoli $2 and the rest of Lebanon $5 by default; free delivery rules unchanged).
 
-After a transfer order: the order is **New** (awaiting payment). She taps “I sent the transfer” (and may add a receipt picture). In **Orders → the order → Payment** you see the receipt, check the money in Whish/OMT/Suyool, then press **Confirm the payment**: the order becomes **Confirmed**.
+## Try your picture / جرّبي صورتك
 
-The WhatsApp buttons write to your number, or to the **employee's own number** when the visitor came by that employee's link.
+Her photo is turned into a black-and-white **engraving** inside a round, square or heart pendant, on a necklace (one ring or two) or a keychain. It all happens in her browser; the **Order on WhatsApp** button writes the choices to you, and she sends the photo in the chat.
+## Not built (on purpose)
 
-## Phone verification on WhatsApp / تأكيد الهاتف على واتساب
-
-At checkout, after she writes her phone, she can verify it: we send a 6-digit code to her WhatsApp, she types it, and the phone is remembered as hers (never asked again). She gets **LIVRE Points once** (Settings → **Phone verification**, default 10 = $1 off; needs `20261007130000_phone_verification_points.sql`). It never blocks an order: her Google account is already a proof.
-
-It uses Meta's **WhatsApp Cloud API** (about $0.011 per code for Lebanon, no monthly fee). It stays hidden until these 3 values are set on the server (Cloudflare → the Worker → Settings → Variables; locally in `.env.local`):
-
-1. developers.facebook.com → create an app (type Business) → add the **WhatsApp** product.
-2. In **WhatsApp Manager**: add the sending number and create an **Authentication** template named `livre_verification_code`, in **English (en)** and in **Arabic (ar)**. Wait for Meta to approve it.
-3. **Business settings → System users**: make a permanent token with the permission `whatsapp_business_messaging`.
-
-```
-WHATSAPP_TOKEN=<the permanent token>
-WHATSAPP_PHONE_NUMBER_ID=<the sending number's id>
-WHATSAPP_OTP_TEMPLATE=livre_verification_code
-```
-
-## What is not built yet / لم يُبنَ بعد
-
-- Uploading the customer's photo with the order for the **photo pendant** (the preview on the home page works; the order button opens the product you set).
+- Payment on the site (transfer / deposit / card) and phone verification by WhatsApp code: removed to keep the shop light; orders are confirmed on WhatsApp.

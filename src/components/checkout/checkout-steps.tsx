@@ -1,4 +1,4 @@
-import { Banknote, Check, Smartphone } from "lucide-react";
+import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const steps = ["bag", "details", "confirm", "done"] as const;
@@ -37,23 +37,5 @@ export function CheckoutSteps({ current }: { current: CheckoutStep }) {
         );
       })}
     </ol>
-  );
-}
-
-export function PaymentBadges() {
-  const t = useTranslations("checkout");
-  const tPay = useTranslations("payment");
-  return (
-    <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
-      <span>{t("weAccept")}</span>
-      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-background px-2 py-1 text-foreground">
-        <Banknote className="size-3.5" strokeWidth={1.5} aria-hidden />
-        {tPay("cod")}
-      </span>
-      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-background px-2 py-1 text-foreground">
-        <Smartphone className="size-3.5" strokeWidth={1.5} aria-hidden />
-        {tPay("whish")}
-      </span>
-    </p>
   );
 }

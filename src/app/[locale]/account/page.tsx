@@ -4,10 +4,9 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { loadAccount } from "@/lib/checkout/account";
-import { googleLoginEnabled } from "@/lib/checkout/customer";
 import { AccountTabs, type AccountTab } from "@/components/account/account-tabs";
-import { GoogleButton } from "@/components/checkout/google-button";
-import { secondaryButton } from "@/components/ui/styles";
+import { LoginButton } from "@/components/auth/login-dialog";
+import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/account">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -25,7 +24,7 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
   const initial: AccountTab = tab === "points" || tab === "track" ? tab : "last";
   const openOrder = typeof order === "string" && /^\d{1,12}$/.test(order) ? Number(order) : null;
 
-  const [account, googleEnabled] = await Promise.all([loadAccount(locale), googleLoginEnabled()]);
+  const account = await loadAccount(locale);
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 pt-8 pb-20 lg:pt-12">
@@ -39,7 +38,7 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
           <UserRound className="size-8 text-gold-dark" strokeWidth={1.25} aria-hidden />
           <h2 className="text-2xl">{t("signInTitle")}</h2>
           <p className="text-muted">{t("signInText")}</p>
-          {googleEnabled && <GoogleButton locale={locale} />}
+          <LoginButton label={t("signIn")} className={`${primaryButton} w-full py-4`} />
           <Link href="/track" className={`${secondaryButton} w-full`}>
             {t("trackWithPhone")}
           </Link>

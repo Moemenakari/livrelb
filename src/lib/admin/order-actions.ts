@@ -28,33 +28,6 @@ export async function setOrderStatus(orderId: string, status: AdminOrderStatus):
   });
 }
 
-/**
- * Confirms the transfer or deposit of an order (after the money is seen in Whish, OMT or
- * Suyool): the payment is stamped with who confirmed it, and a new order becomes
- * Confirmed (which gives the points and tells the customer, like any status change).
- */
-export async function confirmPayment(orderId: string): Promise<ActionResult> {
-  return run(async () => {
-    const { db, staff } = await authorize("orders.edit");
-    const id = uuid(orderId);
-    const { data: order } = await db.from("orders").select("status, deposit_cents, payment_confirmed_at").eq("id", id).maybeSingle();
-    if (!order) throw new AdminError("This order doesn't exist anymore.");
-    if (order.status === "cancelled") throw new AdminError("This order is cancelled.");
-    if (order.deposit_cents <= 0) throw new AdminError("Nothing is due on this order.");
-    if (order.payment_confirmed_at) return;
-    const { error } = await db
-      .from("orders")
-      .update({
-        payment_confirmed_at: new Date().toISOString(),
-        payment_confirmed_by: staff.id,
-        ...(order.status === "pending" ? { status: "confirmed" as const } : {}),
-      })
-      .eq("id", id);
-    if (error) throw error;
-    refresh();
-  });
-}
-
 const adjustmentTypes = ["gift", "discount_percent", "free_delivery", "extra_delivery", "other"] as const;
 export type AdjustmentType = (typeof adjustmentTypes)[number];
 

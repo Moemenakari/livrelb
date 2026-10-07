@@ -5,6 +5,7 @@ import { MessageCircle, ShoppingBag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
+import { ensureLogin } from "@/components/auth/login-dialog";
 import { track } from "@/lib/analytics/client";
 import { defaultFontFor, fonts as fontInfo, textScript } from "@/lib/catalog/materials";
 import { NUMBER_MAX, typeOfText, typesFor, zodiacSigns, type PersonalizationType } from "@/lib/catalog/personalization";
@@ -158,12 +159,14 @@ export function ProductView({ product, children }: { product: ProductViewData; c
     galleryRef.current?.showPreview();
   };
 
-  const onAdd = () => {
+  const onAdd = async () => {
     if (p && !text.trim()) {
       setMissingName(true);
       inputRef.current?.focus();
       return;
     }
+    // An account first (Google or email), then the piece goes to the bag.
+    if (!(await ensureLogin())) return;
     track("AddToCart", { id: product.slug, name: product.name, value: unitPrice, quantity: 1 });
     // Opens the cart drawer.
     addToCart({

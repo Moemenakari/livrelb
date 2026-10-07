@@ -47,22 +47,8 @@ export default async function SettingsPage() {
           whishOnline: s.whish_online_enabled,
           cardOnline: s.card_online_enabled,
           charmPrice: d(s.charm_price_cents),
-          depositPercent: String(s.deposit_percent),
-          ...("phone_verify_points" in s ? { phoneVerifyPoints: String(s.phone_verify_points) } : {}),
-          // Only after the Phase 1 database update.
-          ...("pay_transfer_enabled" in s
-            ? {
-                charmMax: String(s.charm_max),
-                payments: {
-                  transfer: s.pay_transfer_enabled,
-                  deposit: s.pay_deposit_enabled,
-                  whatsapp: s.pay_whatsapp_enabled,
-                  transferNumber: s.transfer_number,
-                  transferName: s.transfer_name,
-                  requireLogin: s.checkout_requires_login,
-                },
-              }
-            : {}),
+          requireLogin: s.checkout_requires_login,
+          charmMax: String(s.charm_max),
           metaPixelId: s.meta_pixel_id,
           ga4Id: s.ga4_id,
         }}

@@ -12,6 +12,7 @@ import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
+import { LoginDialog } from "@/components/auth/login-dialog";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { PromoBar } from "@/components/layout/promo-bar";
@@ -91,6 +92,7 @@ export default async function LocaleLayout({
           <WheelCoin />
           <WhatsAppFloat />
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
+          <LoginDialog />
           <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
           <PwaRegister />
           <PageViews />

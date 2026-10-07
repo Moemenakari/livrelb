@@ -96,10 +96,7 @@ export async function savedCustomer(): Promise<SavedCustomer | null> {
   const db = createAdminClient();
   // Signed in with Google but no order yet: her Google name starts the form.
   if (!customerId || !db) return authUserId ? { google: true, name: authName ?? undefined, email: authEmail ?? undefined } : null;
-  const [{ data }, { data: verified }] = await Promise.all([
-    db.rpc("customer_profile", { p_customer_id: customerId }),
-    db.from("customers").select("phone_verified_at").eq("id", customerId).maybeSingle(),
-  ]);
+  const { data } = await db.rpc("customer_profile", { p_customer_id: customerId });
   if (!data) return null;
   const c = data as { name: string; phone: string; area: string | null; address: string | null; points: number };
   // The checkout saves "address\nbuilding / floor".
@@ -107,7 +104,6 @@ export async function savedCustomer(): Promise<SavedCustomer | null> {
   return {
     google: Boolean(authUserId),
     email: authEmail ?? undefined,
-    phoneVerified: Boolean(verified?.phone_verified_at),
     name: c.name,
     phone: c.phone,
     area: c.area ?? "",

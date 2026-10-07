@@ -110,7 +110,7 @@ Rules:
 ## 6. Customer accounts
 
 - **Updated (Phase 1):** checkout needs an account: **"Continue with Google"**, and we **keep her email** (customers.email) to know the real person. This replaces the old rule "never ask for email".
-- Then she verifies her **phone** by WhatsApp OTP (the provider is waiting for the owner's OK: WhatsApp Cloud API with an authentication template). Until it is built, Google is the proof; at least one of (verified email, verified phone) is needed to order, the phone is preferred.
+- Phone verification by WhatsApp OTP is **postponed** (it needs a Meta WhatsApp Cloud API setup); orders are confirmed with the customer on WhatsApp.
 - Phone number is **required** on every order.
 - Her details (name, phone, area, address) are saved on the account and prefill the checkout.
 - **First order = free delivery** (checked by phone number).

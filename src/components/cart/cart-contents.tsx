@@ -3,6 +3,7 @@
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { blockIfSignedOut } from "@/components/auth/login-dialog";
 import { toInput, useCart, useCoupon } from "@/lib/cart";
 import { primaryButton } from "@/components/ui/styles";
 import { CartLine } from "./cart-line";
@@ -63,6 +64,7 @@ export function CartContents({ freeShippingOver, variant, onNavigate }: Props) {
       />
       <Link
         href="/checkout"
+        onClickCapture={blockIfSignedOut}
         onClick={(e) => {
           if (hasErrors) e.preventDefault();
           else onNavigate?.();
