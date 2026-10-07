@@ -70,11 +70,11 @@ export const categories: Category[] = [
     art: { kind: "coin", variant: "necklace" },
   },
   {
-    slug: "lira-1500-250",
-    name: { en: "1500 & 250 Lira Collection", ar: "مجموعة ليرة ١٥٠٠ و٢٥٠" },
+    slug: "lira-500-250",
+    name: { en: "500 & 250 Lira Collection", ar: "مجموعة ليرة ٥٠٠ و٢٥٠" },
     description: {
-      en: "The other Lebanese coins we grew up with: the 1500 and the golden 250, made into pieces you can wear every day.",
-      ar: "الليرات اللبنانية الثانية يلي كبرنا معها: ١٥٠٠ والـ٢٥٠ الذهبية، بقطع تلبسينها كل يوم.",
+      en: "The other Lebanese coins we grew up with: the 500 and the golden 250, made into pieces you can wear every day.",
+      ar: "الليرات اللبنانية الثانية يلي كبرنا معها: ٥٠٠ والـ٢٥٠ الذهبية، بقطع تلبسينها كل يوم.",
     },
     art: { kind: "coin", variant: "necklace", coin: 250 },
   },
@@ -113,7 +113,7 @@ export const categories: Category[] = [
 ];
 
 // "Shop by style" tiles of the homepage, in order (the database has show_on_home / home_sort).
-export const defaultHomeTiles = ["name-necklaces", "lira-collection", "lira-1500-250", "bracelets", "rings", "earrings", "gifts", "mens-jewelry"];
+export const defaultHomeTiles = ["name-necklaces", "lira-collection", "lira-500-250", "bracelets", "rings", "earrings", "gifts", "mens-jewelry"];
 for (const category of categories) {
   const position = defaultHomeTiles.indexOf(category.slug);
   if (position >= 0) Object.assign(category, { showOnHome: true, homeSort: position });

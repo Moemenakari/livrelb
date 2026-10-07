@@ -10,7 +10,7 @@
 -- 5. site_settings.deposit_percent: the part of a "cash on delivery" order
 --    paid now by transfer (section 6 of the storefront work); the homepage
 --    already mentions it.
--- 6. The new "1500 & 250 Lira Collection" category.
+-- 6. The new "500 & 250 Lira Collection" category.
 
 -- 1. Category tiles ---------------------------------------------------------
 
@@ -99,11 +99,11 @@ alter table public.site_settings
 insert into public.categories
   (slug, name_en, name_ar, description_en, description_ar, styles, art, sort_order)
 values (
-  'lira-1500-250',
-  '1500 & 250 Lira Collection',
-  'مجموعة ليرة ١٥٠٠ و٢٥٠',
-  'The other Lebanese coins we grew up with: the 1500 and the golden 250, made into pieces you can wear every day.',
-  'الليرات اللبنانية الثانية يلي كبرنا معها: ١٥٠٠ والـ٢٥٠ الذهبية، بقطع تلبسينها كل يوم.',
+  'lira-500-250',
+  '500 & 250 Lira Collection',
+  'مجموعة ليرة ٥٠٠ و٢٥٠',
+  'The other Lebanese coins we grew up with: the 500 and the golden 250, made into pieces you can wear every day.',
+  'الليرات اللبنانية الثانية يلي كبرنا معها: ٥٠٠ والـ٢٥٠ الذهبية، بقطع تلبسينها كل يوم.',
   '{}'::text[],
   '{"kind":"coin","variant":"necklace","coin":250}'::jsonb,
   10
@@ -115,7 +115,7 @@ update public.categories c set show_on_home = true, home_sort = v.pos
 from (values
   ('name-necklaces', 0),
   ('lira-collection', 1),
-  ('lira-1500-250', 2),
+  ('lira-500-250', 2),
   ('bracelets', 3),
   ('rings', 4),
   ('earrings', 5),

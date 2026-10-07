@@ -27,9 +27,9 @@ Admin → **Home page** (`/admin/home`). One page, one **Save home page** button
 
 - Tick a category to **show** it on the homepage. Untick to hide it.
 - The arrows set the order. The **first** tile is the big one.
-  Recommended order: Name Necklaces, Lira Collection, 1500 & 250 Lira Collection, Bracelets, Rings, Earrings, Gifts, Men's Jewelry.
+  Recommended order: Name Necklaces, Lira Collection, 500 & 250 Lira Collection, Bracelets, Rings, Earrings, Gifts, Men's Jewelry.
 - **Add photo** uploads the tile photo (JPG/PNG/WebP). Without a photo the tile shows the drawing.
-- The new category **1500 & 250 Lira Collection** is created by the database update. Put products in it from the product editor (Categories).
+- The new category **500 & 250 Lira Collection** is created by the database update. Put products in it from the product editor (Categories).
 
 - علّمي الفئة لتظهر، والأسهم للترتيب، وأول مربع هو الكبير. **Add photo** لرفع صورة المربع، وبدونها يظهر الرسم.
 
