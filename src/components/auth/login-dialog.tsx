@@ -10,8 +10,9 @@ import { GoogleIcon } from "@/components/icons/brand-icons";
 // checkout, place order) calls ensureLogin() / openLogin(): with no session it opens this
 // dialog (Google, or a link sent to her email) and brings her back to the same page.
 
-type State = { user: boolean | null; open: boolean };
-let state: State = { user: null, open: false };
+// `required`: Settings → "Checkout needs an account"; off = nobody is asked to sign in (set by <LoginDialog>).
+type State = { user: boolean | null; open: boolean; required: boolean };
+let state: State = { user: null, open: false, required: true };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<State>) => {
   state = { ...state, ...patch };
@@ -31,6 +32,7 @@ export const openLogin = () => set({ open: true });
 
 /** True when she is signed in. Otherwise opens the sign-in dialog and returns false. */
 export async function ensureLogin(): Promise<boolean> {
+  if (!state.required) return true;
   watch();
   if (state.user === null) set({ user: Boolean((await createClient().auth.getSession()).data.session) });
   if (state.user) return true;
@@ -40,6 +42,7 @@ export async function ensureLogin(): Promise<boolean> {
 
 /** For links and buttons that must not continue without an account (decided right away). */
 export function blockIfSignedOut(event: { preventDefault: () => void }) {
+  if (!state.required) return;
   watch();
   if (state.user === false) {
     event.preventDefault();
@@ -52,7 +55,7 @@ function rememberPage() {
   document.cookie = `livre_next=${encodeURIComponent(window.location.pathname + window.location.search)}; path=/; max-age=900; samesite=lax`;
 }
 
-export function LoginDialog() {
+export function LoginDialog({ required: needed }: { required: boolean }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const ref = useRef<HTMLDialogElement>(null);
@@ -60,6 +63,7 @@ export function LoginDialog() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState<"google" | "email" | null>(null);
   const [error, setError] = useState(false);
+  useEffect(() => set({ required: needed }), [needed]);
   const open = useSyncExternalStore(
     (l) => {
       watch();

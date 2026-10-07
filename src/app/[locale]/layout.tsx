@@ -92,7 +92,7 @@ export default async function LocaleLayout({
           <WheelCoin />
           <WhatsAppFloat />
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
-          <LoginDialog />
+          <LoginDialog required={settings.requireLogin} />
           <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
           <PwaRegister />
           <PageViews />
