@@ -27,7 +27,7 @@ export async function Footer() {
   const columns = [
     {
       title: t("shop"),
-      links: navCategories.slice(0, 7).flatMap((slug) => {
+      links: navCategories.slice(0, 8).flatMap((slug) => {
         const category = findCategory(catalog, slug);
         return category ? [{ href: categoryHref(slug), label: category.name[locale] }] : [];
       }),

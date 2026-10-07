@@ -47,7 +47,7 @@ export function MobileMenu({
         className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-[85vw] max-w-sm bg-background p-0 text-foreground backdrop:bg-foreground/25 open:animate-drawer-in backdrop:animate-fade-in rtl:open:animate-drawer-in-rtl motion-reduce:animate-none"
       >
         <div className="flex h-full flex-col">
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line ps-5 pe-2">
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-line ps-5 pe-2">
             {header}
             <button
               type="button"

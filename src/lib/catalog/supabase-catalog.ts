@@ -1,6 +1,7 @@
 import "server-only";
 import type { Json } from "@/lib/supabase/database.types";
 import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
+import { CHARM_DESIGN_SLUG, defaultNavSort } from "@/config/navigation";
 import { defaultHomeTiles, styleKeys } from "./categories";
 import { isFontKey, materials } from "./materials";
 import { reviews as sampleReviews, showSampleReviews } from "./reviews";
@@ -186,10 +187,16 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     ];
   });
 
+  // The chain of a charm design is a product for pricing, but never listed.
+  const charmDesign = products.find((p) => p.slug === CHARM_DESIGN_SLUG) ?? null;
+  const listed = products.filter((p) => p.slug !== CHARM_DESIGN_SLUG);
+
   const slugById = new Map(categoriesRes.data.map((c) => [c.id, c.slug]));
   // Before the homepage-controls database update there is no show_on_home:
   // the tiles are the ones the homepage always had.
   const hasHomeTiles = categoriesRes.data.some((c) => c.show_on_home !== undefined);
+  // The same for the menu order (nav_sort).
+  const hasNavSort = categoriesRes.data.some((c) => c.nav_sort !== undefined);
   const categories = categoriesRes.data.flatMap((row): Category[] => {
     const art = asArt(row.art);
     if (!art) return [];
@@ -208,6 +215,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         image: row.image_url ?? undefined,
         showOnHome: hasHomeTiles ? row.show_on_home : defaultHomeTiles.includes(row.slug),
         homeSort: hasHomeTiles ? row.home_sort : defaultHomeTiles.indexOf(row.slug),
+        navSort: hasNavSort ? row.nav_sort : defaultNavSort(row.slug),
       },
     ];
   });
@@ -274,7 +282,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
   }
 
   return {
-    products,
+    products: listed,
     categories,
     reviews,
     settings: {
@@ -301,6 +309,18 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       },
       // Before the homepage-controls database update there is no deposit_percent.
       depositPercent: s.deposit_percent ?? 50,
+      charmsNavSort: s.charms_nav_sort ?? defaultNavSort("charms"),
+      phoneVerifyPoints: s.phone_verify_points ?? 10,
+      // Before the Phase 1 database update these columns don't exist: the checkout keeps its old options.
+      payments: {
+        ready: s.pay_transfer_enabled !== undefined,
+        transfer: (s.pay_transfer_enabled ?? true) && (s.transfer_number ?? "").trim() !== "",
+        deposit: (s.pay_deposit_enabled ?? true) && (s.transfer_number ?? "").trim() !== "",
+        whatsapp: s.pay_whatsapp_enabled ?? true,
+        transferNumber: s.transfer_number ?? "",
+        transferName: s.transfer_name ?? "",
+        requireLogin: s.checkout_requires_login ?? false,
+      },
       whishOnline: s.whish_online_enabled,
       cardOnline: s.card_online_enabled,
       metaPixelId: s.meta_pixel_id,
@@ -313,6 +333,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     heroOffer,
     heroSlides,
     home,
+    charmDesign,
     areas: areaRows.map((a) => ({
       slug: a.slug,
       name: loc(a.name_en, a.name_ar),

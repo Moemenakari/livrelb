@@ -21,6 +21,10 @@ export type HomeFormData = {
   stepDefaults: HomeStepInput[];
   /** false until the "home section items" database update is applied. */
   stepsReady: boolean;
+  /** The shop menu in order (categories and the Charms page). */
+  menu: { key: string; name: string }[];
+  /** false until the Phase 1 database update is applied. */
+  menuReady: boolean;
   products: ProductOption[];
 };
 
@@ -101,7 +105,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
       onSubmit={(e) => {
         e.preventDefault();
         save(
-          () => saveHomePage({ sections: d.sections, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers, steps: d.steps }),
+          () => saveHomePage({ sections: d.sections, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers, steps: d.steps, menu: d.menuReady ? d.menu.map((m) => m.key) : [] }),
           () => setSaved(true),
         );
       }}
@@ -165,6 +169,22 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
                 <span className="w-6 text-center text-muted">{i + 1}</span>
                 <span className="min-w-0 truncate">{nameOf(slug)}</span>
                 <Arrows i={i} length={d.bestSellers.length} onMove={(by) => change({ bestSellers: swap(d.bestSellers, i, by) })} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card title="Shop menu order" actions={<span className="text-xs text-muted">The header and the phone menu, first to last.</span>}>
+        {!d.menuReady ? (
+          <p className="text-sm text-muted">The menu order needs the Phase 1 database update (Supabase → SQL Editor).</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {d.menu.map((m, i) => (
+              <li key={m.key} className="flex items-center gap-2 rounded-lg border border-line p-2 text-sm">
+                <span className="w-6 text-center text-muted">{i + 1}</span>
+                <span className="min-w-0 truncate">{m.name}</span>
+                <Arrows i={i} length={d.menu.length} onMove={(by) => change({ menu: swap(d.menu, i, by) })} />
               </li>
             ))}
           </ul>

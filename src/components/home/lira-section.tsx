@@ -21,7 +21,7 @@ export async function LiraSection({ catalog, locale }: { catalog: Catalog; local
 
   const picked = section.products.flatMap((slug) => findProduct(catalog, slug) ?? []);
   const products: Product[] = (picked.length > 0 ? picked : productsIn(catalog, "lira-collection")).slice(0, MAX_PRODUCTS);
-  const cards = products.map((p) => toCard(p, locale));
+  const cards = products.map((p) => toCard(p, locale, catalog.settings.points));
 
   return (
     <section>

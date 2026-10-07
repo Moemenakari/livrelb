@@ -1,3 +1,4 @@
+import { defaultNavSort } from "@/config/navigation";
 import type { Category, Localized, StyleKey } from "./types";
 
 // categories table (brief §7). Order = navbar order (restart brief).
@@ -117,6 +118,7 @@ export const defaultHomeTiles = ["name-necklaces", "lira-collection", "lira-500-
 for (const category of categories) {
   const position = defaultHomeTiles.indexOf(category.slug);
   if (position >= 0) Object.assign(category, { showOnHome: true, homeSort: position });
+  category.navSort = defaultNavSort(category.slug);
 }
 
 export const styleNames: Record<StyleKey, Localized> = {

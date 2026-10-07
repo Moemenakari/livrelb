@@ -9,10 +9,7 @@ import {
   getCatalog,
   productsIn,
   styleNames,
-  styleSamples,
   toCard,
-  type FontKey,
-  type StyleKey,
 } from "@/lib/catalog";
 import { CategoryBrowser } from "@/components/category/category-browser";
 import { alternates, pageUrl } from "@/lib/seo";
@@ -42,10 +39,9 @@ export async function generateMetadata({
   };
 }
 
-const styleFont: Partial<Record<StyleKey, FontKey>> = { bold: "faraya", twoFonts: "byblos", arabic: "tripoli" };
-
-// Category page (brief §8.2, restart brief): trust strip, breadcrumbs,
-// centered title, round style thumbnails, product grid.
+// Category page: a small title at the very top, the filters in one sticky bar and
+// the products straight away. The description and the trust strip come after the
+// grid, so on a phone nothing sits between the title and the pieces.
 export default async function CategoryPage({ params }: PageProps<"/[locale]/category/[slug]">) {
   const locale = await resolveLocale(params);
   const { slug } = await params;
@@ -54,14 +50,9 @@ export default async function CategoryPage({ params }: PageProps<"/[locale]/cate
   if (!category) notFound();
 
   const t = await getTranslations("category");
-  const products = productsIn(catalog, category.slug).map((p) => toCard(p, locale));
+  const products = productsIn(catalog, category.slug).map((p) => toCard(p, locale, catalog.settings.points));
   const trail = categoryTrail(catalog, category.slug);
-  const styles = (category.styles ?? []).map((key) => ({
-    key,
-    label: styleNames[key][locale],
-    sample: styleSamples[key],
-    font: styleFont[key] ?? "beirut",
-  }));
+  const styles = (category.styles ?? []).map((key) => ({ key, label: styleNames[key][locale] }));
 
   const crumbsLd = {
     "@context": "https://schema.org",
@@ -75,8 +66,7 @@ export default async function CategoryPage({ params }: PageProps<"/[locale]/cate
   return (
     <>
       <JsonLd data={crumbsLd} />
-      <TrustStrip />
-      <div className="mx-auto max-w-7xl px-4 pt-5 pb-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-3 pb-14 lg:px-8">
         <Breadcrumbs
           label={t("breadcrumb")}
           items={[
@@ -88,17 +78,20 @@ export default async function CategoryPage({ params }: PageProps<"/[locale]/cate
           ]}
         />
 
-        <header className="mx-auto mt-8 mb-10 flex max-w-2xl flex-col items-center gap-4 text-center lg:mt-12">
-          <h1 className="text-4xl lg:text-5xl">{category.name[locale]}</h1>
-          <p className="text-muted">{category.description[locale]}</p>
-        </header>
+        <h1 className="mt-3 mb-3 text-2xl lg:mt-5 lg:text-4xl">{category.name[locale]}</h1>
 
         <CategoryBrowser
           products={products}
           styles={styles}
           namePreview={products.some((p) => p.art.kind === "name")}
+          perFont={styles.length > 0}
         />
+
+        <section className="mx-auto mt-14 max-w-2xl text-center" aria-label={category.name[locale]}>
+          <p className="text-muted">{category.description[locale]}</p>
+        </section>
       </div>
+      <TrustStrip />
     </>
   );
 }

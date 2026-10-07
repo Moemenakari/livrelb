@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin/auth";
 import { can } from "@/lib/admin/permissions";
+import { CHARMS_NAV_KEY } from "@/config/navigation";
 import { STEP_COUNT, homeSectionKeys } from "@/lib/admin/home-types";
 import { createClient } from "@/lib/supabase/server";
 import { HomeForm, type HomeFormData } from "@/components/admin/home-form";
@@ -15,12 +16,14 @@ export default async function HomeAdminPage() {
   if (!can(staff, "collections.manage") || !can(staff, "products.edit")) return <NoAccess />;
   const db = await createClient();
 
-  const [sectionsRes, picksRes, categoriesRes, productsRes, itemsRes] = await Promise.all([
+  const [sectionsRes, picksRes, categoriesRes, productsRes, itemsRes, navRes, charmsRes] = await Promise.all([
     db.from("home_sections").select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible"),
     db.from("home_section_products").select("section_key, sort_order, products (slug)").eq("section_key", "lira").order("sort_order"),
     db.from("categories").select("slug, name_en, rule, is_active, show_on_home, home_sort, image_url").order("home_sort").order("sort_order"),
     db.from("products").select("slug, name_en, status, is_best_seller, best_seller_sort").order("sort_order"),
     db.from("home_section_items").select("position, title_en, title_ar, text_en, text_ar").eq("section_key", "steps"),
+    db.from("categories").select("slug, name_en, nav_sort").eq("is_active", true),
+    db.from("site_settings").select("charms_nav_sort").eq("id", 1).maybeSingle(),
   ]);
 
   // The columns and tables come from the "home page controls" database update.
@@ -41,6 +44,14 @@ export default async function HomeAdminPage() {
   // The step texts come from the second database update; the rest of the page works without it.
   const stepRows = new Map((itemsRes.error ? [] : (itemsRes.data ?? [])).map((r) => [r.position, r]));
   const stepKeys = ["personalize", "craft", "deliver"] as const;
+  // The menu order comes from the Phase 1 database update; the rest of the page works without it.
+  const menuReady = !navRes.error && !charmsRes.error && charmsRes.data !== null;
+  const menu = menuReady
+    ? [
+        ...(navRes.data ?? []).map((c) => ({ key: c.slug, name: c.name_en, sort: c.nav_sort })),
+        { key: CHARMS_NAV_KEY, name: "Charms (page)", sort: charmsRes.data?.charms_nav_sort ?? 20 },
+      ].sort((a, b) => a.sort - b.sort)
+    : [];
   const rows = new Map((sectionsRes.data ?? []).map((s) => [s.key, s]));
   const data: HomeFormData = {
     sections: homeSectionKeys.map((key) => {
@@ -74,6 +85,8 @@ export default async function HomeAdminPage() {
       textAr: ar.home.steps[k].text,
     })),
     stepsReady: !itemsRes.error,
+    menu: menu.map(({ key, name }) => ({ key, name })),
+    menuReady,
     products: (productsRes.data ?? []).filter((p) => p.status === "active").map((p) => ({ slug: p.slug, name: p.name_en })),
   };
   // Shown tiles first, in their order, then the hidden ones.

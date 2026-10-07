@@ -109,9 +109,10 @@ Rules:
 
 ## 6. Customer accounts
 
-- Sign up / login with **phone number + name only. Never ask for email** (Lebanese customers forget emails). Verification by OTP (WhatsApp preferred over SMS in Lebanon) **[CONFIRM provider]**.
+- **Updated (Phase 1):** checkout needs an account: **"Continue with Google"**, and we **keep her email** (customers.email) to know the real person. This replaces the old rule "never ask for email".
+- Then she verifies her **phone** by WhatsApp OTP (the provider is waiting for the owner's OK: WhatsApp Cloud API with an authentication template). Until it is built, Google is the proof; at least one of (verified email, verified phone) is needed to order, the phone is preferred.
 - Phone number is **required** on every order.
-- Checkout must work without a separate sign-up step: phone + name at checkout automatically creates the account.
+- Her details (name, phone, area, address) are saved on the account and prefill the checkout.
 - **First order = free delivery** (checked by phone number).
 - Fields: name, phone (unique, Lebanese format +961), area/city, address, optional birthday, `marketing_opt_in`.
 

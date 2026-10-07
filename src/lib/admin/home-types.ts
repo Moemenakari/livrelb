@@ -31,4 +31,6 @@ export type HomePageInput = {
   bestSellers: string[];
   /** The "How it works" steps, in order. */
   steps: HomeStepInput[];
+  /** The shop menu in order: category slugs and "charms". Empty = leave it as it is. */
+  menu: string[];
 };

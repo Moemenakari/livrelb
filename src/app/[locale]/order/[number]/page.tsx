@@ -22,6 +22,8 @@ import { whish } from "@/lib/payments/whish";
 import { cardConfigured } from "@/lib/payments/card";
 import { TrackOnMount } from "@/components/analytics/analytics";
 import { CardPayment } from "@/components/checkout/card-payment";
+import { PaymentInstructions } from "@/components/checkout/payment-instructions";
+import { isR2Configured } from "@/lib/storage/r2";
 import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -86,6 +88,26 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
     orderTracking(db, order, locale, catalog.settings),
   ]);
   const whatsapp = catalog.settings.whatsappNumber;
+  const pay = catalog.settings.payments;
+  // A transfer or deposit still to confirm (after the Phase 1 database update; before it, nothing).
+  const onlineWhish = catalog.settings.whishOnline && whish.isConfigured();
+  const due =
+    pay.ready && order.status !== "cancelled" && (order.payment_method === "whish" || order.payment_method === "cod") && !onlineWhish
+      ? (
+          await db
+            .from("orders")
+            .select("deposit_cents, payment_reported_at, payment_confirmed_at")
+            .eq("id", order.id)
+            .maybeSingle()
+        ).data
+      : null;
+  const owed = due
+    ? due.deposit_cents > 0
+      ? due.deposit_cents
+      : order.payment_method === "whish"
+        ? order.total_cents
+        : Math.round((order.total_cents * catalog.settings.depositPercent) / 100)
+    : 0;
   const firstName = order.customer_name.split(/\s+/)[0];
   const row = "flex items-center justify-between gap-4";
 
@@ -115,14 +137,34 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
           </p>
         </div>
         <div className="flex flex-col gap-1 rounded-xl border border-line p-4 text-sm">
-          <p className="font-medium">{t("payment", { method: tCheckout(order.payment_method) })}</p>
-          <p className="text-muted">
-            {order.payment_method === "whish"
-              ? tCheckout("whishHint")
-              : t("codNote", { total: formatPrice(dollars(order.total_cents)) })}
-          </p>
+          {pay.ready && order.payment_method !== "card" ? (
+            <p className="font-medium">{order.payment_method === "whish" ? t("methodTransfer") : t("methodDeposit")}</p>
+          ) : (
+            <>
+              <p className="font-medium">{t("payment", { method: tCheckout(order.payment_method) })}</p>
+              <p className="text-muted">
+                {order.payment_method === "whish"
+                  ? tCheckout("whishHint")
+                  : t("codNote", { total: formatPrice(dollars(order.total_cents)) })}
+              </p>
+            </>
+          )}
         </div>
       </div>
+
+      {due && (
+        <PaymentInstructions
+          orderNumber={order.number}
+          // deposit_cents is set right after the order; if that failed, it is worked out from the total.
+          due={dollars(owed)}
+          rest={Math.max(0, dollars(order.total_cents - owed))}
+          number={pay.transferNumber}
+          accountName={pay.transferName}
+          reported={Boolean(due.payment_reported_at)}
+          confirmed={Boolean(due.payment_confirmed_at)}
+          uploadEnabled={isR2Configured()}
+        />
+      )}
 
       {order.payment_method === "card" && order.status !== "cancelled" && catalog.settings.cardOnline && cardConfigured() && (
         <CardPayment orderNumber={order.number} paid={paidFlag === "1" ? true : paidFlag === "0" ? false : null} />
@@ -254,7 +296,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[l
             {t("whatsapp")}
           </a>
         )}
-        <Link href={{ pathname: "/track", query: { number: order.number } }} className={`${secondaryButton} flex-1`}>
+        <Link href={{ pathname: "/account", query: { tab: "track", order: order.number } }} className={`${secondaryButton} flex-1`}>
           {t("track")}
         </Link>
         <Link href="/" className={`${secondaryButton} flex-1 border-line`}>

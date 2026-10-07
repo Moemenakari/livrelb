@@ -30,6 +30,10 @@ export type CharmItemInput = {
   inStock: boolean;
   isActive: boolean;
   order: string;
+  /** From the Phase 1 database update; undefined before it (the row is then saved without them). */
+  family?: "charms" | "turkish";
+  metal?: "gold" | "silver" | "";
+  code?: string;
 };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -72,11 +76,69 @@ export async function saveCharmItem(input: CharmItemInput): Promise<ActionResult
       in_stock: Boolean(input.inStock),
       is_active: Boolean(input.isActive),
       sort_order: Math.round(Number(input.order) || 0),
+      ...(input.family ? { family: input.family === "charms" ? "charms" : "turkish", metal: input.metal === "gold" || input.metal === "silver" ? input.metal : null } : {}),
     };
     const { error } = input.id && UUID.test(input.id) ? await db.from("charm_items").update(row).eq("id", input.id) : await db.from("charm_items").insert(row);
     if (error) throw error;
     revalidatePath("/[locale]/charms", "page");
     refresh();
+  });
+}
+
+export type CharmImportRow = { family: "charms" | "turkish"; metal: "gold" | "silver"; code: string; url: string };
+
+const humanize = (code: string) => {
+  const text = code.replace(/-/g, " ").trim();
+  return (text.charAt(0).toUpperCase() + text.slice(1)).slice(0, 80);
+};
+
+/**
+ * Bulk import: the photos are already uploaded; each row is one charm named by its
+ * file (family_metal_code.png). A new charm is created (name from the code, standard
+ * price); a charm with the same family, metal and code only gets its new photo, so its
+ * name and price are kept.
+ */
+export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionResult<{ created: number; updated: number }>> {
+  return run(async () => {
+    const { db } = await authorize("products.edit");
+    const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.replace(/\/$/, "");
+    const list = Array.isArray(rows) ? rows : [];
+    if (list.length === 0 || list.length > 100) throw new AdminError("Import up to 100 charms at a time.");
+    for (const r of list) {
+      if ((r.family !== "charms" && r.family !== "turkish") || (r.metal !== "gold" && r.metal !== "silver")) throw new AdminError("Invalid file name.");
+      if (!/^[a-z0-9-]{1,60}$/.test(r.code)) throw new AdminError("Invalid file name.");
+      if (!base || !r.url.startsWith(`${base}/`) || r.url.length > 500) throw new AdminError("Upload the photos again.");
+    }
+
+    const { data: existing, error: readError } = await db
+      .from("charm_items")
+      .select("id, family, metal, code")
+      .in("code", list.map((r) => r.code));
+    if (readError) {
+      throw new AdminError("The import needs the Phase 1 database update (Supabase → SQL Editor).");
+    }
+    const idOf = new Map((existing ?? []).map((e) => [`${e.family}|${e.metal}|${e.code}`, e.id]));
+
+    const fresh: { family: string; metal: string; code: string; image_url: string; name_en: string; name_ar: string }[] = [];
+    let updated = 0;
+    for (const r of list) {
+      const id = idOf.get(`${r.family}|${r.metal}|${r.code}`);
+      if (id) {
+        const { error } = await db.from("charm_items").update({ image_url: r.url }).eq("id", id);
+        if (error) throw error;
+        updated += 1;
+      } else {
+        const name = humanize(r.code);
+        fresh.push({ family: r.family, metal: r.metal, code: r.code, image_url: r.url, name_en: name, name_ar: name });
+      }
+    }
+    if (fresh.length > 0) {
+      const { error } = await db.from("charm_items").insert(fresh);
+      if (error) throw error;
+    }
+    revalidatePath("/[locale]/charms", "page");
+    refresh();
+    return { created: fresh.length, updated };
   });
 }
 

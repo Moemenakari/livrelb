@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import { CHARMS_NAV_KEY } from "@/config/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { loadStaticCatalog } from "./static-catalog";
 import { loadSupabaseCatalog } from "./supabase-catalog";
@@ -87,6 +88,19 @@ export function homeCategories(catalog: Catalog): Category[] {
   return catalog.categories
     .filter((c) => c.showOnHome)
     .sort((a, b) => (a.homeSort ?? 0) - (b.homeSort ?? 0));
+}
+
+/**
+ * The shop menu (header and phone drawer) in the admin's order: the
+ * categories and the Charms page (key "charms", no category).
+ */
+export function navItems(catalog: Catalog): { key: string; category?: Category }[] {
+  return [
+    ...catalog.categories.map((category) => ({ key: category.slug, category, sort: category.navSort ?? 1000 })),
+    { key: CHARMS_NAV_KEY, category: undefined, sort: catalog.settings.charmsNavSort },
+  ]
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ key, category }) => ({ key, category }));
 }
 
 /** Same first category first, then the rest of the catalog. */

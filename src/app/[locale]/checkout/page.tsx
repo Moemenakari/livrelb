@@ -6,6 +6,8 @@ import { googleLoginEnabled, savedCustomer } from "@/lib/checkout/customer";
 import { getCheckoutOptions } from "@/lib/checkout/options";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { cardConfigured } from "@/lib/payments/card";
+import { whatsappOtpConfigured } from "@/lib/otp/whatsapp";
+import { verifiedPhoneOfBrowser } from "@/lib/otp/verified";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/checkout">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -13,16 +15,18 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/checkout
   return { title: t("title"), robots: { index: false } };
 }
 
-// Checkout (brief §8.4): one page, phone + name, no account, no email.
-// Rendered per request: a remembered browser (or Google login) is prefilled.
+// Checkout: one page. She signs in with Google first (when the owner asks for it and Google
+// sign-in is on), then name, phone and address (prefilled), then how she pays: a transfer, or a
+// deposit now and the rest on delivery. Rendered per request: her account is prefilled.
 export default async function CheckoutPage({ params }: PageProps<"/[locale]/checkout">) {
   const locale = await resolveLocale(params);
   const t = await getTranslations("checkout");
-  const [{ settings }, options, saved, googleEnabled] = await Promise.all([
+  const [{ settings }, options, saved, googleEnabled, verifiedPhone] = await Promise.all([
     getCatalog(),
     getCheckoutOptions(locale),
     savedCustomer(),
     googleLoginEnabled(),
+    verifiedPhoneOfBrowser(),
   ]);
 
   return (
@@ -38,6 +42,16 @@ export default async function CheckoutPage({ params }: PageProps<"/[locale]/chec
         saved={saved}
         googleEnabled={googleEnabled}
         cardEnabled={settings.cardOnline && cardConfigured()}
+        payments={settings.payments}
+        depositPercent={settings.depositPercent}
+        loginRequired={settings.payments.ready && settings.payments.requireLogin && googleEnabled}
+        whatsapp={settings.whatsappNumber}
+        phoneVerification={{
+          enabled: whatsappOtpConfigured(),
+          verifiedPhone,
+          points: settings.phoneVerifyPoints,
+          pointValue: settings.points.redeemPoints > 0 ? settings.points.redeemValue / settings.points.redeemPoints : 0,
+        }}
       />
     </div>
   );

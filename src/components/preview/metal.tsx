@@ -33,6 +33,13 @@ export const metalStops: Record<MetalTone, [number, string][]> = {
   ],
 };
 
+/** Solid metal color: the fill under a gradient, so letters are never see-through if a phone fails to paint the gradient. */
+export const metalSolid: Record<MetalTone, string> = {
+  gold: "#d9b36a",
+  silver: "#c3c7ce",
+  rose: "#dfa48c",
+};
+
 /** Darker edge color: outlines, chain links, engraving. */
 export const metalEdge: Record<MetalTone, string> = {
   gold: "#8a6428",
@@ -64,9 +71,19 @@ export function toTone(material: MaterialKey | MetalTone): MetalTone {
  * <defs> for one SVG: `${id}-fill` gradient and `${id}-metal` filter.
  * `id` must be unique on the page (use useId()).
  */
-export function MetalDefs({ id, tone }: { id: string; tone: MetalTone }) {
+export function MetalDefs({ id, tone, textSpan }: { id: string; tone: MetalTone; textSpan?: [top: number, bottom: number] }) {
   return (
     <>
+      {/* Letters: a second gradient, `${id}-text`, fixed to the letters' own height (user space of
+          the text) instead of the text's bounding box, which iOS Safari reads as empty until the
+          font is ready and then paints no fill. */}
+      {textSpan && (
+        <linearGradient id={`${id}-text`} gradientUnits="userSpaceOnUse" x1="0" y1={textSpan[0]} x2="0" y2={textSpan[1]}>
+          {metalStops[tone].map(([offset, color]) => (
+            <stop key={offset} offset={offset} stopColor={color} />
+          ))}
+        </linearGradient>
+      )}
       <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
         {metalStops[tone].map(([offset, color]) => (
           <stop key={offset} offset={offset} stopColor={color} />

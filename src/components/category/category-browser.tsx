@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { LayoutGrid, PenLine, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { PenLine, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import type { CardProduct } from "@/lib/catalog/card";
-import { materials } from "@/lib/catalog/materials";
+import { fonts as fontInfo, materials, textScript } from "@/lib/catalog/materials";
 import type { FontKey, MetalTone, StyleKey } from "@/lib/catalog/types";
+import { formatPrice } from "@/lib/format";
 import { NAME_MAX_LENGTH } from "@/components/preview/name-preview";
-import { ProductArt } from "@/components/product/product-art";
 import { ProductCard } from "@/components/product/product-card";
 
-type Style = { key: StyleKey; label: string; sample: string; font: FontKey };
+type Style = { key: StyleKey; label: string };
 type Sort = "featured" | "priceLow" | "priceHigh" | "newest";
 type Metal = "all" | MetalTone;
 
@@ -19,6 +19,8 @@ type Props = {
   styles: Style[];
   /** Show "see your name on every necklace" (categories with name pieces). */
   namePreview: boolean;
+  /** Name categories: a personalized piece is shown once for each font it allows. */
+  perFont?: boolean;
 };
 
 const sorts: Sort[] = ["featured", "priceLow", "priceHigh", "newest"];
@@ -28,144 +30,180 @@ const metalSwatch: Record<MetalTone, string> = {
   silver: materials.silver.swatch,
   rose: "#e2a98f",
 };
+/** "Up to $N" choices of the price filter; only the ones that make sense for this list are offered. */
+const PRICE_STEPS = [25, 50, 75, 100, 150, 250];
 
-// Style thumbnails, filters, sort and the page-wide name preview for a
-// category grid (brief §8.2). Filtering happens here on the static sample
-// data; with the database it moves to the query.
-export function CategoryBrowser({ products, styles, namePreview }: Props) {
+/** One card of the grid: a piece, or a piece in one of its fonts. */
+type Entry = { key: string; product: CardProduct; font?: FontKey };
+
+const chip = "flex h-9 shrink-0 items-center justify-center rounded-full border px-3.5 text-[13px] whitespace-nowrap transition-colors";
+const chipOn = "border-ink bg-ink text-white";
+const chipOff = "border-line hover:border-muted";
+
+// Compact filters (styles, metal, price, sale / new, sort) in one sticky bar,
+// then the grid straight away. Name categories list a piece once per font it
+// allows, each card previewing the name in that font and opening the product
+// with the font chosen.
+export function CategoryBrowser({ products, styles, namePreview, perFont = false }: Props) {
   const t = useTranslations("category");
+  const locale = useLocale() as "en" | "ar";
   const [style, setStyle] = useState<StyleKey | "all">("all");
   const [metal, setMetal] = useState<Metal>("all");
+  const [maxPrice, setMaxPrice] = useState(0);
+  const [sale, setSale] = useState(false);
+  const [fresh, setFresh] = useState(false);
   const [sort, setSort] = useState<Sort>("featured");
   const [name, setName] = useState("");
+
+  const top = Math.max(0, ...products.map((p) => p.price));
+  const priceSteps = PRICE_STEPS.filter((n) => n < top && products.some((p) => p.price <= n));
 
   const shown = useMemo(() => {
     const list = products.filter(
       (p) =>
         (style === "all" || p.style === style) &&
-        (metal === "all" || p.offers.some((o) => o.tone === metal)),
+        (metal === "all" || p.offers.some((o) => o.tone === metal)) &&
+        (maxPrice === 0 || p.price <= maxPrice) &&
+        (!sale || p.offers.some((o) => o.compareAtPrice)) &&
+        (!fresh || p.isNew),
     );
-    if (sort === "priceLow") return [...list].sort((a, b) => a.price - b.price);
-    if (sort === "priceHigh") return [...list].sort((a, b) => b.price - a.price);
-    if (sort === "newest") return [...list].sort((a, b) => Number(b.isNew) - Number(a.isNew));
-    return list;
-  }, [products, style, metal, sort]);
+    const sorted =
+      sort === "priceLow"
+        ? [...list].sort((a, b) => a.price - b.price)
+        : sort === "priceHigh"
+          ? [...list].sort((a, b) => b.price - a.price)
+          : sort === "newest"
+            ? [...list].sort((a, b) => Number(b.isNew) - Number(a.isNew))
+            : list;
+    return sorted.flatMap((product): Entry[] => {
+      if (!perFont || product.art.kind !== "name" || !product.fonts || product.fonts.length < 2) return [{ key: product.slug, product }];
+      // Fonts that can write the sample name (Arabic fonts for Arabic names).
+      const script = textScript(product.sample ?? "A");
+      const usable = product.fonts.filter((f) => fontInfo[f].script === script);
+      return (usable.length > 0 ? usable : product.fonts).map((font) => ({ key: `${product.slug}:${font}`, product, font }));
+    });
+  }, [products, style, metal, maxPrice, sale, fresh, sort, perFont]);
 
+  const filtered = style !== "all" || metal !== "all" || maxPrice !== 0 || sale || fresh;
   const clear = () => {
     setStyle("all");
     setMetal("all");
+    setMaxPrice(0);
+    setSale(false);
+    setFresh(false);
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {styles.length > 0 && (
-        <nav aria-label={t("stylesLabel")}>
-          <ul className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 py-1 sm:justify-center lg:gap-7">
-            <li className="shrink-0">
-              <StyleButton
-                label={t("allStyles")}
-                active={style === "all"}
-                onClick={() => setStyle("all")}
-              >
-                <LayoutGrid className="size-7 text-gold-dark" strokeWidth={1.25} aria-hidden />
-              </StyleButton>
-            </li>
-            {styles.map((s) => (
-              <li key={s.key} className="shrink-0">
-                <StyleButton label={s.label} active={style === s.key} onClick={() => setStyle(s.key)}>
-                  <ProductArt
-                    art={{ kind: "name", variant: "necklace" }}
-                    material="gold"
-                    text={s.sample}
-                    font={s.font}
-                    connection="center"
-                    aspect="square"
-                    className="translate-y-[-8%] scale-[1.45]"
-                  />
-                </StyleButton>
-              </li>
-            ))}
-          </ul>
-        </nav>
+    <div className="flex flex-col gap-4">
+      {namePreview && (
+        <label className="flex items-center gap-3 rounded-full border border-line bg-surface px-4 py-2.5 focus-within:border-gold lg:max-w-sm">
+          <PenLine className="size-4 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
+          <span className="sr-only">{t("previewLabel")}</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={NAME_MAX_LENGTH}
+            placeholder={t("previewLabel")}
+            className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted"
+          />
+        </label>
       )}
 
-      <div className="flex flex-col gap-4 border-y border-line py-4 lg:flex-row lg:items-center lg:justify-between">
-        {namePreview ? (
-          <label className="flex flex-1 items-center gap-3 rounded-full border border-line bg-surface px-4 py-2.5 focus-within:border-gold lg:max-w-sm">
-            <PenLine className="size-4 shrink-0 text-gold-dark" strokeWidth={1.5} aria-hidden />
-            <span className="sr-only">{t("previewLabel")}</span>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={NAME_MAX_LENGTH}
-              placeholder={t("previewLabel")}
-              className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted"
-            />
-          </label>
-        ) : (
-          <p className="text-sm text-muted" aria-live="polite">
-            {t("count", { count: shown.length })}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between gap-3 lg:justify-end lg:gap-5">
-          <fieldset className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <legend className="sr-only">{t("metalLabel")}</legend>
-            {metals.map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={metal === m}
-                aria-label={t(`metal.${m}`)}
-                title={t(`metal.${m}`)}
-                onClick={() => setMetal(m)}
-                className={`flex h-8 items-center justify-center rounded-full border text-xs whitespace-nowrap transition-colors ${
-                  metal === m ? "border-ink" : "border-line hover:border-muted"
-                } ${m === "all" ? "px-3" : "w-8"}`}
-              >
-                {m === "all" ? (
-                  t("metal.all")
-                ) : (
-                  <span
-                    className="size-4.5 rounded-full border border-black/10"
-                    style={{ backgroundColor: metalSwatch[m] }}
-                  />
-                )}
+      {/* Sticky under the header: one swipeable row on a phone. */}
+      <div
+        role="group"
+        aria-label={t("filtersLabel")}
+        className="no-scrollbar sticky top-12 z-30 -mx-4 flex items-center gap-2 overflow-x-auto border-b border-line bg-background/95 px-4 py-2 backdrop-blur lg:top-28 lg:mx-0 lg:px-0 min-[90rem]:top-16"
+      >
+        {styles.length > 0 && (
+          <>
+            <button type="button" aria-pressed={style === "all"} onClick={() => setStyle("all")} className={`${chip} ${style === "all" ? chipOn : chipOff}`}>
+              {t("allStyles")}
+            </button>
+            {styles.map((s) => (
+              <button key={s.key} type="button" aria-pressed={style === s.key} onClick={() => setStyle(s.key)} className={`${chip} ${style === s.key ? chipOn : chipOff}`}>
+                {s.label}
               </button>
             ))}
-          </fieldset>
+            <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-line" />
+          </>
+        )}
 
-          <label className="flex min-w-0 flex-1 items-center justify-end gap-2 text-sm lg:flex-none">
-            <span className="sr-only text-muted sm:not-sr-only">{t("sortLabel")}</span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as Sort)}
-              className="w-full max-w-48 min-w-0 rounded-full border border-line bg-background py-1.5 ps-3 pe-8 text-sm"
+        <fieldset className="flex shrink-0 items-center gap-1.5">
+          <legend className="sr-only">{t("metalLabel")}</legend>
+          {metals.map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={metal === m}
+              aria-label={t(`metal.${m}`)}
+              title={t(`metal.${m}`)}
+              onClick={() => setMetal(m)}
+              className={`flex h-9 items-center justify-center rounded-full border text-[13px] whitespace-nowrap transition-colors ${
+                metal === m ? "border-ink" : "border-line hover:border-muted"
+              } ${m === "all" ? "px-3.5" : "w-9"}`}
             >
-              {sorts.map((s) => (
-                <option key={s} value={s}>
-                  {t(`sort.${s}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+              {m === "all" ? (
+                t("metal.all")
+              ) : (
+                <span className="size-4.5 rounded-full border border-black/10" style={{ backgroundColor: metalSwatch[m] }} />
+              )}
+            </button>
+          ))}
+        </fieldset>
+
+        {priceSteps.length > 0 && (
+          <select
+            aria-label={t("priceLabel")}
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(Number(e.target.value))}
+            className="h-9 shrink-0 rounded-full border border-line bg-background ps-3 pe-7 text-[13px]"
+          >
+            <option value={0}>{t("priceAny")}</option>
+            {priceSteps.map((n) => (
+              <option key={n} value={n}>
+                {t("priceUpTo", { price: formatPrice(n) })}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <button type="button" aria-pressed={sale} onClick={() => setSale((v) => !v)} className={`${chip} ${sale ? chipOn : chipOff}`}>
+          {t("saleOnly")}
+        </button>
+        <button type="button" aria-pressed={fresh} onClick={() => setFresh((v) => !v)} className={`${chip} ${fresh ? chipOn : chipOff}`}>
+          {t("newOnly")}
+        </button>
+
+        <select
+          aria-label={t("sortLabel")}
+          value={sort}
+          onChange={(e) => setSort(e.target.value as Sort)}
+          className="ms-auto h-9 shrink-0 rounded-full border border-line bg-background ps-3 pe-7 text-[13px]"
+        >
+          {sorts.map((s) => (
+            <option key={s} value={s}>
+              {t(`sort.${s}`)}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {namePreview && (
-        <p className="-mt-4 text-sm text-muted" aria-live="polite">
-          {t("count", { count: shown.length })}
-        </p>
-      )}
+      <p className="text-sm text-muted" aria-live="polite">
+        {t("count", { count: shown.length })}
+      </p>
 
       {shown.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
-          {shown.map((p) => (
-            <li key={`${p.slug}-${metal}`}>
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
+          {shown.map(({ key, product, font }) => (
+            <li key={`${key}-${metal}`}>
               <ProductCard
-                product={p}
+                product={product}
                 previewText={name}
                 preferredTone={metal === "all" ? undefined : metal}
+                font={font}
+                title={font ? t("inFont", { name: product.name, font: fontInfo[font].name[locale] }) : undefined}
+                subtitle={font ? fontInfo[font].style[locale] : undefined}
               />
             </li>
           ))}
@@ -173,48 +211,14 @@ export function CategoryBrowser({ products, styles, namePreview }: Props) {
       ) : (
         <div className="flex flex-col items-center gap-4 py-16 text-center">
           <p className="text-muted">{t("empty")}</p>
-          <button
-            type="button"
-            onClick={clear}
-            className="inline-flex items-center gap-2 rounded-full border border-ink px-5 py-2 text-sm"
-          >
-            <X className="size-4" strokeWidth={1.5} aria-hidden />
-            {t("clear")}
-          </button>
+          {filtered && (
+            <button type="button" onClick={clear} className="inline-flex items-center gap-2 rounded-full border border-ink px-5 py-2 text-sm">
+              <X className="size-4" strokeWidth={1.5} aria-hidden />
+              {t("clear")}
+            </button>
+          )}
         </div>
       )}
     </div>
-  );
-}
-
-function StyleButton({
-  label,
-  active,
-  onClick,
-  children,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className="group flex w-20 flex-col items-center gap-2 lg:w-28"
-    >
-      <span
-        className={`flex size-20 items-center justify-center overflow-hidden rounded-full bg-blush transition-shadow lg:size-28 ${
-          active ? "ring-2 ring-gold ring-offset-2" : "group-hover:ring-1 group-hover:ring-line"
-        }`}
-      >
-        {children}
-      </span>
-      <span className={`text-[13px] ${active ? "font-medium text-foreground" : "text-muted"}`}>
-        {label}
-      </span>
-    </button>
   );
 }

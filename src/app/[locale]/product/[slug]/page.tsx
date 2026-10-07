@@ -1,3 +1,4 @@
+import { defaultTypeFor } from "@/lib/catalog/personalization";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -109,6 +110,7 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     defaultMaterial: product.defaultMaterial,
     personalization: p && {
       kind: p.kind,
+      defaultType: defaultTypeFor(p.kind, p.sample),
       maxLength: p.maxLength,
       fonts: p.fonts.map((key) => ({ key, name: fonts[key].name[locale] })),
     },
@@ -143,8 +145,8 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     },
   };
 
-  const related = relatedProducts(catalog, product, 4).map((r) => toCard(r, locale));
-  const candidates = catalog.products.filter((c) => c.slug !== product.slug).map((c) => toCard(c, locale));
+  const related = relatedProducts(catalog, product, 4).map((r) => toCard(r, locale, catalog.settings.points));
+  const candidates = catalog.products.filter((c) => c.slug !== product.slug).map((c) => toCard(c, locale, catalog.settings.points));
   const reviews = reviewsFor(catalog, product.slug);
 
   // Search-engine data. Ratings come only from real, approved reviews of this

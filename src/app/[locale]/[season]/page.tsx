@@ -31,7 +31,7 @@ export default async function SeasonPage({ params }: PageProps<"/[locale]/[seaso
   const [catalog, t, tPromo] = await Promise.all([getCatalog(), getTranslations("category"), getTranslations("promo")]);
   const products = season.productSlugs.flatMap((slug) => {
     const p = findProduct(catalog, slug);
-    return p ? [toCard(p, locale)] : [];
+    return p ? [toCard(p, locale, catalog.settings.points)] : [];
   });
 
   return (

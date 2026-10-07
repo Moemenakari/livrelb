@@ -107,6 +107,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          nav_sort: number
           nav_name_ar: string | null
           nav_name_en: string | null
           parent_id: string | null
@@ -129,6 +130,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          nav_sort?: number
           nav_name_ar?: string | null
           nav_name_en?: string | null
           parent_id?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          nav_sort?: number
           nav_name_ar?: string | null
           nav_name_en?: string | null
           parent_id?: string | null
@@ -173,6 +176,9 @@ export type Database = {
       }
       charm_items: {
         Row: {
+          metal: string | null
+          family: string
+          code: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -187,6 +193,9 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          metal?: string | null
+          family?: string
+          code?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -201,6 +210,9 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          metal?: string | null
+          family?: string
+          code?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -470,6 +482,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          email: string | null
           address: string | null
           area_id: string | null
           auth_user_id: string | null
@@ -486,6 +499,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          email?: string | null
           address?: string | null
           area_id?: string | null
           auth_user_id?: string | null
@@ -502,6 +516,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          email?: string | null
           address?: string | null
           area_id?: string | null
           auth_user_id?: string | null
@@ -1047,6 +1062,11 @@ export type Database = {
       }
       orders: {
         Row: {
+          deposit_cents: number
+          payment_confirmed_at: string | null
+          payment_confirmed_by: string | null
+          payment_proof_url: string | null
+          payment_reported_at: string | null
           address: string | null
           adjustments_cents: number
           area_id: string | null
@@ -1082,6 +1102,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          deposit_cents?: number
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_proof_url?: string | null
+          payment_reported_at?: string | null
           address?: string | null
           adjustments_cents?: number
           area_id?: string | null
@@ -1117,6 +1142,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          deposit_cents?: number
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_proof_url?: string | null
+          payment_reported_at?: string | null
           address?: string | null
           adjustments_cents?: number
           area_id?: string | null
@@ -1909,6 +1939,15 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          phone_verify_points: number
+          checkout_requires_login: boolean
+          pay_deposit_enabled: boolean
+          pay_transfer_enabled: boolean
+          pay_whatsapp_enabled: boolean
+          transfer_name: string
+          transfer_number: string
+          charm_max: number
+          charms_nav_sort: number
           deposit_percent: number
           processing_days_max: number
           processing_days_min: number
@@ -1944,6 +1983,15 @@ export type Database = {
           whish_online_enabled: boolean
         }
         Insert: {
+          phone_verify_points?: number
+          checkout_requires_login?: boolean
+          pay_deposit_enabled?: boolean
+          pay_transfer_enabled?: boolean
+          pay_whatsapp_enabled?: boolean
+          transfer_name?: string
+          transfer_number?: string
+          charm_max?: number
+          charms_nav_sort?: number
           deposit_percent?: number
           processing_days_max?: number
           processing_days_min?: number
@@ -1979,6 +2027,15 @@ export type Database = {
           whish_online_enabled?: boolean
         }
         Update: {
+          phone_verify_points?: number
+          checkout_requires_login?: boolean
+          pay_deposit_enabled?: boolean
+          pay_transfer_enabled?: boolean
+          pay_whatsapp_enabled?: boolean
+          transfer_name?: string
+          transfer_number?: string
+          charm_max?: number
+          charms_nav_sort?: number
           deposit_percent?: number
           processing_days_max?: number
           processing_days_min?: number

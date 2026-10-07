@@ -5,6 +5,7 @@ import type {
   FontKey,
   MaterialKey,
   MetalTone,
+  PointsRules,
   Product,
   ProductArt,
 } from "./types";
@@ -27,6 +28,10 @@ export type CardProduct = {
   price: number;
   isBestSeller: boolean;
   isNew: boolean;
+  /** An order with this piece pays no delivery (set in the admin). */
+  freeDelivery: boolean;
+  /** LIVRE Points earned by buying it at its default price (0 = points are off or too low). */
+  points: number;
   offers: CardOffer[];
   defaultMaterial: MaterialKey;
   /** Personalizable pieces: the name drawn by default. */
@@ -40,7 +45,7 @@ export type CardProduct = {
   style?: Product["style"];
 };
 
-export function toCard(product: Product, locale: Locale): CardProduct {
+export function toCard(product: Product, locale: Locale, points?: PointsRules): CardProduct {
   const p = product.personalization;
   const offers = product.offers.map((o) => ({
     material: o.material,
@@ -57,6 +62,9 @@ export function toCard(product: Product, locale: Locale): CardProduct {
     price: main.price,
     isBestSeller: Boolean(product.isBestSeller),
     isNew: Boolean(product.isNew),
+    freeDelivery: Boolean(product.freeDelivery),
+    // Same rule as the database and the product page: whole steps of the price.
+    points: points?.enabled ? Math.floor(main.price / points.stepDollars) * points.perStep : 0,
     offers,
     defaultMaterial: main.material,
     sample: p?.sample,

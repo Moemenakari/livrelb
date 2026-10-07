@@ -28,6 +28,20 @@ export type SettingsInput = {
   whishOnline: boolean;
   cardOnline: boolean;
   charmPrice: string;
+  /** Percent of the total paid now by transfer on a deposit order. */
+  depositPercent: string;
+  /** From the Phase 1 database update: undefined before it (those columns are then left alone). */
+  charmMax?: string;
+  /** Points for verifying a phone on WhatsApp (needs the phone verification database update). */
+  phoneVerifyPoints?: string;
+  payments?: {
+    transfer: boolean;
+    deposit: boolean;
+    whatsapp: boolean;
+    transferNumber: string;
+    transferName: string;
+    requireLogin: boolean;
+  };
   metaPixelId: string;
   ga4Id: string;
 };
@@ -43,6 +57,20 @@ const centsOf = (v: string, label: string) => {
   if (!Number.isFinite(n) || n < 0 || n > 10000) throw new AdminError(`${label}: check the amount.`);
   return Math.round(n * 100);
 };
+
+/** The payment and login columns of the Phase 1 database update. */
+function paymentColumns(p: NonNullable<SettingsInput["payments"]>) {
+  const transferNumber = str(p.transferNumber, 40);
+  if (transferNumber && !/^[0-9+() -]{6,40}$/.test(transferNumber)) throw new AdminError("Transfer number: digits only, e.g. +961 70 123 456.");
+  return {
+    pay_transfer_enabled: Boolean(p.transfer),
+    pay_deposit_enabled: Boolean(p.deposit),
+    pay_whatsapp_enabled: Boolean(p.whatsapp),
+    transfer_number: transferNumber,
+    transfer_name: str(p.transferName, 80),
+    checkout_requires_login: Boolean(p.requireLogin),
+  };
+}
 
 /** Shop settings (owner only): delivery, contacts, LIVRE Points, announcement bar. */
 export async function saveSettings(input: SettingsInput): Promise<ActionResult> {
@@ -92,6 +120,10 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         whish_online_enabled: Boolean(input.whishOnline),
         card_online_enabled: Boolean(input.cardOnline),
         charm_price_cents: centsOf(input.charmPrice, "Charm price"),
+        deposit_percent: whole(input.depositPercent, "Deposit %", 1, 100),
+        ...(input.phoneVerifyPoints !== undefined ? { phone_verify_points: whole(input.phoneVerifyPoints, "Points for verifying a phone", 0, 10000) } : {}),
+        ...(input.charmMax !== undefined ? { charm_max: whole(input.charmMax, "Most charms on a chain", 1, 30) } : {}),
+        ...(input.payments ? paymentColumns(input.payments) : {}),
         meta_pixel_id: metaPixelId,
         ga4_id: ga4Id,
       })

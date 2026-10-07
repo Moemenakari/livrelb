@@ -2,11 +2,12 @@
 
 import { useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { MessageCircle, ShoppingBag } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
 import { track } from "@/lib/analytics/client";
 import { defaultFontFor, fonts as fontInfo, textScript } from "@/lib/catalog/materials";
+import { NUMBER_MAX, typeOfText, typesFor, zodiacSigns, type PersonalizationType } from "@/lib/catalog/personalization";
 import type {
   ChainConnection,
   FontKey,
@@ -20,6 +21,7 @@ import type {
 } from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { useTrackView } from "@/lib/recently-viewed";
+import { useWhatsappNumber } from "@/lib/use-whatsapp";
 import { Stars } from "@/components/ui/stars";
 import { primaryButton } from "@/components/ui/styles";
 import { FontPicker } from "./font-picker";
@@ -53,6 +55,8 @@ export type ProductViewData = {
   defaultMaterial: MaterialKey;
   personalization?: {
     kind: "name" | "initial";
+    /** What the piece opens with: a name, a letter, a number or a zodiac sign. */
+    defaultType: PersonalizationType;
     maxLength: number;
     /** Allowed fonts (the product's default first), named in the page language. */
     fonts: { key: FontKey; name: string }[];
@@ -84,6 +88,9 @@ export function ProductView({ product, children }: { product: ProductViewData; c
   const t = useTranslations("product");
   const tCommon = useTranslations("common");
   const tPreview = useTranslations("namePreview");
+  const locale = useLocale() as "en" | "ar";
+  // The shop's WhatsApp, or the employee's own when she came by that employee's link.
+  const whatsapp = useWhatsappNumber(product.whatsappNumber);
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<GalleryHandle>(null);
@@ -108,6 +115,11 @@ export function ProductView({ product, children }: { product: ProductViewData; c
 
   const [materialChoice, setMaterial] = useState<MaterialKey | null>(null);
   const [textChoice, setText] = useState<string | null>(null);
+  // What she writes: a name, one letter, a number or a zodiac sign.
+  const [typeChoice, setTypeChoice] = useState<PersonalizationType | null>(null);
+  const types = p ? typesFor(p.kind) : [];
+  const type = typeChoice ?? (p ? typeOfText(fromUrl.text, p.defaultType) : "name");
+  const limit = p ? (type === "letter" || type === "zodiac" ? 1 : type === "number" ? Math.min(NUMBER_MAX, p.maxLength) : p.maxLength) : 0;
   // One font choice per script: an Arabic name keeps its Arabic font and a
   // Latin name its Latin font while the customer edits.
   const fontKeys = useMemo(() => p?.fonts.map((f) => f.key) ?? [], [p]);
@@ -266,10 +278,63 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
         )}
 
-        {p && (
+        {p && types.length > 1 && (
+          <fieldset className="flex min-w-0 flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("typeLabel")}</legend>
+            <div className="flex flex-wrap gap-2">
+              {types.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={type === k}
+                  onClick={() => {
+                    if (k === type) return;
+                    setTypeChoice(k);
+                    // A different kind starts empty (a sign, a digit or a letter is not a name).
+                    design(setText)("");
+                  }}
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${type === k ? "border-ink bg-ink text-white" : "border-line hover:border-muted"}`}
+                >
+                  {t(`type.${k}`)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
+        {p && type === "zodiac" && (
+          <fieldset className="flex min-w-0 flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("zodiacLabel")}</legend>
+            <div className={`grid grid-cols-4 gap-2 rounded-lg ${missingName ? "ring-1 ring-red-700" : ""}`}>
+              {zodiacSigns.map((z) => (
+                <button
+                  key={z.symbol}
+                  type="button"
+                  aria-pressed={text === z.symbol}
+                  onClick={() => {
+                    design(setText)(z.symbol);
+                    setMissingName(false);
+                  }}
+                  className={`${optionCard} flex flex-col items-center gap-0.5 px-1 py-2 text-center ${text === z.symbol ? selected : unselected}`}
+                >
+                  <span aria-hidden className="text-2xl leading-none" lang="en">
+                    {z.symbol}
+                  </span>
+                  <span className="text-[11px] leading-tight">{z.name[locale]}</span>
+                </button>
+              ))}
+            </div>
+            {missingName && <p className="text-xs text-red-700">{t("zodiacRequired")}</p>}
+            <div aria-hidden className="flex w-40 items-center self-start overflow-hidden rounded-lg border border-line bg-surface">
+              <ProductArt art={product.art} material={material} text={text} font={font} connection={connection} piece={piece} aspect="wide" />
+            </div>
+          </fieldset>
+        )}
+
+        {p && type !== "zodiac" && (
           <div className="flex flex-col gap-2">
             <label htmlFor={inputId} className="text-sm font-medium">
-              {p.kind === "initial" ? t("initialLabel") : t("nameLabel")}
+              {type === "letter" ? t("initialLabel") : type === "number" ? t("numberLabel") : t("nameLabel")}
             </label>
             <div className="flex items-stretch gap-3">
               <div className="flex flex-1 flex-col gap-1.5">
@@ -282,22 +347,24 @@ export function ProductView({ product, children }: { product: ProductViewData; c
                     ref={inputRef}
                     id={inputId}
                     value={text}
-                    maxLength={p.maxLength}
+                    maxLength={limit}
+                    inputMode={type === "number" ? "numeric" : undefined}
                     autoComplete="off"
                     aria-invalid={missingName || undefined}
                     aria-describedby={`${inputId}-hint`}
                     onChange={(e) => {
-                      design(setText)(e.target.value);
-                      if (e.target.value.trim()) setMissingName(false);
+                      const value = type === "number" ? e.target.value.replace(/\D/g, "") : e.target.value;
+                      design(setText)(value);
+                      if (value.trim()) setMissingName(false);
                     }}
                     className="h-12 w-full min-w-0 bg-transparent text-lg outline-none"
                   />
                   <span className="shrink-0 text-xs text-muted tabular-nums" aria-hidden>
-                    {t("nameCount", { count: [...text].length, max: p.maxLength })}
+                    {t("nameCount", { count: [...text].length, max: limit })}
                   </span>
                 </div>
                 <p id={`${inputId}-hint`} className={`text-xs ${missingName ? "text-red-700" : "text-muted"}`}>
-                  {missingName ? t("nameRequired") : t("nameHint", { max: p.maxLength })}
+                  {missingName ? t("nameRequired") : type === "name" ? t("nameHint", { max: limit }) : t("typeHint")}
                 </p>
               </div>
               <div
@@ -404,10 +471,10 @@ export function ProductView({ product, children }: { product: ProductViewData; c
             <span aria-hidden>·</span>
             {formatPrice(unitPrice)}
           </button>
-          {product.whatsappNumber && (
+          {whatsapp && (
             <a
               href={whatsappUrl(
-                product.whatsappNumber,
+                whatsapp,
                 t("whatsappMessage", { product: product.name, url: product.url }),
               )}
               target="_blank"

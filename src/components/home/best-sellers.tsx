@@ -14,7 +14,7 @@ export async function BestSellers({ catalog, locale }: { catalog: Catalog; local
   const t = await getTranslations("home.bestSellers");
   const section = homeSection(catalog, "best_sellers");
   if (!section.visible) return null;
-  const cards = bestSellers(catalog, 8).map((p) => toCard(p, locale));
+  const cards = bestSellers(catalog, 8).map((p) => toCard(p, locale, catalog.settings.points));
   if (cards.length === 0) return null;
 
   return (

@@ -8,8 +8,8 @@ import { Link } from "@/i18n/navigation";
 import { productHref } from "@/config/navigation";
 import type { CardProduct } from "@/lib/catalog/card";
 import { defaultFontFor } from "@/lib/catalog/materials";
-import type { MaterialKey, MetalTone } from "@/lib/catalog/types";
-import { formatPrice } from "@/lib/format";
+import type { FontKey, MaterialKey, MetalTone } from "@/lib/catalog/types";
+import { formatMoney, formatPrice } from "@/lib/format";
 import { PhotoSlot } from "@/components/ui/photo-slot";
 import { ProductArt } from "./product-art";
 
@@ -19,6 +19,12 @@ type Props = {
   previewText?: string;
   /** Open in this metal when the piece comes in it (category metal filter). */
   preferredTone?: MetalTone;
+  /** A name piece shown in one of its fonts (name categories): drawn in it and opens with it chosen. */
+  font?: FontKey;
+  /** Replaces the product name ("Name necklace — Beirut"). */
+  title?: string;
+  /** A small line under the name (the font's look). */
+  subtitle?: string;
   className?: string;
 };
 
@@ -27,9 +33,10 @@ export const badgeClass =
 
 // Product card (restart brief): badges, image carousel with dots, material
 // dots, name, old and new price, free shipping.
-export function ProductCard({ product, previewText, preferredTone, className = "" }: Props) {
+export function ProductCard({ product, previewText, preferredTone, font, title, subtitle, className = "" }: Props) {
   const t = useTranslations("productCard");
   const tCommon = useTranslations("common");
+  const tOffer = useTranslations("offer");
   const tPlaceholders = useTranslations("placeholders");
   const locale = useLocale();
   const [material, setMaterial] = useState<MaterialKey>(
@@ -39,7 +46,8 @@ export function ProductCard({ product, previewText, preferredTone, className = "
   );
   const [slide, setSlide] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
-  const href = productHref(product.slug);
+  const href = font ? `${productHref(product.slug)}?font=${font}` : productHref(product.slug);
+  const name = title ?? product.name;
 
   const offer = product.offers.find((o) => o.material === material) ?? product.offers[0];
   const price = offer.price;
@@ -51,7 +59,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
       art={product.art}
       material={material}
       text={text}
-      font={product.fonts && defaultFontFor(product.fonts, text)}
+      font={font ?? (product.fonts && defaultFontFor(product.fonts, text))}
       connection={product.connection}
       aspect="portrait"
       className={className}
@@ -98,7 +106,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
       <div className="relative overflow-hidden rounded-lg">
         <div
           ref={trackRef}
-          aria-label={t("slides", { name: product.name })}
+          aria-label={t("slides", { name })}
           onScroll={(e) => {
             const el = e.currentTarget;
             setSlide(Math.round(Math.abs(el.scrollLeft) / el.clientWidth));
@@ -111,7 +119,7 @@ export function ProductCard({ product, previewText, preferredTone, className = "
               href={href}
               tabIndex={i === 0 ? undefined : -1}
               aria-hidden={i === 0 ? undefined : true}
-              aria-label={i === 0 ? product.name : undefined}
+              aria-label={i === 0 ? name : undefined}
               className="relative block w-full shrink-0 snap-center"
             >
               {content}
@@ -185,11 +193,12 @@ export function ProductCard({ product, previewText, preferredTone, className = "
       <div className="flex flex-col gap-1 px-0.5">
         <h3 className="text-[15px] leading-snug font-normal font-sans">
           <Link href={href} className="transition-colors hover:text-gold-dark">
-            {product.name}
+            {name}
           </Link>
         </h3>
+        {subtitle && <p className="-mt-0.5 text-xs text-muted">{subtitle}</p>}
         <p className="flex flex-wrap items-baseline gap-x-2">
-          <span className="font-medium text-gold-dark">
+          <span className={`font-medium ${compareAt ? "text-sale" : "text-gold-dark"}`}>
             <span className="sr-only">{t("priceNow", { price: formatPrice(price) })}</span>
             <span aria-hidden>{formatPrice(price)}</span>
           </span>
@@ -200,10 +209,18 @@ export function ProductCard({ product, previewText, preferredTone, className = "
             </s>
           )}
         </p>
-        <p className="flex items-center gap-1 text-xs text-cedar">
-          <Check className="size-3.5" strokeWidth={2} aria-hidden />
-          {tCommon("freeShipping")}
-        </p>
+        {compareAt && (
+          <p className="text-xs font-medium text-sale">
+            {tOffer("percentOff", { percent: Math.round((1 - price / compareAt) * 100) })} · {tOffer("youSave", { amount: formatMoney(compareAt - price) })}
+          </p>
+        )}
+        {product.points > 0 && <p className="text-xs font-medium text-sale">{tOffer("pointsShort", { points: product.points })}</p>}
+        {product.freeDelivery && (
+          <p className="flex items-center gap-1 text-xs text-cedar">
+            <Check className="size-3.5" strokeWidth={2} aria-hidden />
+            {tCommon("freeShipping")}
+          </p>
+        )}
       </div>
     </article>
   );

@@ -9,6 +9,7 @@ import { allMaterials, isFontKey } from "@/lib/catalog/materials";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPreview } from "@/components/admin/admin-preview";
 import { OrderControls } from "@/components/admin/order-controls";
+import { PaymentCard } from "@/components/admin/payment-card";
 import { PointsApprovalCard } from "@/components/admin/points-approval";
 import { Badge, Card, NoAccess, PageHeader } from "@/components/admin/ui";
 
@@ -64,7 +65,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
     <>
       <PageHeader
         title={`Order #${order.number}`}
-        subtitle={`${dateTime(order.created_at)} · ${{ cod: "Cash on delivery", whish: "Whish", card: "Visa / Mastercard" }[order.payment_method]}`}
+        subtitle={`${dateTime(order.created_at)} · ${order.deposit_cents > 0 ? { cod: "Deposit + cash on delivery", whish: "Transfer (Whish / OMT / Suyool)", card: "Visa / Mastercard" }[order.payment_method] : { cod: "Cash on delivery", whish: "Whish", card: "Visa / Mastercard" }[order.payment_method]}`}
         actions={<Badge tone={statusTones[order.status]}>{statusLabels[order.status]}</Badge>}
       />
 
@@ -156,6 +157,19 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
         </div>
 
         <div className="flex flex-col gap-4">
+          {order.deposit_cents > 0 && order.payment_method !== "card" && (
+            <PaymentCard
+              orderId={order.id}
+              method={order.payment_method}
+              due={money(order.deposit_cents)}
+              rest={money(order.total_cents - order.deposit_cents)}
+              reportedAt={order.payment_reported_at}
+              proofUrl={order.payment_proof_url}
+              confirmedAt={order.payment_confirmed_at}
+              canEdit={can(staff, "orders.edit")}
+              cancelled={order.status === "cancelled"}
+            />
+          )}
           <OrderControls
             orderId={order.id}
             status={order.status}

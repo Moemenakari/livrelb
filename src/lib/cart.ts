@@ -29,6 +29,10 @@ export type CartItem = {
   font?: FontKey;
   size?: number;
   connection?: ChainConnection;
+  /** A charm design: the charms on the chain, in order (shape slugs and "stock:<id>"). */
+  charms?: string[];
+  /** Names of those charms to show in the bag. */
+  charmNames?: Localized[];
   /** Price when added (USD). Display only. */
   unitPrice: number;
   qty: number;
@@ -56,7 +60,8 @@ const sameDesign = (a: Omit<CartItem, "id" | "qty">, b: Omit<CartItem, "id" | "q
   a.text === b.text &&
   a.font === b.font &&
   a.size === b.size &&
-  a.connection === b.connection;
+  a.connection === b.connection &&
+  (a.charms ?? []).join(",") === (b.charms ?? []).join(",");
 
 export function addToCart(item: Omit<CartItem, "id" | "qty">) {
   const list = items.read();
@@ -124,5 +129,6 @@ export function toInput(item: CartItem): CartItemInput {
     font: item.font,
     size: item.size,
     connection: item.connection,
+    charms: item.charms,
   };
 }

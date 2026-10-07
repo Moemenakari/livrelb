@@ -119,7 +119,7 @@ export function PriceBlock({
             {t.rich("pointsEarn", {
               points,
               value: formatMoney(value),
-              strong: (chunks) => <strong className="font-semibold text-gold-dark">{chunks}</strong>,
+              strong: (chunks) => <strong className="font-semibold text-sale">{chunks}</strong>,
             })}
           </span>
         </p>

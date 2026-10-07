@@ -14,7 +14,7 @@ export async function NewArrivals({ catalog, locale }: { catalog: Catalog; local
   const t = await getTranslations("home.newArrivals");
   const section = homeSection(catalog, "new_arrivals");
   if (!section.visible) return null;
-  const cards = newestProducts(catalog, 4).map((p) => toCard(p, locale));
+  const cards = newestProducts(catalog, 4).map((p) => toCard(p, locale, catalog.settings.points));
   if (cards.length === 0) return null;
 
   return (

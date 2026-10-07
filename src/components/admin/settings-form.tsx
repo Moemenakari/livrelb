@@ -26,6 +26,10 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
     setSaved(false);
     setS((p) => ({ ...p, [k]: v }));
   };
+  const setPayments = (patch: Partial<NonNullable<SettingsInput["payments"]>>) => {
+    setSaved(false);
+    setS((p) => (p.payments ? { ...p, payments: { ...p.payments, ...patch } } : p));
+  };
   const pointValue = Number(s.redeemDollars) / Math.max(1, Number(s.redeemPoints));
 
   return (
@@ -138,10 +142,68 @@ export function SettingsForm({ initial, whishReady }: { initial: SettingsInput; 
       </Card>
 
       <Card title="Charms page">
-        <Field label="Price of one charm ($)" hint="Every charm a customer picks costs this, unless a Turkish charm has its own price." htmlFor="st-charm">
-          <input id="st-charm" type="number" min="0" step="0.01" value={s.charmPrice} onChange={(e) => set("charmPrice", e.target.value)} className={inputClass} />
-        </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Price of one charm ($)" hint="Every charm a customer picks costs this, unless a charm photo has its own price. The chain's price is the product “Charm necklace or bracelet” in Products." htmlFor="st-charm">
+            <input id="st-charm" type="number" min="0" step="0.01" value={s.charmPrice} onChange={(e) => set("charmPrice", e.target.value)} className={inputClass} />
+          </Field>
+          {s.charmMax !== undefined && (
+            <Field label="Most charms on one chain" htmlFor="st-charmmax">
+              <input id="st-charmmax" type="number" min="1" max="30" value={s.charmMax} onChange={(e) => set("charmMax", e.target.value)} className={inputClass} />
+            </Field>
+          )}
+        </div>
       </Card>
+
+      <Card title="Payment at checkout">
+        {s.payments ? (
+          <div className="flex flex-col gap-3">
+            <Toggle
+              label="Full payment by transfer (Whish / OMT / Suyool)"
+              hint="She sends the whole total to your number, then taps “I sent the transfer”. You confirm in Orders."
+              checked={s.payments.transfer}
+              onChange={(v) => setPayments({ transfer: v })}
+            />
+            <Toggle
+              label="Deposit now, the rest on delivery"
+              hint={`She sends ${s.depositPercent || "…"}% by transfer now and pays the rest in cash at the door.`}
+              checked={s.payments.deposit}
+              onChange={(v) => setPayments({ deposit: v })}
+            />
+            <Toggle label="“Order on WhatsApp” button" hint="Sends the order summary to your WhatsApp (no order on the site)." checked={s.payments.whatsapp} onChange={(v) => setPayments({ whatsapp: v })} />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Deposit (%)" htmlFor="st-deposit">
+                <input id="st-deposit" type="number" min="1" max="100" value={s.depositPercent} onChange={(e) => set("depositPercent", e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Send the money to (number)" hint="Same number for Whish, OMT and Suyool. Transfer and deposit are not offered at checkout until it is set." htmlFor="st-tnum">
+                <input id="st-tnum" dir="ltr" inputMode="tel" maxLength={40} placeholder="+961 70 123 456" value={s.payments.transferNumber} onChange={(e) => setPayments({ transferNumber: e.target.value })} className={inputClass} />
+              </Field>
+              <Field label="Name on the account" htmlFor="st-tname">
+                <input id="st-tname" maxLength={80} value={s.payments.transferName} onChange={(e) => setPayments({ transferName: e.target.value })} className={inputClass} />
+              </Field>
+            </div>
+            <Toggle
+              label="Checkout needs a login"
+              hint="Customers sign in with Google before they order (only when Google sign-in is on in Supabase)."
+              checked={s.payments.requireLogin}
+              onChange={(v) => setPayments({ requireLogin: v })}
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-muted">These options need the Phase 1 database update (Supabase → SQL Editor). Until then checkout keeps cash on delivery and Whish.</p>
+        )}
+      </Card>
+
+      {s.phoneVerifyPoints !== undefined && (
+        <Card title="Phone verification (WhatsApp)">
+          <Field
+            label="Points given once when a customer verifies her phone"
+            hint={`= $${((Number(s.phoneVerifyPoints) || 0) * pointValue).toFixed(2)} off. The code is sent with the WhatsApp Cloud API: it stays hidden until the WHATSAPP_* keys are set on the server (see docs/admin-guide.md).`}
+            htmlFor="st-vp"
+          >
+            <input id="st-vp" type="number" min="0" max="10000" value={s.phoneVerifyPoints} onChange={(e) => set("phoneVerifyPoints", e.target.value)} className={inputClass} />
+          </Field>
+        </Card>
+      )}
 
       <Card title="Visa / Mastercard online">
         <Toggle

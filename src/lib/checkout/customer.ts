@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { createClient as createSessionClient } from "@/lib/supabase/server";
 import { getSupabaseEnv, getSupabaseSecretKey, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
+import { hmac, same } from "@/lib/security/sign";
 import { CUSTOMER_COOKIE, CUSTOMER_MAX_AGE } from "./cookies";
 import type { SavedCustomer } from "./types";
 
@@ -16,26 +17,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function secret(): string | undefined {
   return process.env.CUSTOMER_COOKIE_SECRET || getSupabaseSecretKey();
-}
-
-async function hmac(data: string, key: string): Promise<string> {
-  const k = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(key),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(data)));
-  return btoa(String.fromCharCode(...sig)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-/** Constant-time string compare. */
-function same(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
 }
 
 async function readDeviceCookie(value: string | undefined): Promise<string | null> {
@@ -71,12 +52,18 @@ export async function forgetCustomer() {
   }
 }
 
+type SessionUser = { id: string; email: string | null; name: string | null };
+
 /** The Google login, when this browser has a Supabase session. */
-async function sessionUserId(): Promise<string | null> {
+async function sessionUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   if (!isSupabaseConfigured() || !jar.getAll().some((c) => c.name.startsWith("sb-"))) return null;
   const { data } = await (await createSessionClient()).auth.getUser();
-  return data.user?.id ?? null;
+  const user = data.user;
+  if (!user) return null;
+  const meta = user.user_metadata as { full_name?: unknown; name?: unknown } | undefined;
+  const name = typeof meta?.full_name === "string" ? meta.full_name : typeof meta?.name === "string" ? meta.name : null;
+  return { id: user.id, email: user.email ?? null, name };
 }
 
 export type VerifiedCustomer = {
@@ -84,33 +71,43 @@ export type VerifiedCustomer = {
   customerId: string | null;
   /** Her Google login, if signed in (linked at her next order). */
   authUserId: string | null;
+  /** The email and name Google shares: kept with her account, to know the real person. */
+  authEmail: string | null;
+  authName: string | null;
 };
 
 export async function verifiedCustomer(): Promise<VerifiedCustomer> {
   const db = isSupabaseConfigured() ? createAdminClient() : null;
-  if (!db) return { customerId: null, authUserId: null };
-  const authUserId = await sessionUserId();
-  if (authUserId) {
-    const { data } = await db.from("customers").select("id").eq("auth_user_id", authUserId).maybeSingle();
-    if (data) return { customerId: data.id, authUserId };
+  if (!db) return { customerId: null, authUserId: null, authEmail: null, authName: null };
+  const user = await sessionUser();
+  const auth = { authUserId: user?.id ?? null, authEmail: user?.email ?? null, authName: user?.name ?? null };
+  if (user) {
+    const { data } = await db.from("customers").select("id").eq("auth_user_id", user.id).maybeSingle();
+    if (data) return { customerId: data.id, ...auth };
   }
   const device = await readDeviceCookie((await cookies()).get(CUSTOMER_COOKIE)?.value);
-  return { customerId: device, authUserId };
+  return { customerId: device, ...auth };
 }
 
 /** Saved details to prefill the checkout, and her points. */
 export async function savedCustomer(): Promise<SavedCustomer | null> {
   if (!isSupabaseConfigured()) return null;
-  const { customerId, authUserId } = await verifiedCustomer();
+  const { customerId, authUserId, authEmail, authName } = await verifiedCustomer();
   const db = createAdminClient();
-  if (!customerId || !db) return authUserId ? { google: true } : null;
-  const { data } = await db.rpc("customer_profile", { p_customer_id: customerId });
+  // Signed in with Google but no order yet: her Google name starts the form.
+  if (!customerId || !db) return authUserId ? { google: true, name: authName ?? undefined, email: authEmail ?? undefined } : null;
+  const [{ data }, { data: verified }] = await Promise.all([
+    db.rpc("customer_profile", { p_customer_id: customerId }),
+    db.from("customers").select("phone_verified_at").eq("id", customerId).maybeSingle(),
+  ]);
   if (!data) return null;
   const c = data as { name: string; phone: string; area: string | null; address: string | null; points: number };
   // The checkout saves "address\nbuilding / floor".
   const [address, ...building] = (c.address ?? "").split("\n");
   return {
     google: Boolean(authUserId),
+    email: authEmail ?? undefined,
+    phoneVerified: Boolean(verified?.phone_verified_at),
     name: c.name,
     phone: c.phone,
     area: c.area ?? "",

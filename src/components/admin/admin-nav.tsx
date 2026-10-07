@@ -36,7 +36,7 @@ const items: Item[] = [
   { href: "/admin/products", label: "Products", icon: Gem, main: true },
   { href: "/admin/customers", label: "Customers", icon: Users, need: "customers.view", main: true },
   { href: "/admin/charms", label: "Charm designs", icon: Star, need: "orders.view" },
-  { href: "/admin/charms/items", label: "Turkish charms", icon: Gem, need: "products.edit" },
+  { href: "/admin/charms/items", label: "Charm photos", icon: Gem, need: "products.edit" },
   { href: "/admin/home", label: "Home page", icon: House, need: "collections.manage" },
   { href: "/admin/promotions", label: "Promotions", icon: BadgePercent, need: "coupons.manage" },
   { href: "/admin/seasons", label: "Seasons", icon: Sparkles, need: "collections.manage" },

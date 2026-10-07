@@ -2,7 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { REF_CODE, REF_COOKIE, REF_MAX_AGE } from "./lib/checkout/cookies";
+import { REF_CODE, REF_COOKIE, REF_FLAG_COOKIE, REF_MAX_AGE } from "./lib/checkout/cookies";
 
 const intl = createMiddleware(routing);
 
@@ -78,13 +78,19 @@ export default async function proxy(request: NextRequest) {
   if (personal) {
     const code = personal[1].toLowerCase();
     const response = NextResponse.redirect(new URL("/", request.url));
-    if (REF_CODE.test(code)) response.cookies.set(REF_COOKIE, code, refCookie);
+    if (REF_CODE.test(code)) {
+      response.cookies.set(REF_COOKIE, code, refCookie);
+      response.cookies.set(REF_FLAG_COOKIE, "1", { ...refCookie, httpOnly: false });
+    }
     return response;
   }
 
   const response = intl(request);
   const ref = request.nextUrl.searchParams.get("ref")?.toLowerCase();
-  if (ref && REF_CODE.test(ref)) response.cookies.set(REF_COOKIE, ref, refCookie);
+  if (ref && REF_CODE.test(ref)) {
+    response.cookies.set(REF_COOKIE, ref, refCookie);
+    response.cookies.set(REF_FLAG_COOKIE, "1", { ...refCookie, httpOnly: false });
+  }
   return refreshSession(request, response);
 }
 

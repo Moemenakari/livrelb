@@ -3,7 +3,7 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { productHref } from "@/config/navigation";
+import { CHARM_DESIGN_SLUG, productHref } from "@/config/navigation";
 import { MAX_QTY, removeFromCart, setQty, type CartItem } from "@/lib/cart";
 import { fonts, materials } from "@/lib/catalog/materials";
 import { pieceOf } from "@/lib/catalog/types";
@@ -30,6 +30,8 @@ export function CartLine({ item, quoted, readOnly = false, onNavigate }: Props) 
   const tProduct = useTranslations("product");
   const locale = useLocale() as "en" | "ar";
   const name = item.name[locale];
+  // A charm design has no product page of its own: it opens the Charms page.
+  const href = item.slug === CHARM_DESIGN_SLUG ? "/charms" : productHref(item.slug);
   const lineTotal = quoted && !quoted.error ? quoted.lineTotal : item.unitPrice * item.qty;
 
   const size =
@@ -49,7 +51,7 @@ export function CartLine({ item, quoted, readOnly = false, onNavigate }: Props) 
   return (
     <li className="flex gap-3 py-4">
       <Link
-        href={productHref(item.slug)}
+        href={href}
         onClick={onNavigate}
         className="flex size-20 shrink-0 items-center overflow-hidden rounded-lg bg-surface"
         aria-hidden
@@ -70,16 +72,22 @@ export function CartLine({ item, quoted, readOnly = false, onNavigate }: Props) 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <Link
-              href={productHref(item.slug)}
+              href={href}
               onClick={onNavigate}
               className="text-[15px] leading-snug hover:text-gold-dark"
             >
               {name}
             </Link>
-            {item.text && (
-              <p className="truncate text-sm font-medium" dir="auto">
-                {item.text}
+            {item.charmNames && item.charmNames.length > 0 ? (
+              <p className="text-sm font-medium" dir="auto">
+                {item.charmNames.map((n) => n[locale]).join(", ")}
               </p>
+            ) : (
+              item.text && (
+                <p className="truncate text-sm font-medium" dir="auto">
+                  {item.text}
+                </p>
+              )
             )}
           </div>
           <span className="shrink-0 text-sm font-medium text-gold-dark">{formatPrice(lineTotal)}</span>

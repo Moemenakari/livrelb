@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { CharmItems } from "@/components/admin/charm-items";
 import { NoAccess, PageHeader } from "@/components/admin/ui";
 
-export const metadata: Metadata = { title: "Turkish charms" };
+export const metadata: Metadata = { title: "Charm photos" };
 
-// The Turkish charms in stock that customers can pick on the Charms page.
+// The charms with photos (Charms and Turkish charms) that customers can pick on the Charms page.
 export default async function CharmItemsPage() {
   const staff = await requireStaff();
   if (!can(staff, "products.edit")) return <NoAccess />;
@@ -19,9 +19,9 @@ export default async function CharmItemsPage() {
 
   return (
     <>
-      <PageHeader title="Turkish charms" subtitle="Charms we have in stock. They appear on the website's Charms page." />
+      <PageHeader title="Charm photos" subtitle="Charms and Turkish charms with photos. They appear on the website's Charms page." />
       <CharmItems
-        defaultPrice={String((settings?.charm_price_cents ?? 1300) / 100)}
+        defaultPrice={String((settings?.charm_price_cents ?? 950) / 100)}
         items={(items ?? []).map((i) => ({
           id: i.id,
           url: i.image_url,
@@ -31,6 +31,8 @@ export default async function CharmItemsPage() {
           inStock: i.in_stock,
           isActive: i.is_active,
           order: String(i.sort_order),
+          // Only after the Phase 1 database update.
+          ...("family" in i ? { family: i.family === "charms" ? ("charms" as const) : ("turkish" as const), metal: i.metal === "gold" || i.metal === "silver" ? i.metal : ("" as const), code: i.code ?? "" } : {}),
         }))}
       />
     </>

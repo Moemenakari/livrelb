@@ -4,6 +4,7 @@ import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
+import { CHARMS_NAV_KEY } from "@/config/navigation";
 import { STEP_COUNT, homeSectionKeys, type HomePageInput } from "./home-types";
 import { can } from "./permissions";
 
@@ -75,6 +76,8 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
     }));
     const stepsUsed = steps.some((s) => s.title_en || s.title_ar || s.text_en || s.text_ar);
 
+    const menu = [...new Set((Array.isArray(input.menu) ? input.menu : []).filter((k) => k === CHARMS_NAV_KEY || SLUG.test(k)))];
+
     const { data: products, error: productsError } = await db.from("products").select("id, slug").in("slug", [...liraSlugs, ...bestSlugs]);
     if (productsError) throw productsError;
     const idOf = new Map((products ?? []).map((p) => [p.slug, p.id]));
@@ -90,6 +93,16 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
           if (!missing) throw error;
           if (stepsUsed) throw new AdminError("The step texts need the database update 20261007110000_home_section_items.sql (Supabase → SQL Editor).");
         }
+      }
+
+      // The shop menu: places 10, 20, 30...; Charms is a page, so its place is a setting.
+      for (const [i, key] of menu.entries()) {
+        const place = (i + 1) * 10;
+        const { error } =
+          key === CHARMS_NAV_KEY
+            ? await db.from("site_settings").update({ charms_nav_sort: place }).eq("id", 1)
+            : await db.from("categories").update({ nav_sort: place }).eq("slug", key);
+        if (error) throw error;
       }
 
       const { error: sectionsError } = await db.from("home_sections").upsert(sections, { onConflict: "key" });

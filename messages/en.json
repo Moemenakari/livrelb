@@ -131,7 +131,14 @@
     "previewLabel": "See your name on every necklace",
     "previewPlaceholder": "Type a name",
     "empty": "No pieces match these filters.",
-    "clear": "Clear filters"
+    "clear": "Clear filters",
+    "filtersLabel": "Filters",
+    "priceLabel": "Price",
+    "priceAny": "Any price",
+    "priceUpTo": "Up to {price}",
+    "saleOnly": "Sale",
+    "newOnly": "New",
+    "inFont": "{name} — {font}"
   },
   "product": {
     "breadcrumbLabel": "Breadcrumb",
@@ -198,7 +205,18 @@
       "55": "Long, great for layering"
     },
     "braceletGuide": "Measure your wrist and add 1–2 cm for a comfortable fit.",
-    "ringGuide": "Wrap a strip of paper around your finger, measure it and message us on WhatsApp: we'll tell you your size."
+    "ringGuide": "Wrap a strip of paper around your finger, measure it and message us on WhatsApp: we'll tell you your size.",
+    "typeLabel": "Personalize with",
+    "zodiacLabel": "Choose your sign",
+    "zodiacRequired": "Please choose a sign first",
+    "numberLabel": "Please write your number",
+    "typeHint": "Shown in the font you chose.",
+    "type": {
+      "name": "Name",
+      "letter": "Letter",
+      "number": "Number",
+      "zodiac": "Zodiac sign"
+    }
   },
   "offer": {
     "percentOff": "−{percent}%",
@@ -217,7 +235,8 @@
     "topIn": "#1 Best Seller in {category}",
     "bestSeller": "Best Seller",
     "new": "New",
-    "onlyLeft": "Only {count} left"
+    "onlyLeft": "Only {count} left",
+    "pointsShort": "+{points} LIVRE Points"
   },
   "productInfo": {
     "more": "More details",
@@ -506,7 +525,9 @@
       "cart_changed": "Some pieces in your bag changed. Please check your bag.",
       "unavailable": "We can't take orders right now. Please try again in a moment.",
       "failed": "Something went wrong. Please try again.",
-      "rate_limited": "Too many attempts. Please wait a few minutes and try again."
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
+      "login_required": "Please sign in to place your order.",
+      "payment_invalid": "This payment option isn't available. Please choose another."
     },
     "notYou": "Not you? Clear",
     "google": "Continue with Google",
@@ -521,7 +542,40 @@
       "done": "Done"
     },
     "weAccept": "We accept",
-    "secure": "Secure checkout. Your information is protected."
+    "secure": "Secure checkout. Your information is protected.",
+    "loginTitle": "Sign in to place your order",
+    "loginText": "It takes one tap with Google. Your details are saved for next time, and you can follow every order from your account. Your bag is kept.",
+    "transfer": "Pay by transfer",
+    "transferHint": "Send the full total by Whish, OMT or Suyool, then tap “I sent the transfer”. We confirm and start making your piece.",
+    "deposit": "{percent}% deposit, rest on delivery",
+    "depositHint": "Send {percent}% now by Whish, OMT or Suyool and pay the rest in cash when your order arrives.",
+    "dueNow": "Pay now",
+    "restOnDelivery": "Rest on delivery",
+    "methodTransfer": "Transfer (Whish / OMT / Suyool)",
+    "methodDeposit": "Deposit + cash on delivery",
+    "whatsappOrder": "Order on WhatsApp",
+    "whatsappIntro": "Hi LIVRE! I'd like to order:",
+    "whatsappTotal": "Total",
+    "whatsappWho": "Name, phone, address",
+    "whatsappOnly": "Online payment is off right now. Please order on WhatsApp.",
+    "verify": {
+      "title": "Verify your phone on WhatsApp.",
+      "reward": "You get {points} LIVRE Points ({value} off).",
+      "send": "Send me the code on WhatsApp",
+      "codeLabel": "The 6-digit code we sent you",
+      "check": "Verify",
+      "resend": "Send the code again",
+      "done": "Phone verified",
+      "errors": {
+        "not_available": "Phone verification isn't available right now. You can still place your order.",
+        "login_required": "Please sign in first.",
+        "phone_invalid": "Please check your phone number.",
+        "rate_limited": "Too many attempts. Please wait a few minutes.",
+        "send_failed": "We couldn't send the code. Please check the number and try again.",
+        "code_invalid": "This code isn't right. Please try again.",
+        "code_expired": "This code expired. Please send a new one."
+      }
+    }
   },
   "pages": {
     "breadcrumbLabel": "Breadcrumb",
@@ -553,13 +607,7 @@
   "charms": {
     "nav": "Charms",
     "title": "Charms",
-    "subtitle": "Charms you design. Pick as many as you like, in gold or silver, {price} each.",
-    "tabs": {
-      "label": "How do you want to choose?",
-      "shapes": "Shapes",
-      "stock": "Turkish charms",
-      "photo": "My photo"
-    },
+    "subtitle": "Charms you design. Pick as many as you like, in gold or silver, {price} each, on a necklace or a bracelet.",
     "count": "{count} shapes, letters and numbers",
     "each": "{price} each",
     "total": "{count, plural, one {# charm} other {# charms}} × {price} = {total}",
@@ -589,22 +637,11 @@
     "picked": "Tap a charm on the chain to remove it.",
     "full": "You reached {max} charms.",
     "showMore": "Show {left} more",
-    "noResults": "No shape found. Try another word, or send us a photo of what you want.",
+    "noResults": "No charm found. Try another word.",
     "stock": {
-      "hint": "Real Turkish charms we have in stock, photographed.",
-      "empty": "No Turkish charms listed yet. Pick shapes or send us a photo instead.",
+      "hint": "Real Turkish charms, photographed. Tap one to add it.",
+      "empty": "No charms to show here yet for this metal.",
       "soldOut": "Out of stock"
-    },
-    "photo": {
-      "title": "Upload a picture of the charms you want",
-      "hint": "A photo, a drawing or a screenshot. JPG, PNG or WebP, up to 5 MB.",
-      "choose": "Choose a photo",
-      "uploading": "Uploading…",
-      "remove": "Remove photo",
-      "error": "We couldn't upload this photo. Please try another one.",
-      "unavailable": "Photo upload isn't available yet. Send it to us on WhatsApp instead.",
-      "price": "We confirm the price after seeing your photo.",
-      "ai": "AI charm designer: coming this week."
     },
     "whatsapp": {
       "title": "Prefer WhatsApp?",
@@ -615,32 +652,24 @@
     "summary": {
       "shapes": "Charms",
       "metal": "Metal",
-      "photo": "Photo",
-      "name": "Name",
-      "total": "Estimated total"
+      "total": "Estimated total",
+      "piece": "Worn as"
     },
-    "form": {
-      "title": "Send it to us",
-      "name": "Your name",
-      "phone": "Phone number",
-      "note": "Anything else we should know? (optional)",
-      "submit": "Send my charms",
-      "privacy": "We only use your name and phone to reply to this request."
+    "family": {
+      "label": "Which charms?",
+      "charms": "Charms",
+      "turkish": "Turkish charms"
     },
-    "errors": {
-      "name_required": "Please write your name.",
-      "phone_invalid": "Please check your phone number.",
-      "empty_design": "Pick a charm or upload a photo first.",
-      "rate_limited": "Too many requests. Please wait a few minutes and try again.",
-      "failed": "Something went wrong. Please try again."
+    "piece": {
+      "label": "Worn as",
+      "necklace": "Necklace",
+      "bracelet": "Bracelet",
+      "size": "Size"
     },
-    "done": {
-      "title": "Thank you, we got your charms!",
-      "text": "We will message you on WhatsApp to confirm and arrange payment and delivery. Your reference: {ref}.",
-      "total": "Estimated total: {total}",
-      "whatsapp": "Send it on WhatsApp too",
-      "another": "Choose more charms"
-    }
+    "breakdown": "Chain {chain} + {count, plural, one {# charm} other {# charms}} {charms} = {total}",
+    "deliveryNote": "Delivery is added at checkout.",
+    "addToBag": "Add to bag",
+    "noBag": "Adding to the bag opens soon. Send your design on WhatsApp for now."
   },
   "install": {
     "cta": "Save on your phone",
@@ -689,7 +718,31 @@
     "continue": "Continue shopping",
     "locked": "To see this order, track it with the phone number it was placed with.",
     "pointsToEarn": "You'll earn {points} LIVRE Points after your order is delivered.",
-    "pointsEarned": "This order earned you {points} LIVRE Points."
+    "pointsEarned": "This order earned you {points} LIVRE Points.",
+    "payTitle": "Complete your payment",
+    "payAmount": "Send {amount} now",
+    "payHow": "By Whish, OMT or Suyool to:",
+    "payAccount": "Account name: {name}",
+    "payCopy": "Copy the number",
+    "payCopied": "Copied",
+    "payRest": "The rest, {amount}, is paid in cash on delivery.",
+    "payReceipt": "Add a screenshot of the receipt (optional)",
+    "payReceiptAdded": "Receipt added",
+    "payReceiptRemove": "Remove",
+    "paySent": "I sent the transfer",
+    "payReported": "Thank you! We received your message and will check the transfer and confirm your order shortly.",
+    "payConfirmed": "Payment confirmed. Thank you!",
+    "payAwaiting": "Awaiting payment",
+    "payNoNumber": "We will send you the transfer details on WhatsApp.",
+    "payErrors": {
+      "not_found": "We couldn't find this order in this browser.",
+      "rate_limited": "Too many attempts. Please wait a few minutes.",
+      "invalid_file": "Please use a picture (JPG, PNG or WebP) up to 5 MB.",
+      "unavailable": "Receipts can't be uploaded right now. You can still tap “I sent the transfer”.",
+      "failed": "Something went wrong. Please try again."
+    },
+    "methodTransfer": "Payment: transfer (Whish / OMT / Suyool)",
+    "methodDeposit": "Payment: deposit now, the rest on delivery"
   },
   "orderStatus": {
     "pending": "New",
@@ -739,5 +792,24 @@
     "reference": "Reference: {id}",
     "retry": "Try again",
     "backHome": "Back to home"
+  },
+  "account": {
+    "title": "My account",
+    "hello": "Hi {name}",
+    "tabsLabel": "My account",
+    "tabs": {
+      "last": "Last order",
+      "points": "My points",
+      "track": "Track my orders"
+    },
+    "noOrders": "You haven't placed an order yet.",
+    "shop": "Start designing",
+    "openOrder": "Open the order",
+    "pointsPending": "{points} more points once your orders are delivered.",
+    "ruleEarn": "You earn {points} points for every {amount} you spend.",
+    "ruleRedeem": "{points} points = {value} off your next order.",
+    "signInTitle": "Sign in to see your account",
+    "signInText": "Your last order, your LIVRE Points and the tracking of your orders, in one place. Signing in takes one tap with Google.",
+    "trackWithPhone": "Track an order with its number and phone"
   }
 }

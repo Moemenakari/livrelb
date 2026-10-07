@@ -1,9 +1,9 @@
 import { ChevronRight, UserRound } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { categoryHref, navCategories } from "@/config/navigation";
+import { CHARMS_NAV_KEY, categoryHref } from "@/config/navigation";
 import { whatsappUrl } from "@/config/site";
-import { findCategory, getCatalog } from "@/lib/catalog";
+import { findCategory, getCatalog, navItems } from "@/lib/catalog";
 import { WhatsAppIcon } from "@/components/icons/brand-icons";
 import { CartButton } from "./cart-button";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -13,8 +13,10 @@ import { SearchButton, type SearchIndex } from "./search-button";
 
 const iconButton =
   "flex size-9 items-center justify-center rounded-full transition-colors hover:text-gold-dark lg:size-10";
-const drawerLink =
-  "flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:text-gold-dark";
+// The bottom block of the phone drawer: three equal buttons in one row, so all
+// the menu links above fit on one phone screen.
+const drawerAction =
+  "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-xs transition-colors hover:text-gold-dark";
 
 // White header (restart brief): logo on the start side, small spaced
 // uppercase menu, search / account / cart on the end side. The menu sits
@@ -28,21 +30,12 @@ export async function Navbar() {
 
   const brand = tCommon("brandName");
   const catalog = await getCatalog();
-  const categoryLinks = navCategories.flatMap((slug) => {
-    const category = findCategory(catalog, slug);
-    if (!category) return [];
-    return {
-      href: categoryHref(slug),
-      label: (category.navName ?? category.name)[locale],
-      full: category.name[locale],
-    };
-  });
-  // Charms is its own page (design your charms): second in the menu.
-  const links = [
-    ...categoryLinks.slice(0, 1),
-    { href: "/charms", label: t("charms"), full: t("charms") },
-    ...categoryLinks.slice(1),
-  ];
+  // The categories and the Charms page, in the order set in the admin.
+  const links = navItems(catalog).map(({ key, category }) =>
+    category
+      ? { href: categoryHref(category.slug), label: (category.navName ?? category.name)[locale], full: category.name[locale] }
+      : { href: key === CHARMS_NAV_KEY ? "/charms" : "/", label: t("charms"), full: t("charms") },
+  );
 
   // Small: names only. Searched in the browser (brief: simple search).
   const searchIndex: SearchIndex = {
@@ -68,13 +61,13 @@ export async function Navbar() {
             title={t("menuTitle")}
             header={<Logo name={brand} homeLabel={t("homeLabel")} className="text-xl" />}
           >
-            <nav aria-label={t("mainLabel")} className="flex-1 overflow-y-auto px-5">
-              <ul className="divide-y divide-line">
+            <nav aria-label={t("mainLabel")} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5">
+              <ul className="flex flex-1 flex-col divide-y divide-line">
                 {links.map(({ href, full }) => (
-                  <li key={href}>
+                  <li key={href} className="flex min-h-10 flex-1">
                     <Link
                       href={href}
-                      className="flex items-center justify-between py-4 transition-colors hover:text-gold-dark"
+                      className="flex w-full items-center justify-between py-2 text-sm transition-colors hover:text-gold-dark"
                     >
                       {full}
                       <ChevronRight
@@ -87,18 +80,18 @@ export async function Navbar() {
                 ))}
               </ul>
             </nav>
-            <div className="flex shrink-0 flex-col gap-1 border-t border-line bg-surface p-3">
-              <Link href="/account" className={drawerLink}>
+            <div className="grid shrink-0 grid-flow-col auto-cols-fr gap-1 border-t border-line bg-surface p-2">
+              <Link href="/account" className={drawerAction}>
                 <UserRound className="size-5" strokeWidth={1.5} aria-hidden />
                 {t("account")}
               </Link>
               {catalog.settings.whatsappNumber && (
-                <a href={whatsappUrl(catalog.settings.whatsappNumber)} target="_blank" rel="noopener noreferrer" className={drawerLink}>
+                <a href={whatsappUrl(catalog.settings.whatsappNumber)} target="_blank" rel="noopener noreferrer" className={drawerAction}>
                   <WhatsAppIcon className="size-5 text-cedar" />
                   {tFooter("whatsapp")}
                 </a>
               )}
-              <LocaleSwitcher className="mt-2 flex items-center justify-center rounded-full border border-line bg-background py-2.5 text-sm transition-colors hover:border-gold" />
+              <LocaleSwitcher className={`${drawerAction} font-medium`} />
             </div>
           </MobileMenu>
 
@@ -130,7 +123,7 @@ export async function Navbar() {
         <div className="ms-auto flex items-center">
           <SearchButton index={searchIndex} className={iconButton} />
           <LocaleSwitcher className="hidden h-10 min-w-10 items-center justify-center px-1.5 text-sm transition-colors hover:text-gold-dark sm:flex" />
-          <Link href="/account" aria-label={t("account")} className={`hidden sm:flex ${iconButton}`}>
+          <Link href="/account" aria-label={t("account")} className={iconButton}>
             <UserRound className="size-5" strokeWidth={1.5} />
           </Link>
           <CartButton className={iconButton} />

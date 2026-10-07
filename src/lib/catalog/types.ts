@@ -168,6 +168,8 @@ export type Category = {
   /** A tile of "Shop by style" on the homepage, in this order. */
   showOnHome?: boolean;
   homeSort?: number;
+  /** Place in the shop menu (smaller first), set in the admin. */
+  navSort?: number;
 };
 
 export type Review = {
@@ -203,6 +205,12 @@ export type StoreSettings = {
   processingDays: DayRange;
   /** LIVRE Points rules (site_settings). */
   points: PointsRules;
+  /** Place of the Charms page in the shop menu (smaller first). */
+  charmsNavSort: number;
+  /** How she can pay and log in (Settings). */
+  payments: PaymentSettings;
+  /** LIVRE Points given once when she verifies her phone on WhatsApp. */
+  phoneVerifyPoints: number;
   /** Percent of the total paid now by transfer on a "cash on delivery" order (default 50). */
   depositPercent: number;
   /** Whish online payment (OTP) is switched on. Off = Whish stays manual. */
@@ -214,6 +222,25 @@ export type StoreSettings = {
   ga4Id: string;
   /** Shipping tab text from the admin; empty = the default text. */
   shippingInfo?: Localized;
+};
+
+/**
+ * Ways to pay and the checkout login. `ready` is false until the Phase 1 database
+ * update is applied: the checkout then keeps its previous options.
+ */
+export type PaymentSettings = {
+  ready: boolean;
+  /** Full payment by a Whish / OMT / Suyool transfer. */
+  transfer: boolean;
+  /** A deposit by transfer now, the rest in cash on delivery. */
+  deposit: boolean;
+  /** "Order on WhatsApp" (no order is created on the site). */
+  whatsapp: boolean;
+  /** Where the money goes, shown after she orders. */
+  transferNumber: string;
+  transferName: string;
+  /** Checkout needs a login (when Google sign-in is on). */
+  requireLogin: boolean;
 };
 
 export type PointsRules = {
@@ -302,6 +329,8 @@ export type Catalog = {
   heroOffer: HeroOffer | null;
   /** Empty = the homepage shows the 3D coin. */
   heroSlides: HeroSlide[];
+  /** The chain that carries a charm design in the cart (the "charm-design" product), kept out of `products`. */
+  charmDesign: Product | null;
   /** Homepage sections by key; a missing key = visible with the default texts. */
   home: Record<string, HomeSection>;
   areas: DeliveryArea[];

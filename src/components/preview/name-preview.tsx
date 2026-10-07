@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { FontKey, MaterialKey, MetalTone, ChainConnection } from "@/lib/catalog/types";
 import { estimateInk, measureInk, type Ink, type Point } from "./measure-ink";
-import { MetalDefs, metalEdge, metalLight, toTone } from "./metal";
+import { MetalDefs, metalEdge, metalLight, metalSolid, toTone } from "./metal";
 import { isArabic, scriptFace } from "./script-fonts";
 import { useBevel } from "./use-bevel";
 
@@ -160,7 +160,7 @@ export function NamePreview({
       className={`block h-auto w-full overflow-visible ${className}`}
     >
       <defs>
-        <MetalDefs id={id} tone={tone} />
+        <MetalDefs id={id} tone={tone} textSpan={[ink.top, ink.bottom]} />
         {shine && (
           <linearGradient
             id={`${id}-shine`}
@@ -211,16 +211,30 @@ export function NamePreview({
             strokeWidth="2.6"
           />
         ))}
+        {/* Solid metal first (with the outline), the shiny gradient on top: if a phone cannot
+            paint the gradient on text, the letters are still solid, never transparent. */}
         <text
           transform={textTransform}
           textAnchor="middle"
           direction={arabic ? "rtl" : "ltr"}
           fontSize={fontSize}
           fontWeight={face.weight}
-          fill={`url(#${id}-fill)`}
+          fill={metalSolid[tone]}
           stroke={metalEdge[tone]}
           strokeWidth={1.3}
           paintOrder="stroke"
+          style={{ fontFamily: family }}
+        >
+          {shown}
+        </text>
+        <text
+          aria-hidden
+          transform={textTransform}
+          textAnchor="middle"
+          direction={arabic ? "rtl" : "ltr"}
+          fontSize={fontSize}
+          fontWeight={face.weight}
+          fill={`url(#${id}-text)`}
           style={{ fontFamily: family }}
         >
           {shown}
