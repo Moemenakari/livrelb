@@ -18,9 +18,9 @@ const drawerAction =
   "flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-xs transition-colors hover:text-gold-dark";
 
 // White header (restart brief): logo on the start side, small spaced
-// uppercase menu, search / account / cart on the end side. The menu sits
-// inline from 1440px up and wraps to a second row below that, from the same
-// markup (flex-wrap + order).
+// uppercase menu, search / account / cart on the end side. On desktop the menu
+// is always a second, centred row (it wraps onto a second line when the screen
+// is too narrow for every item, so nothing is ever cut off).
 export async function Navbar() {
   const locale = await getLocale();
   const t = await getTranslations("nav");
@@ -51,7 +51,7 @@ export async function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
-      {/* Wider than the page container so the one-row menu fits at 1440px. */}
+      {/* Wider than the page container so the menu fits in one row at 1440px. */}
       <div className="mx-auto flex max-w-[90rem] flex-wrap items-center px-2 sm:px-4 lg:px-8">
         <div className="flex h-12 items-center gap-1 lg:h-16">
           <MobileMenu
@@ -102,9 +102,9 @@ export async function Navbar() {
 
         <nav
           aria-label={t("mainLabel")}
-          className="order-last hidden w-full border-t border-line lg:block min-[90rem]:order-none min-[90rem]:w-auto min-[90rem]:flex-1 min-[90rem]:border-t-0"
+          className="order-last hidden w-full border-t border-line lg:block"
         >
-          <ul className="flex h-12 items-center justify-center gap-x-7 min-[90rem]:h-16 min-[90rem]:gap-x-6">
+          <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 py-3">
             {links.map(({ href, label }) => (
               <li key={href}>
                 <Link
