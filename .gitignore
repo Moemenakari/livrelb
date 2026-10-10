@@ -52,3 +52,6 @@ next-env.d.ts
 
 # graphify (local knowledge graph)
 /graphify-out
+
+# local MCP server config
+/.mcp.json
