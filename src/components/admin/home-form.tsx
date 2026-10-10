@@ -153,7 +153,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
         </span>
         <span className="min-w-0">
           <span className="block text-sm font-medium">{info.label}</span>
-          <span className="block truncate text-xs text-muted">{info.about}</span>
+          <span className="block text-xs text-muted sm:truncate">{info.about}</span>
         </span>
       </span>
     );
@@ -237,10 +237,10 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
             const s = d.sections.find((x) => x.key === key)!;
             return (
               <li key={key} className={`rounded-lg border p-3 ${s.visible ? "border-line" : "border-dashed border-line bg-surface"}`}>
-                <div className="flex items-center gap-3">
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:flex">
                   <PositionBox position={i + 1} count={d.order.length} disabled={!d.orderReady} onMove={(to) => change({ order: moveTo(d.order, i, to) })} />
                   {sectionLead(key)}
-                  <span className="ms-auto flex items-center gap-1">
+                  <span className="col-span-2 ms-auto flex items-center gap-1 sm:col-auto">
                     <button
                       type="button"
                       aria-pressed={s.visible}
@@ -302,8 +302,8 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
         <FormError error={uploadError} />
         <ul className="flex flex-col gap-2">
           {d.tiles.map((t, i) => (
-            <li key={t.slug} className={`flex flex-wrap items-center gap-3 rounded-lg border p-3 ${t.show ? "border-line" : "border-dashed border-line bg-surface"}`}>
-              <label className="flex items-center gap-2 text-sm font-medium">
+            <li key={t.slug} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border p-3 sm:flex sm:flex-wrap sm:gap-3 ${t.show ? "border-line" : "border-dashed border-line bg-surface"}`}>
+              <label className="col-span-2 flex items-center gap-2 text-sm font-medium sm:col-auto">
                 <input type="checkbox" checked={t.show} onChange={(e) => setTile(t.slug, { show: e.target.checked })} className="size-5 accent-[var(--cedar)]" />
                 {t.name}
               </label>
@@ -377,7 +377,7 @@ function StepFields({ n, step, defaults, disabled, onChange }: { n: number; step
 function TilePhoto({ tile, busy, onFile, onRemove }: { tile: Tile; busy: boolean; onFile: (f: File) => void; onRemove: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   return (
-    <span className="ms-auto flex items-center gap-2">
+    <span className="flex items-center gap-2 sm:ms-auto">
       {tile.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={tile.imageUrl} alt="" className="size-10 rounded-md object-cover" />
