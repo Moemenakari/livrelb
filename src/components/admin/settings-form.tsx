@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Loader2, Plus, X } from "lucide-react";
 import { saveSettings, type SettingsInput } from "@/lib/admin/settings-actions";
 import { FormError, useSave } from "./promo-forms";
+import { HeroCardsEditor, type HeroLabels, type ReviewOption } from "./hero-cards-editor";
 import { Card, Field, buttonClass, inputClass, smallButtonClass } from "./ui";
 
 function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: ReactNode }) {
@@ -18,7 +19,7 @@ function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange
   );
 }
 
-export function SettingsForm({ initial }: { initial: SettingsInput }) {
+export function SettingsForm({ initial, reviews, heroLabels }: { initial: SettingsInput; reviews: ReviewOption[]; heroLabels: HeroLabels }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(false);
   const { pending, error, save } = useSave();
@@ -100,6 +101,10 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
             </li>
           ))}
         </ul>
+      </Card>
+
+      <Card title={heroLabels.title}>
+        <HeroCardsEditor cards={s.heroCards} onChange={(cards) => set("heroCards", cards)} reviews={reviews} labels={heroLabels} />
       </Card>
 
       <Card title="Checkout">

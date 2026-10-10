@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "@/components/admin/settings-form";
+import { parseHeroCards } from "@/lib/hero-cards";
+import en from "../../../../../messages/en.json";
 import { NoAccess, PageHeader } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -10,7 +12,10 @@ export default async function SettingsPage() {
   const staff = await requireStaff();
   if (!staff.isOwner) return <NoAccess />;
   const db = await createClient();
-  const { data: s } = await db.from("site_settings").select("*").eq("id", 1).single();
+  const [{ data: s }, { data: approved }] = await Promise.all([
+    db.from("site_settings").select("*").eq("id", 1).single(),
+    db.from("reviews").select("id, customer_name, city, rating, text").eq("is_approved", true).eq("is_sample", false).order("review_date", { ascending: false }).limit(100),
+  ]);
   if (!s) return <p className="text-sm text-muted">Settings couldn&apos;t be loaded.</p>;
   const d = (cents: number) => String(cents / 100);
   const announcements = Array.isArray(s.announcements)
@@ -33,10 +38,13 @@ export default async function SettingsPage() {
           redeemPoints: String(s.points_redeem_points),
           redeemDollars: d(s.points_redeem_cents),
           announcements,
+          heroCards: parseHeroCards((s as { hero_cards?: unknown }).hero_cards),
           requireLogin: s.checkout_requires_login,
           metaPixelId: s.meta_pixel_id,
           ga4Id: s.ga4_id,
         }}
+        reviews={(approved ?? []).map((r) => ({ id: r.id, rating: r.rating, text: r.text, author: r.customer_name, city: r.city ?? "" }))}
+        heroLabels={en.adminHeroCards}
       />
     </>
   );

@@ -23,9 +23,9 @@ export type WallCardData =
   | { kind: "note"; icon: HeroIconKey | ""; text: string; stars: number; price: string };
 
 // A hand-drawn loudspeaker (not an emoji) with a little 3D shading.
-function Speaker() {
+function Speaker({ className = "size-11" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" aria-hidden className="size-11 shrink-0 drop-shadow-[0_3px_3px_rgba(31,26,23,0.25)]">
+    <svg viewBox="0 0 48 48" aria-hidden className={`${className} shrink-0 drop-shadow-[0_3px_3px_rgba(31,26,23,0.25)]`}>
       <defs>
         <linearGradient id="wall-spk" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#e8c876" />
@@ -53,10 +53,10 @@ const ICONS: Record<Exclude<HeroIconKey, "speaker">, LucideIcon> = {
   party: PartyPopper,
 };
 
-export function HeroIcon({ icon, className = "size-9" }: { icon: HeroIconKey; className?: string }) {
-  if (icon === "speaker") return <Speaker />;
+export function HeroIcon({ icon, className }: { icon: HeroIconKey; className?: string }) {
+  if (icon === "speaker") return <Speaker className={className ?? "size-11"} />;
   const Icon = ICONS[icon];
-  return <Icon className={`${className} shrink-0 text-gold-dark`} strokeWidth={1.5} aria-hidden />;
+  return <Icon className={`${className ?? "size-9"} shrink-0 text-gold-dark`} strokeWidth={1.5} aria-hidden />;
 }
 
 const box = "flex h-28 w-60 shrink-0 rounded-2xl border border-line bg-white/90 p-4 shadow-sm";
