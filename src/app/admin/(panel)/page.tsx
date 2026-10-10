@@ -64,6 +64,22 @@ export default async function DashboardPage() {
   const customersOf = new Map(customerCounts);
 
   const link = personalLink(staff.refCode);
+  const personIds = [...people.map((s) => s.id), ...(staff.isOwner ? [null] : [])];
+  const personName = (id: string | null) => {
+    const person = id ? people.find((s) => s.id === id) : null;
+    return id ? (
+      <>
+        {nameOf(names, id)}
+        {person?.role === "owner" && (
+          <span className="ms-2">
+            <Badge tone="gold">Admin</Badge>
+          </span>
+        )}
+      </>
+    ) : (
+      <span className="text-muted">No employee</span>
+    );
+  };
   const cell = (t: { orders: number; cents: number }) => (
     <td className="py-2 text-end tabular-nums">
       {t.orders}
@@ -108,7 +124,41 @@ export default async function DashboardPage() {
 
       {seeSales && (
         <Card title={staff.isOwner ? "Sales per person" : "My sales"} className="mt-4">
-          <div className="overflow-x-auto">
+          {/* Phones: one small card per person, so no column is ever cut off. */}
+          <ul className="flex flex-col gap-3 sm:hidden">
+            {personIds.map((id) => (
+              <li key={id ?? "none"} className="rounded-lg border border-line p-3 text-sm">
+                <p className="font-medium">{personName(id)}</p>
+                <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                  {(
+                    [
+                      ["Today", rows.day],
+                      ["This week", rows.week],
+                      ["This month", rows.month],
+                    ] as const
+                  ).map(([label, list]) => {
+                    const t = of(list, id);
+                    return (
+                      <div key={label}>
+                        <dt className="text-xs text-muted">{label}</dt>
+                        <dd className="tabular-nums">
+                          {t.orders}
+                          <span className="text-muted"> · {money(t.cents)}</span>
+                        </dd>
+                      </div>
+                    );
+                  })}
+                  {id && (
+                    <div>
+                      <dt className="text-xs text-muted">Customers</dt>
+                      <dd className="tabular-nums">{customersOf.get(id) ?? "—"}</dd>
+                    </div>
+                  )}
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[34rem] text-sm">
               <thead className="text-xs text-muted">
                 <tr>
@@ -120,24 +170,10 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {[...people.map((s) => s.id), ...(staff.isOwner ? [null] : [])].map((id) => {
-                  const person = id ? people.find((s) => s.id === id) : null;
+                {personIds.map((id) => {
                   return (
                     <tr key={id ?? "none"}>
-                      <td className="py-2">
-                        {id ? (
-                          <>
-                            {nameOf(names, id)}
-                            {person?.role === "owner" && (
-                              <span className="ms-2">
-                                <Badge tone="gold">Admin</Badge>
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-muted">No employee</span>
-                        )}
-                      </td>
+                      <td className="py-2">{personName(id)}</td>
                       {cell(of(rows.day, id))}
                       {cell(of(rows.week, id))}
                       {cell(of(rows.month, id))}
