@@ -286,7 +286,7 @@ for (const [group, list] of Object.entries(groups)) {
       continue;
     }
     const nodes = data.node.map(([tag, attrs]) => {
-      const { key: _key, ...rest } = attrs;
+      const rest = Object.fromEntries(Object.entries(attrs).filter(([name]) => name !== "key"));
       return [tag, rest];
     });
     seen.add(slug);
