@@ -2,6 +2,8 @@
 
 import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
+import { HERO_TEXT_MAX, HERO_PRICE_MAX, MAX_HERO_CARDS, isHeroIcon, isReviewId, type HeroCard } from "@/lib/hero-cards";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 
 export type SettingsInput = {
@@ -16,6 +18,8 @@ export type SettingsInput = {
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
+  /** Cards behind the Lira coin on the homepage. */
+  heroCards: HeroCard[];
   /** Checkout needs an account (Google or email). */
   requireLogin: boolean;
   metaPixelId: string;
@@ -33,6 +37,32 @@ const centsOf = (v: string, label: string) => {
   if (!Number.isFinite(n) || n < 0 || n > 10000) throw new AdminError(`${label}: check the amount.`);
   return Math.round(n * 100);
 };
+
+/** Checks the cards behind the coin and drops the empty ones. */
+function cleanHeroCards(input: unknown): HeroCard[] {
+  const list = Array.isArray(input) ? (input as Partial<HeroCard>[]) : [];
+  if (list.length > MAX_HERO_CARDS) throw new AdminError(`Up to ${MAX_HERO_CARDS} cards behind the coin.`);
+  const cards: HeroCard[] = [];
+  for (const c of list) {
+    const id = str(c?.id, 40) || Math.random().toString(36).slice(2, 10);
+    const visible = c?.visible !== false;
+    if (c?.kind === "review") {
+      if (!isReviewId(c.reviewId)) continue;
+      cards.push({ id, kind: "review", icon: "", text: "", stars: 0, price: "", reviewId: c.reviewId, visible });
+      continue;
+    }
+    const icon = isHeroIcon(c?.icon) ? c.icon : "";
+    const text = str(c?.text, HERO_TEXT_MAX + 1);
+    if (text.length > HERO_TEXT_MAX) throw new AdminError(`A card's text can have up to ${HERO_TEXT_MAX} characters.`);
+    const price = str(c?.price, HERO_PRICE_MAX + 1);
+    if (price.length > HERO_PRICE_MAX) throw new AdminError(`A card's price can have up to ${HERO_PRICE_MAX} characters.`);
+    const stars = Math.round(Number(c?.stars ?? 0));
+    if (!Number.isFinite(stars) || stars < 0 || stars > 5) throw new AdminError("Stars: 0 to 5.");
+    if (!text && !price && !icon && stars === 0) continue;
+    cards.push({ id, kind: "note", icon, text, stars, price, reviewId: "", visible });
+  }
+  return cards;
+}
 
 /** Shop settings (owner only): contacts, LIVRE Points, announcement bar, checkout, ad tracking. */
 export async function saveSettings(input: SettingsInput): Promise<ActionResult> {
@@ -53,25 +83,30 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
       .filter((a) => a.en);
     if (announcements.length > 8) throw new AdminError("Up to 8 announcements.");
 
-    const { error } = await db
-      .from("site_settings")
-      .update({
-        whatsapp_number: whatsapp,
-        instagram_url: instagram,
-        points_enabled: Boolean(input.pointsEnabled),
-        points_per_step: whole(input.pointsPerStep, "Points per step", 0, 100000),
-        points_per_review: whole(input.pointsPerReview, "Points per review", 0, 10000),
-        points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
-        points_redeem_cents: centsOf(input.redeemDollars, "Their value"),
-        announcements,
-        points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
-        reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
-        reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
-        checkout_requires_login: Boolean(input.requireLogin),
-        meta_pixel_id: metaPixelId,
-        ga4_id: ga4Id,
-      })
-      .eq("id", 1);
+    const heroCards = cleanHeroCards(input.heroCards);
+
+    const fields = {
+      whatsapp_number: whatsapp,
+      instagram_url: instagram,
+      points_enabled: Boolean(input.pointsEnabled),
+      points_per_step: whole(input.pointsPerStep, "Points per step", 0, 100000),
+      points_per_review: whole(input.pointsPerReview, "Points per review", 0, 10000),
+      points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
+      points_redeem_cents: centsOf(input.redeemDollars, "Their value"),
+      announcements,
+      points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
+      reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
+      reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
+      checkout_requires_login: Boolean(input.requireLogin),
+      meta_pixel_id: metaPixelId,
+      ga4_id: ga4Id,
+    };
+    let { error } = await db.from("site_settings").update({ ...fields, hero_cards: heroCards }).eq("id", 1);
+    // Before the hero cards database update there is no column: everything else still saves.
+    if (isMissingColumn(error)) {
+      if (heroCards.length > 0) throw new AdminError("The cards behind the coin need the database update 20261011090000_hero_cards.sql.");
+      ({ error } = await db.from("site_settings").update(fields).eq("id", 1));
+    }
     if (error) throw error;
     revalidateTag(CATALOG_TAG, { expire: 0 });
     refresh();
