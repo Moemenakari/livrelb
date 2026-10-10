@@ -762,6 +762,8 @@
     "emailSend": "Send me a link",
     "sent": "We sent a link to {email}. Open it on this phone to continue.",
     "error": "Something went wrong. Please try again.",
+    "failed": "We couldn't sign you in. Please try again.",
+    "retry": "Try again",
     "close": "Close"
   }
 }

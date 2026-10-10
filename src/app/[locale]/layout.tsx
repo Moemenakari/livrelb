@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/site";
 import { defaultOgImage } from "@/lib/seo";
 import { Analytics } from "@/components/analytics/analytics";
 import { PwaRegister } from "@/components/layout/pwa";
+import { AuthFailed } from "@/components/auth/auth-failed";
 import { SeenPing } from "@/components/layout/seen-ping";
 import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -95,6 +96,7 @@ export default async function LocaleLayout({
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
           <LoginDialog required={settings.requireLogin} />
           <LoginReminder />
+          <AuthFailed />
           <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
           <PwaRegister />
           <PageViews />
