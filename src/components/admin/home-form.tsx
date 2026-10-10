@@ -1,7 +1,28 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ImagePlus, Loader2, Plus, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Camera,
+  Eye,
+  EyeOff,
+  Gift,
+  Gem,
+  ImagePlus,
+  LayoutGrid,
+  ListOrdered,
+  Loader2,
+  Lock,
+  MessageSquareQuote,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Sun,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { createTileUpload, saveHomePage } from "@/lib/admin/home-actions";
 import type { HomeSectionInput, HomeSectionKey, HomeStepInput } from "@/lib/admin/home-types";
 import { toWebp } from "./media-manager";
@@ -13,6 +34,10 @@ type ProductOption = { slug: string; name: string };
 
 export type HomeFormData = {
   sections: HomeSectionInput[];
+  /** The movable sections, top to bottom. */
+  order: HomeSectionKey[];
+  /** false until the admin redesign database update is applied. */
+  orderReady: boolean;
   liraSlugs: string[];
   tiles: Tile[];
   bestSellers: string[];
@@ -30,15 +55,36 @@ export type HomeFormData = {
 
 const MAX_LIRA = 8;
 
-// What each section lets the owner change. Empty text = the default one.
-const sectionInfo: Record<HomeSectionKey, { label: string; subtitle?: string; cta?: string }> = {
-  lira: { label: "Lira Collection (after the first screen)", subtitle: "Text", cta: "Button opens (default: the Lira Collection page)" },
-  shop_by_style: { label: "Shop by style", subtitle: "Line under the title" },
-  best_sellers: { label: "Best sellers", subtitle: "Line under the title", cta: "Button opens (default: Bestsellers page)" },
-  steps: { label: "How it works (title and the 3 steps)" },
-  new_arrivals: { label: "New arrivals", subtitle: "Line under the title", cta: "Button opens (default: New Arrivals page)" },
-  try_picture: { label: "Try your picture", subtitle: "Line under the title" },
-  create: { label: "Create something personal", subtitle: "Text", cta: "Button opens (default: the name necklace)" },
+// What each section is and what it lets the owner change. Empty text = the default one.
+const sectionInfo: Record<HomeSectionKey, { label: string; about: string; icon: LucideIcon; subtitle?: string; cta?: string }> = {
+  lira: {
+    label: "Lira Collection",
+    about: "The coin comes down here. Products picked below.",
+    icon: Gem,
+    subtitle: "Text",
+    cta: "Button opens (default: the Lira Collection page)",
+  },
+  shop_by_style: { label: "Shop by style", about: "Round pictures of the pages: Rings, Bracelets, Gifts...", icon: LayoutGrid, subtitle: "Line under the title" },
+  best_sellers: {
+    label: "Best sellers",
+    about: "The pieces with the Best seller badge.",
+    icon: Star,
+    subtitle: "Line under the title",
+    cta: "Button opens (default: Bestsellers page)",
+  },
+  steps: { label: "How it works", about: "01 Personalize · 02 Handmade · 03 Delivered.", icon: ListOrdered },
+  try_picture: { label: "Try your picture", about: "The customer tries her photo inside a pendant.", icon: Camera, subtitle: "Line under the title" },
+  reviews: { label: "Reviews", about: "Loved by customers: the latest approved reviews.", icon: MessageSquareQuote },
+  new_arrivals: {
+    label: "New arrivals",
+    about: "The pieces with the New badge, newest first.",
+    icon: Sparkles,
+    subtitle: "Line under the title",
+    cta: "Button opens (default: New Arrivals page)",
+  },
+  why_us: { label: "Why LIVRE", about: "Handcrafted, personalized, quality, trusted.", icon: ShieldCheck },
+  create: { label: "Create something personal", about: "The big call to make a name necklace.", icon: Gift, subtitle: "Text", cta: "Button opens (default: the name necklace)" },
+  trust: { label: "Trust bar", about: "The strip of promises at the bottom.", icon: ShieldCheck },
 };
 
 function swap<T>(list: T[], i: number, by: number): T[] {
@@ -97,6 +143,67 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
     }
   };
 
+  const sectionLead = (keyName: HomeSectionKey) => {
+    const info = sectionInfo[keyName];
+    const Icon = info.icon;
+    return (
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface text-cedar">
+          <Icon className="size-5" strokeWidth={1.5} aria-hidden />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium">{info.label}</span>
+          <span className="block truncate text-xs text-muted">{info.about}</span>
+        </span>
+      </span>
+    );
+  };
+
+  // Texts, button and (for How it works) the three steps of one section.
+  const sectionEditor = (s: HomeSectionInput) => {
+    const info = sectionInfo[s.key];
+    if (!info.subtitle && !info.cta && s.key !== "steps") return null;
+    return (
+      <details className="mt-3 border-t border-line pt-3">
+        <summary className="cursor-pointer text-xs font-medium text-muted">Edit the texts</summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Field label="Title (English)" hint="Empty = the default title." htmlFor={`hs-te-${s.key}`}>
+            <input id={`hs-te-${s.key}`} maxLength={120} value={s.titleEn} onChange={(e) => setSection(s.key, { titleEn: e.target.value })} className={inputClass} />
+          </Field>
+          {info.subtitle && (
+            <Field label={`${info.subtitle} (English)`} htmlFor={`hs-se-${s.key}`}>
+              <input id={`hs-se-${s.key}`} maxLength={300} value={s.subtitleEn} onChange={(e) => setSection(s.key, { subtitleEn: e.target.value })} className={inputClass} />
+            </Field>
+          )}
+          {s.key === "steps" && (
+            <div className="grid gap-3 sm:col-span-2">
+              {!d.stepsReady && (
+                <p className="rounded-lg bg-surface px-3 py-2 text-xs text-muted">
+                  The step texts need the database update <b>20261007110000_home_section_items.sql</b> (Supabase → SQL Editor).
+                </p>
+              )}
+              {d.steps.map((step, i) => (
+                <StepFields
+                  key={i}
+                  n={i + 1}
+                  step={step}
+                  defaults={d.stepDefaults[i]}
+                  disabled={!d.stepsReady}
+                  onChange={(patch) => change({ steps: d.steps.map((x, j) => (j === i ? { ...x, ...patch } : x)) })}
+                />
+              ))}
+            </div>
+          )}
+          {info.cta && (
+            <Field label={info.cta} className="sm:col-span-2" htmlFor={`hs-cta-${s.key}`}>
+              <input id={`hs-cta-${s.key}`} dir="ltr" maxLength={200} placeholder="/category/bracelets" value={s.ctaHref} onChange={(e) => setSection(s.key, { ctaHref: e.target.value })} className={inputClass} />
+            </Field>
+          )}
+        </div>
+      </details>
+    );
+  };
+
   const addable = d.products.filter((p) => !d.liraSlugs.includes(p.slug));
 
   return (
@@ -105,11 +212,59 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
       onSubmit={(e) => {
         e.preventDefault();
         save(
-          () => saveHomePage({ sections: d.sections, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers, steps: d.steps, menu: d.menuReady ? d.menu.map((m) => m.key) : [] }),
+          () => saveHomePage({ sections: d.sections, order: d.order, orderReady: d.orderReady, liraSlugs: d.liraSlugs, tiles: d.tiles.map(({ slug, show, imageUrl }) => ({ slug, show, imageUrl })), bestSellers: d.bestSellers, steps: d.steps, menu: d.menuReady ? d.menu.map((m) => m.key) : [] }),
           () => setSaved(true),
         );
       }}
     >
+      <Card title="Page layout" actions={<span className="text-xs text-muted">Top to bottom, as the shop shows it. Type a number to move a section, or use the arrows. The eye hides it.</span>}>
+        {!d.orderReady && (
+          <p className="mb-3 rounded-lg bg-surface px-3 py-2 text-xs text-muted">
+            Moving sections needs the database update <b>20261009120000_admin_redesign.sql</b> (Supabase → SQL Editor). Until then the order stays as it is; hiding sections and the texts work.
+          </p>
+        )}
+        <ol className="flex flex-col gap-2">
+          <FixedRow icon={Sun} title="Hero" note="The first screen: the Lira coin (or your photos and videos above), the offer and its countdown." />
+          <li className="rounded-lg border border-line bg-surface/60 p-3">
+            <div className="flex items-center gap-3">
+              <Lock className="size-4 shrink-0 text-muted" aria-hidden />
+              {sectionLead("lira")}
+              <span className="ms-auto text-xs text-muted">Fixed</span>
+            </div>
+            {sectionEditor(d.sections.find((x) => x.key === "lira")!)}
+          </li>
+          {d.order.map((key, i) => {
+            const s = d.sections.find((x) => x.key === key)!;
+            return (
+              <li key={key} className={`rounded-lg border p-3 ${s.visible ? "border-line" : "border-dashed border-line bg-surface"}`}>
+                <div className="flex items-center gap-3">
+                  <PositionBox position={i + 1} count={d.order.length} disabled={!d.orderReady} onMove={(to) => change({ order: moveTo(d.order, i, to) })} />
+                  {sectionLead(key)}
+                  <span className="ms-auto flex items-center gap-1">
+                    <button
+                      type="button"
+                      aria-pressed={s.visible}
+                      aria-label={s.visible ? `Hide ${sectionInfo[key].label}` : `Show ${sectionInfo[key].label}`}
+                      onClick={() => setSection(key, { visible: !s.visible })}
+                      className={smallButtonClass}
+                    >
+                      {s.visible ? <Eye className="size-3.5" aria-hidden /> : <EyeOff className="size-3.5" aria-hidden />}
+                    </button>
+                    <button type="button" disabled={!d.orderReady || i === 0} onClick={() => change({ order: swap(d.order, i, -1) })} aria-label="Move up" className={smallButtonClass}>
+                      <ArrowUp className="size-3.5" aria-hidden />
+                    </button>
+                    <button type="button" disabled={!d.orderReady || i === d.order.length - 1} onClick={() => change({ order: swap(d.order, i, 1) })} aria-label="Move down" className={smallButtonClass}>
+                      <ArrowDown className="size-3.5" aria-hidden />
+                    </button>
+                  </span>
+                </div>
+                {sectionEditor(s)}
+              </li>
+            );
+          })}
+        </ol>
+      </Card>
+
       <Card title="Lira Collection products" actions={<span className="text-xs text-muted">Up to {MAX_LIRA}, in this order. None picked = every product of the Lira Collection category.</span>}>
         <ul className="flex flex-col gap-2">
           {d.liraSlugs.map((slug, i) => (
@@ -191,64 +346,6 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
         )}
       </Card>
 
-      <Card title="Section texts" actions={<span className="text-xs text-muted">Empty = the default text. Untick to hide a whole section.</span>}>
-        <ul className="flex flex-col gap-2">
-          {d.sections.map((s) => {
-            const info = sectionInfo[s.key];
-            return (
-              <li key={s.key} className="rounded-lg border border-line p-3">
-                <details>
-                  <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium">
-                    <span>{info.label}</span>
-                    {!s.visible && <span className="text-xs font-normal text-muted">Hidden</span>}
-                  </summary>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <label className="flex items-center gap-2 text-sm sm:col-span-2">
-                      <input type="checkbox" checked={s.visible} onChange={(e) => setSection(s.key, { visible: e.target.checked })} className="size-5 accent-[var(--cedar)]" />
-                      Show this section
-                    </label>
-                    <Field label="Title (English)" htmlFor={`hs-te-${s.key}`}>
-                      <input id={`hs-te-${s.key}`} maxLength={120} value={s.titleEn} onChange={(e) => setSection(s.key, { titleEn: e.target.value })} className={inputClass} />
-                    </Field>
-                    {info.subtitle && (
-                      <>
-                        <Field label={`${info.subtitle} (English)`} htmlFor={`hs-se-${s.key}`}>
-                          <input id={`hs-se-${s.key}`} maxLength={300} value={s.subtitleEn} onChange={(e) => setSection(s.key, { subtitleEn: e.target.value })} className={inputClass} />
-                        </Field>
-                      </>
-                    )}
-                    {s.key === "steps" && (
-                      <div className="grid gap-3 sm:col-span-2">
-                        {!d.stepsReady && (
-                          <p className="rounded-lg bg-surface px-3 py-2 text-xs text-muted">
-                            The step texts need the database update <b>20261007110000_home_section_items.sql</b> (Supabase → SQL Editor).
-                          </p>
-                        )}
-                        {d.steps.map((step, i) => (
-                          <StepFields
-                            key={i}
-                            n={i + 1}
-                            step={step}
-                            defaults={d.stepDefaults[i]}
-                            disabled={!d.stepsReady}
-                            onChange={(patch) => change({ steps: d.steps.map((x, j) => (j === i ? { ...x, ...patch } : x)) })}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    {info.cta && (
-                      <Field label={info.cta} className="sm:col-span-2" htmlFor={`hs-cta-${s.key}`}>
-                        <input id={`hs-cta-${s.key}`} dir="ltr" maxLength={200} placeholder="/category/bracelets" value={s.ctaHref} onChange={(e) => setSection(s.key, { ctaHref: e.target.value })} className={inputClass} />
-                      </Field>
-                    )}
-                  </div>
-                </details>
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
-
       <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t border-line bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:start-60">
         <div className="mx-auto flex max-w-6xl items-center justify-end gap-3">
           {saved && <p className="me-auto text-sm text-emerald-700">Saved. The shop shows it right away.</p>}
@@ -296,5 +393,60 @@ function TilePhoto({ tile, busy, onFile, onRemove }: { tile: Tile; busy: boolean
         </button>
       )}
     </span>
+  );
+}
+
+// Moves the item at `from` to the place `to` (0-based).
+function moveTo<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(Math.max(0, Math.min(next.length, to)), 0, item);
+  return next;
+}
+
+// A section that can't move.
+function FixedRow({ icon: Icon, title, note }: { icon: LucideIcon; title: string; note: string }) {
+  return (
+    <li className="flex items-center gap-3 rounded-lg border border-line bg-surface/60 p-3">
+      <Lock className="size-4 shrink-0 text-muted" aria-hidden />
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-background text-cedar">
+        <Icon className="size-5" strokeWidth={1.5} aria-hidden />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{title}</span>
+        <span className="block text-xs text-muted">{note}</span>
+      </span>
+      <span className="ms-auto text-xs text-muted">Fixed</span>
+    </li>
+  );
+}
+
+// The place of a section: type a number and press Enter (or leave the box) to move it there.
+function PositionBox({ position, count, disabled, onMove }: { position: number; count: number; disabled: boolean; onMove: (to: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    const n = Math.round(Number(draft));
+    setDraft(null);
+    if (Number.isFinite(n) && n >= 1 && n !== position) onMove(Math.min(count, n) - 1);
+  };
+  return (
+    <input
+      type="number"
+      min={1}
+      max={count}
+      inputMode="numeric"
+      aria-label="Place on the page"
+      disabled={disabled}
+      value={draft ?? position}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+        }
+      }}
+      className="h-10 w-14 shrink-0 rounded-lg border border-line bg-background text-center text-sm font-semibold tabular-nums outline-none focus:border-gold"
+    />
   );
 }

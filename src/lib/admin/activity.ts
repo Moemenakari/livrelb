@@ -148,7 +148,10 @@ export function describe(rows: AuditRow[], names: Names): ActivityEvent[] {
       };
       const next = r.table_name === "orders" ? changed("status") : null;
       const href = number ? `/admin/orders/${number}` : "/admin/orders";
-      if (next === "cancelled") {
+      const removed = r.table_name === "orders" ? changed("deleted_at") : null;
+      if (removed !== null && who) {
+        events.push({ key: `a${r.id}`, kind: "cancel", actorId: r.actor_staff_id, title: who, detail: `${removed ? "deleted" : "restored"} ${label}`, href, at: r.created_at });
+      } else if (next === "cancelled") {
         events.push({ key: `a${r.id}`, kind: "cancel", actorId: r.actor_staff_id, title: `Order ${number ? `#${number} ` : ""}cancelled`, detail: who ? `By ${who}` : "Cancelled", href, at: r.created_at });
       } else if (who) {
         let what: string;

@@ -101,7 +101,8 @@ export const statusTones = {
 } as const;
 
 /** "+961 3 123 456" style, for reading. */
-export function prettyPhone(e164: string): string {
+export function prettyPhone(e164: string | null): string {
+  if (!e164) return "No phone yet";
   if (e164.startsWith("+961")) {
     const n = e164.slice(4);
     return `+961 ${n.length === 7 ? `${n.slice(0, 1)} ${n.slice(1, 4)} ${n.slice(4)}` : `${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}`}`;

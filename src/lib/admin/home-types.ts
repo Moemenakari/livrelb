@@ -1,8 +1,25 @@
 // Shapes of the admin's Home page (kept out of the "use server" file, which may only export functions).
 
 /** The homepage sections the owner can edit (keys of home_sections). */
-export const homeSectionKeys = ["lira", "shop_by_style", "best_sellers", "steps", "new_arrivals", "try_picture", "create"] as const;
+export const homeSectionKeys = [
+  "lira",
+  "shop_by_style",
+  "best_sellers",
+  "steps",
+  "try_picture",
+  "reviews",
+  "new_arrivals",
+  "why_us",
+  "create",
+  "trust",
+] as const;
 export type HomeSectionKey = (typeof homeSectionKeys)[number];
+
+/**
+ * The sections the owner can reorder, in their original order. The Hero and the
+ * Lira Collection always come first (they carry the 3D coin).
+ */
+export const movableSectionKeys = homeSectionKeys.filter((k): k is Exclude<HomeSectionKey, "lira"> => k !== "lira");
 
 export type HomeSectionInput = {
   key: HomeSectionKey;
@@ -23,6 +40,10 @@ export type HomeTileInput = { slug: string; show: boolean; imageUrl: string };
 
 export type HomePageInput = {
   sections: HomeSectionInput[];
+  /** The movable sections, top to bottom. */
+  order: HomeSectionKey[];
+  /** false until the admin redesign database update is applied: the order can't be saved yet. */
+  orderReady?: boolean;
   /** Lira Collection products picked by hand, in order (slugs). */
   liraSlugs: string[];
   /** All tile categories; the order of the list is the order on the homepage. */

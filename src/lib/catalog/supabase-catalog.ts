@@ -87,7 +87,7 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
 
   // Sales counts and public coupons: server-only numbers (secret key).
   const admin = createAdminClient();
-  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes, homeRes, itemsRes] = await Promise.all([
+  const [productsRes, categoriesRes, reviewsRes, settingsRes, promotionsRes, areasRes, statsRes, homeRes, itemsRes, sortRes] = await Promise.all([
     db.from("products").select(productColumns).eq("status", "active").order("sort_order"),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
     (reviewReader ?? db)
@@ -105,6 +105,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       .from("home_sections")
       .select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible, home_section_products (sort_order, products (slug))"),
     db.from("home_section_items").select("section_key, position, title_en, title_ar, text_en, text_ar"),
+    // Its own request: before the admin redesign database update this column doesn't exist, and the rest must still load.
+    db.from("home_sections").select("key, sort_order"),
   ]);
 
   // Before the homepage-controls database update the new columns don't exist:
@@ -274,6 +276,9 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       products: [...row.home_section_products].sort(bySort).flatMap((p) => (p.products ? [p.products.slug] : [])),
       items: {},
     };
+  }
+  for (const row of sortRes.error ? [] : (sortRes.data ?? [])) {
+    if (home[row.key]) home[row.key].sort = row.sort_order;
   }
   // The item texts come from a later database update: without it they stay empty.
   for (const row of itemsRes.error ? [] : (itemsRes.data ?? [])) {

@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { authorize, AdminError, run, type ActionResult } from "./auth";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { orderStatuses, type AdminOrderStatus } from "./format";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -13,41 +14,72 @@ function uuid(value: unknown): string {
 
 /**
  * New → Confirmed → In production → Out for delivery → Delivered, or
- * Cancelled. Confirming gives the LIVRE Points and cancelling takes them
- * back (database trigger orders_points); cancelling needs orders.cancel
- * (checked here and by orders_guard), every change is logged.
+ * Cancelled. Delivered gives the LIVRE Points automatically and cancelling
+ * takes them back (database trigger orders_points); cancelling needs
+ * orders.cancel (checked here and by orders_guard), every change is logged.
  */
 export async function setOrderStatus(orderId: string, status: AdminOrderStatus): Promise<ActionResult> {
   return run(async () => {
     if (!orderStatuses.includes(status)) throw new AdminError("Invalid status.");
     const { db } = await authorize(status === "cancelled" ? "orders.cancel" : "orders.edit");
-    const { error, count } = await db.from("orders").update({ status }, { count: "exact" }).eq("id", uuid(orderId));
+    let { error, count } = await db.from("orders").update({ status }, { count: "exact" }).eq("id", uuid(orderId)).is("deleted_at", null);
+    // Before the admin redesign database update there is no deleted_at.
+    if (isMissingColumn(error)) ({ error, count } = await db.from("orders").update({ status }, { count: "exact" }).eq("id", uuid(orderId)));
     if (error) throw error;
-    if (!count) throw new AdminError("You don't have permission to do this.");
+    if (!count) throw new AdminError("Nothing changed. Is this order deleted, or are you not allowed to change it?");
     refresh();
   });
 }
 
-const adjustmentTypes = ["gift", "discount_percent", "free_delivery", "extra_delivery", "other"] as const;
-export type AdjustmentType = (typeof adjustmentTypes)[number];
+export const deleteReasons = ["test", "error", "other"] as const;
+export type DeleteReason = (typeof deleteReasons)[number];
 
-/** Gift, % discount, free delivery, extra delivery fee or a note (add_order_adjustment). */
-export async function addAdjustment(
-  orderId: string,
-  input: { type: AdjustmentType; value: number; note: string },
-): Promise<ActionResult> {
+/**
+ * Delete an order without losing it: it stays in the Orders list as a red line
+ * with the reason and who deleted it, and stops counting in sales and points.
+ * Needs orders.cancel (orders_guard checks it again).
+ */
+export async function deleteOrder(orderId: string, reason: DeleteReason, note: string): Promise<ActionResult> {
   return run(async () => {
-    if (!adjustmentTypes.includes(input.type)) throw new AdminError("Invalid adjustment.");
-    const value = Number(input.value);
-    if (!Number.isFinite(value) || Math.abs(value) > 100000) throw new AdminError("Please check the amount.");
-    const note = String(input.note ?? "").trim().slice(0, 500);
-    if (input.type === "other" && value === 0 && !note) throw new AdminError("Write a note or an amount.");
+    if (!deleteReasons.includes(reason)) throw new AdminError("Choose why you are deleting it.");
+    const text = String(note ?? "").trim().slice(0, 500);
+    if (reason === "other" && !text) throw new AdminError("Write the reason.");
+    const { db } = await authorize("orders.cancel");
+    const { error, count } = await db
+      .from("orders")
+      .update({ deleted_at: new Date().toISOString(), delete_reason: reason, delete_note: text || null }, { count: "exact" })
+      .eq("id", uuid(orderId))
+      .is("deleted_at", null);
+    if (error) throw error;
+    if (!count) throw new AdminError("This order is already deleted.");
+    refresh();
+  });
+}
+
+/** Bring a deleted order back (its points are recalculated by the database). */
+export async function restoreOrder(orderId: string): Promise<ActionResult> {
+  return run(async () => {
+    const { db } = await authorize("orders.cancel");
+    const { error } = await db
+      .from("orders")
+      .update({ deleted_at: null })
+      .eq("id", uuid(orderId));
+    if (error) throw error;
+    refresh();
+  });
+}
+
+/** An internal note on the order (shown in Totals, never to the customer). */
+export async function addOrderNote(orderId: string, note: string): Promise<ActionResult> {
+  return run(async () => {
+    const text = String(note ?? "").trim().slice(0, 500);
+    if (!text) throw new AdminError("Write the note.");
     const { db } = await authorize("orders.edit");
     const { error } = await db.rpc("add_order_adjustment", {
       p_order_id: uuid(orderId),
-      p_type: input.type,
-      p_value: value,
-      p_note: note || undefined,
+      p_type: "other",
+      p_value: 0,
+      p_note: text,
     });
     if (error) throw error;
     refresh();
@@ -79,9 +111,9 @@ export type PointsApproval = {
 };
 
 /**
- * Staff approve an order's LIVRE Points after delivery (approve_order_points):
- * once per order, per $20, and it makes a one-use reward coupon. The result
- * feeds the "thank you" message.
+ * Only for orders delivered before points became automatic: gives their points
+ * now (approve_order_points), once per order, and makes the one-use thank-you
+ * coupon. New orders get their points the moment they are marked Delivered.
  */
 export async function approveOrderPoints(orderId: string): Promise<ActionResult<PointsApproval>> {
   return run(async () => {
@@ -108,25 +140,54 @@ export async function approveOrderPoints(orderId: string): Promise<ActionResult<
   });
 }
 
-/** A line on the customer's tracking page (note from staff, shown to the customer). */
-export async function addTrackingNote(orderId: string, en: string, ar: string): Promise<ActionResult> {
+// Tracking. These save without refreshing the whole page (the card keeps its
+// own list), so they feel instant.
+
+const note = (v: unknown) => String(v ?? "").trim().slice(0, 140);
+
+/** A line on the customer's tracking page (a note from staff). */
+export async function addTrackingNote(orderId: string, text: string): Promise<ActionResult<{ id: string; createdAt: string }>> {
   return run(async () => {
-    const titleEn = en.trim().slice(0, 140);
-    const titleAr = ar.trim().slice(0, 140) || titleEn;
-    if (!titleEn) throw new AdminError("Write the update for the customer.");
+    const title = note(text);
+    if (!title) throw new AdminError("Write the update for the customer.");
     const { db, staff } = await authorize("orders.edit");
-    const { error } = await db.from("order_events").insert({
-      order_id: uuid(orderId),
-      title_en: titleEn,
-      title_ar: titleAr,
-      created_by: staff.id,
-    });
+    const { data, error } = await db
+      .from("order_events")
+      .insert({ order_id: uuid(orderId), title_en: title, title_ar: title, created_by: staff.id })
+      .select("id, created_at")
+      .single();
     if (error) throw error;
-    refresh();
+    return { id: data.id, createdAt: data.created_at };
   });
 }
 
-/** Courier name and tracking number shown on the customer's tracking page. */
+/** Fix the wording of a note staff wrote. */
+export async function updateTrackingNote(id: string, text: string): Promise<ActionResult> {
+  return run(async () => {
+    const title = note(text);
+    if (!title) throw new AdminError("Write the update for the customer.");
+    const { db } = await authorize("orders.edit");
+    const { error, count } = await db
+      .from("order_events")
+      .update({ title_en: title, title_ar: title }, { count: "exact" })
+      .eq("id", uuid(id))
+      .is("status", null);
+    if (error) throw error;
+    if (!count) throw new AdminError("This update can't be changed.");
+  });
+}
+
+/** Remove a note staff wrote (status lines of the order can't be removed). */
+export async function deleteTrackingNote(id: string): Promise<ActionResult> {
+  return run(async () => {
+    const { db } = await authorize("orders.edit");
+    const { error, count } = await db.from("order_events").delete({ count: "exact" }).eq("id", uuid(id)).is("status", null);
+    if (error) throw error;
+    if (!count) throw new AdminError("This update can't be removed.");
+  });
+}
+
+/** Courier name and tracking number shown on the customer's tracking page (empty = remove). */
 export async function saveShipping(orderId: string, carrier: string, trackingNumber: string): Promise<ActionResult> {
   return run(async () => {
     const { db } = await authorize("orders.edit");
@@ -135,6 +196,5 @@ export async function saveShipping(orderId: string, carrier: string, trackingNum
       .update({ carrier: carrier.trim().slice(0, 60) || null, tracking_number: trackingNumber.trim().slice(0, 60) || null })
       .eq("id", uuid(orderId));
     if (error) throw error;
-    refresh();
   });
 }

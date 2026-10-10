@@ -1,169 +1,151 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Check, Loader2, MessageCircle, Sparkles } from "lucide-react";
-import { approveOrderPoints, type PointsApproval } from "@/lib/admin/order-actions";
+import { approveOrderPoints } from "@/lib/admin/order-actions";
 import { writePointsMessage } from "@/lib/admin/points-message";
 import { buttonClass, Card, inputClass, secondaryButtonClass } from "./ui";
 
 type Props = {
   orderId: string;
   status: string;
-  /** Points staff already approved for this order (0 = not yet). */
-  approvedPoints: number;
-  /** Points this order would earn when approved. */
+  /** Points already given for this order (0 = none yet). */
+  earned: number;
+  /** Points this order earns once it is Delivered. */
   wouldEarn: number;
   canEdit: boolean;
-  /** Used when the approval result was not kept in this browser. */
+  /** The customer's points balance now. */
+  balance: number;
+  /** The one-use thank-you coupon made with the points (null for orders from before points were automatic). */
+  coupon: { code: string; percent: number; endsAt: string } | null;
   customer: { name: string; phone: string; orderNumber: number };
 };
 
-const storageKey = (orderId: string) => `livre-points-${orderId}`;
-
-function load(orderId: string): PointsApproval | null {
-  try {
-    const raw = localStorage.getItem(storageKey(orderId));
-    return raw ? (JSON.parse(raw) as PointsApproval) : null;
-  } catch {
-    return null;
-  }
-}
-
-// Delivered orders: the staff member approves the points (once), then gets a
-// ready "you won points + a coupon" message to send on WhatsApp.
-export function PointsApprovalCard({ orderId, status, approvedPoints, wouldEarn, canEdit, customer }: Props) {
+// LIVRE Points are given by the database the moment an order is marked
+// Delivered. This card shows the result and writes the thank-you message the
+// team can send on WhatsApp (AI wording when a key is set, else a fixed text).
+export function PointsCard({ orderId, status, earned, wouldEarn, canEdit, balance, coupon, customer }: Props) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PointsApproval | null>(null);
   const [language, setLanguage] = useState<"ar" | "en">("ar");
   const [text, setText] = useState("");
   const [ai, setAi] = useState(false);
 
-  useEffect(() => {
-    // Read once after mount (localStorage is browser-only).
-    const kept = load(orderId);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (kept) setResult(kept);
-  }, [orderId]);
-
-  const write = (data: PointsApproval, lang: "ar" | "en") =>
+  const write = (lang: "ar" | "en") => {
+    if (!coupon) return;
     start(async () => {
       setError(null);
-      const r = await writePointsMessage({ ...data, language: lang });
+      const r = await writePointsMessage({
+        customerName: customer.name,
+        orderNumber: customer.orderNumber,
+        points: earned,
+        balance,
+        couponCode: coupon.code,
+        couponPercent: coupon.percent,
+        couponEndsAt: coupon.endsAt,
+        language: lang,
+      });
       if (!r.ok) return setError(r.error);
       setText(r.data?.text ?? "");
       setAi(Boolean(r.data?.ai));
     });
+  };
 
-  const approve = () =>
+  const giveNow = () =>
     start(async () => {
       setError(null);
       const r = await approveOrderPoints(orderId);
-      if (!r.ok || !r.data) return setError(r.ok ? "Something went wrong." : r.error);
-      try {
-        localStorage.setItem(storageKey(orderId), JSON.stringify(r.data));
-      } catch {}
-      setResult(r.data);
-      const m = await writePointsMessage({ ...r.data, language });
-      if (m.ok) {
-        setText(m.data?.text ?? "");
-        setAi(Boolean(m.data?.ai));
-      }
+      if (!r.ok) setError(r.error);
     });
 
-  if (status !== "delivered" && approvedPoints === 0) {
+  if (status === "cancelled") {
     return (
       <Card title="LIVRE Points" className="print:hidden">
-        <p className="text-sm text-muted">
-          {wouldEarn > 0
-            ? `This order will earn ${wouldEarn} points. Mark it Delivered, then approve them here.`
-            : "This order is under the points step, it earns no points."}
-        </p>
+        <p className="text-sm text-muted">No points: the order is cancelled.</p>
       </Card>
     );
   }
 
-  const phoneDigits = (result?.customerPhone ?? customer.phone).replace(/\D/g, "");
+  if (earned === 0) {
+    return (
+      <Card title="LIVRE Points" className="print:hidden">
+        {status !== "delivered" ? (
+          <p className="text-sm text-muted">
+            {wouldEarn > 0
+              ? `This order earns ${wouldEarn} points. They are added automatically when you mark it Delivered, with a thank-you coupon.`
+              : "This order is under the points step, it earns no points."}
+          </p>
+        ) : wouldEarn > 0 && canEdit ? (
+          <>
+            <p className="mb-3 text-sm text-muted">This order was delivered before points became automatic. Give its {wouldEarn} points now?</p>
+            <button type="button" disabled={pending} onClick={giveNow} className={buttonClass}>
+              {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Check className="size-4" aria-hidden />}
+              Give {wouldEarn} points
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-muted">This order is under the points step, it earns no points.</p>
+        )}
+        {error && (
+          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+            {error}
+          </p>
+        )}
+      </Card>
+    );
+  }
 
+  const phoneDigits = customer.phone.replace(/\D/g, "");
   return (
     <Card title="LIVRE Points" className="print:hidden">
-      {approvedPoints === 0 && !result && (
-        <>
-          <p className="mb-3 text-sm">
-            The customer received this order. Approve <strong>{wouldEarn} points</strong> for their account? They also
-            get a one-use reward coupon.
-          </p>
-          {canEdit && wouldEarn > 0 ? (
-            <button type="button" disabled={pending} onClick={approve} className={buttonClass}>
-              {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Check className="size-4" aria-hidden />}
-              Approve {wouldEarn} points
-            </button>
-          ) : (
-            <p className="text-sm text-muted">Nothing to approve.</p>
-          )}
-        </>
-      )}
-
-      {(approvedPoints > 0 || result) && (
-        <p className="mb-3 flex items-center gap-2 text-sm font-medium text-cedar">
-          <Check className="size-4" aria-hidden /> {result?.points ?? approvedPoints} points approved
-          {result && <span className="font-normal text-muted">· balance {result.balance}</span>}
-        </p>
-      )}
-
-      {result && (
+      <p className="mb-3 flex items-center gap-2 text-sm font-medium text-cedar">
+        <Check className="size-4" aria-hidden /> {earned} points added automatically
+        <span className="font-normal text-muted">· balance {balance}</span>
+      </p>
+      {coupon ? (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Coupon <span className="font-mono font-semibold text-foreground">{result.couponCode}</span> (
-            {result.couponPercent}% off, one use) ends{" "}
-            {new Date(result.couponEndsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.
+            Thank-you coupon <span className="font-mono font-semibold text-foreground">{coupon.code}</span> ({coupon.percent}% off, one use) ends{" "}
+            {new Date(coupon.endsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.
           </p>
-          <div className="flex gap-1.5">
-            {(["ar", "en"] as const).map((l) => (
-              <button
-                key={l}
-                type="button"
-                aria-pressed={language === l}
-                onClick={() => {
-                  setLanguage(l);
-                  write(result, l);
-                }}
-                className={`rounded-full border px-3 py-1.5 text-xs ${language === l ? "border-ink bg-ink text-white" : "border-line"}`}
-              >
-                {l === "ar" ? "Arabic" : "English"}
-              </button>
-            ))}
-            <button type="button" disabled={pending} onClick={() => write(result, language)} className={`${secondaryButtonClass} ms-auto`}>
-              {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-              Write again
+          {!text ? (
+            <button type="button" disabled={pending} onClick={() => write(language)} className={secondaryButtonClass}>
+              {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <MessageCircle className="size-4" aria-hidden />}
+              Write the WhatsApp message
             </button>
-          </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={7}
-            dir="auto"
-            aria-label="Message to the customer"
-            className={inputClass}
-          />
-          <p className="text-xs text-muted">{ai ? "Written by AI. Read it before sending." : "Standard wording (AI is off)."}</p>
-          <a
-            href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonClass}
-          >
-            <MessageCircle className="size-4" aria-hidden /> Send on WhatsApp
-          </a>
+          ) : (
+            <>
+              <div className="flex gap-1.5">
+                {(["ar", "en"] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    aria-pressed={language === l}
+                    onClick={() => {
+                      setLanguage(l);
+                      write(l);
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-xs ${language === l ? "border-ink bg-ink text-white" : "border-line"}`}
+                  >
+                    {l === "ar" ? "Arabic" : "English"}
+                  </button>
+                ))}
+                <button type="button" disabled={pending} onClick={() => write(language)} className={`${secondaryButtonClass} ms-auto`}>
+                  {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
+                  Write again
+                </button>
+              </div>
+              <textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} dir="auto" aria-label="Message to the customer" className={inputClass} />
+              <p className="text-xs text-muted">{ai ? "Written by AI. Read it before sending." : "Standard wording (AI is off)."}</p>
+              <a href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className={buttonClass}>
+                <MessageCircle className="size-4" aria-hidden /> Send on WhatsApp
+              </a>
+            </>
+          )}
         </div>
+      ) : (
+        <p className="text-xs text-muted">The thank-you message was shown when these points were approved.</p>
       )}
-
-      {approvedPoints > 0 && !result && (
-        <p className="text-xs text-muted">
-          The message and coupon were shown when the points were approved (in another browser or device).
-        </p>
-      )}
-
       {error && (
         <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
           {error}

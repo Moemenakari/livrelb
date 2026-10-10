@@ -5,7 +5,7 @@ import { CATALOG_TAG } from "@/lib/catalog";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 import { CHARMS_NAV_KEY } from "@/config/navigation";
-import { STEP_COUNT, homeSectionKeys, type HomePageInput } from "./home-types";
+import { STEP_COUNT, homeSectionKeys, movableSectionKeys, type HomePageInput } from "./home-types";
 import { can } from "./permissions";
 
 const MAX_LIRA = 8;
@@ -37,6 +37,10 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
     const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.replace(/\/$/, "");
 
     // Validate everything before anything is written, so a mistake never leaves half a save.
+    const order = [...new Set(Array.isArray(input.order) ? input.order : [])];
+    if (order.length !== movableSectionKeys.length || !movableSectionKeys.every((k) => order.includes(k))) {
+      throw new AdminError("Reload the page and try again.");
+    }
     const sections = (Array.isArray(input.sections) ? input.sections : []).map((s) => {
       if (!homeSectionKeys.includes(s.key)) throw new AdminError("Reload the page and try again.");
       const ctaHref = str(s.ctaHref, 200);
@@ -51,6 +55,8 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
         subtitle_en: str(s.subtitleEn, 300),
         subtitle_ar: str(s.subtitleAr, 300),
         cta_href: ctaHref,
+        // Places 10, 20, 30...; the Lira Collection is always right after the Hero.
+        ...(input.orderReady === false ? {} : { sort_order: s.key === "lira" ? 0 : (order.indexOf(s.key) + 1) * 10 }),
       };
     });
 

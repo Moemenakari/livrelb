@@ -9,6 +9,8 @@ import { GoogleIcon } from "@/components/icons/brand-icons";
 // One sign-in dialog for the whole shop. Anything that needs an account (add to bag,
 // checkout, place order) calls ensureLogin() / openLogin(): with no session it opens this
 // dialog (Google, or a link sent to her email) and brings her back to the same page.
+// There is no password and she is asked nothing here: her account is made the moment she
+// signs in (see ensureAccount). Her name, phone and area are asked once, at her first order.
 
 // `required`: Settings → "Checkout needs an account"; off = nobody is asked to sign in (set by <LoginDialog>).
 type State = { user: boolean | null; open: boolean; required: boolean };
@@ -59,6 +61,7 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const ref = useRef<HTMLDialogElement>(null);
+  const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState<"google" | "email" | null>(null);
@@ -111,16 +114,29 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
       aria-label={t("title")}
       onClose={() => set({ open: false })}
       onClick={(e) => e.target === e.currentTarget && set({ open: false })}
-      className="m-auto w-[min(92vw,26rem)] rounded-2xl bg-background p-0 text-foreground backdrop:bg-foreground/30"
+      className="m-auto w-[min(92vw,26rem)] rounded-2xl border border-white/40 bg-background/85 p-0 text-foreground shadow-xl backdrop-blur-md backdrop:bg-foreground/30"
     >
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-2xl">{t("title")}</h2>
+          <div role="tablist" aria-label={t("title")} className="flex gap-1 rounded-full bg-surface p-1">
+            {(["in", "up"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                onClick={() => setMode(m)}
+                className={`rounded-full px-4 py-1.5 text-sm transition-colors ${mode === m ? "bg-ink text-white" : "text-muted"}`}
+              >
+                {t(m === "in" ? "tabIn" : "tabUp")}
+              </button>
+            ))}
+          </div>
           <button type="button" onClick={() => set({ open: false })} aria-label={t("close")} className="flex size-9 items-center justify-center rounded-full hover:bg-surface">
             <X className="size-5" strokeWidth={1.5} />
           </button>
         </div>
-        <p className="text-sm text-muted">{t("text")}</p>
+        <p className="text-sm text-muted">{t(mode === "in" ? "textIn" : "textUp")}</p>
 
         <button
           type="button"
@@ -170,6 +186,72 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
         )}
       </div>
     </dialog>
+  );
+}
+
+const NUDGE_KEY = "livre-login-nudge";
+const NUDGE_EVERY = 24 * 60 * 60 * 1000;
+
+/** A small reminder, at most once a day, for a visitor who is not signed in. */
+export function LoginReminder() {
+  const t = useTranslations("auth");
+  const user = useSyncExternalStore(
+    (l) => {
+      watch();
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => state.user,
+    () => null,
+  );
+  const required = useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => state.required,
+    () => false,
+  );
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (user !== false || !required) return;
+    try {
+      if (Date.now() - Number(localStorage.getItem(NUDGE_KEY) ?? 0) < NUDGE_EVERY) return;
+    } catch {
+      // Storage blocked: ask at most once per visit.
+    }
+    const timer = window.setTimeout(() => setShow(true), 20000);
+    return () => window.clearTimeout(timer);
+  }, [user, required]);
+
+  const hide = () => {
+    setShow(false);
+    try {
+      localStorage.setItem(NUDGE_KEY, String(Date.now()));
+    } catch {
+      // Not saved: it only comes back on the next visit.
+    }
+  };
+
+  if (!show || user !== false) return null;
+  return (
+    <div role="status" className="fixed inset-x-4 bottom-24 z-30 flex items-center gap-3 rounded-2xl border border-white/40 bg-background/85 p-3 shadow-lg backdrop-blur-md sm:start-6 sm:end-auto sm:w-96">
+      <p className="flex-1 text-sm">{t("nudge")}</p>
+      <button
+        type="button"
+        onClick={() => {
+          hide();
+          openLogin();
+        }}
+        className="h-10 shrink-0 rounded-full bg-ink px-4 text-sm font-medium text-white"
+      >
+        {t("tabIn")}
+      </button>
+      <button type="button" onClick={hide} aria-label={t("close")} className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-surface">
+        <X className="size-5" strokeWidth={1.5} />
+      </button>
+    </div>
   );
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 import { findProduct, getCatalog } from "@/lib/catalog";
 import type { PointsRules } from "@/lib/catalog/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { createAdminClient } from "@/lib/supabase/public";
 import { verifiedCustomer } from "./customer";
 import { orderPoints } from "./points";
@@ -43,19 +44,23 @@ export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> 
     return authUserId ? { name: authName ?? "", points: { balance: 0, value: 0 }, rules: catalog.settings.points, orders: [] } : null;
   }
 
-  const [{ data: profile }, { data: s }, { data: orders }] = await Promise.all([
-    db.rpc("customer_profile", { p_customer_id: customerId }),
-    db.from("site_settings").select("points_redeem_points, points_redeem_cents").eq("id", 1).maybeSingle(),
-    db
+  // Deleted orders are hidden (before the admin redesign database update there is no deleted_at).
+  const myOrders = (live: boolean) => {
+    const q = db
       .from("orders")
       .select(
         `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number, area_id,
          order_items (product_slug, product_name, custom_text, qty)`,
       )
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false })
-      .limit(MAX_ORDERS),
+      .eq("customer_id", customerId);
+    return (live ? q.is("deleted_at", null) : q).order("created_at", { ascending: false }).limit(MAX_ORDERS);
+  };
+  const [{ data: profile }, { data: s }, firstOrders] = await Promise.all([
+    db.rpc("customer_profile", { p_customer_id: customerId }),
+    db.from("site_settings").select("points_redeem_points, points_redeem_cents").eq("id", 1).maybeSingle(),
+    myOrders(true),
   ]);
+  const { data: orders } = isMissingColumn(firstOrders.error) ? await myOrders(false) : firstOrders;
   const me = profile as { name?: string; points?: number } | null;
   const balance = Math.max(0, me?.points ?? 0);
   const value = s ? Math.floor(balance / s.points_redeem_points) * dollars(s.points_redeem_cents) : 0;

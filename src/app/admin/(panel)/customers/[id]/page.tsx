@@ -5,8 +5,10 @@ import { requireStaff } from "@/lib/admin/auth";
 import { nameOf, staffNames } from "@/lib/admin/data";
 import { dateOnly, dateTime, money, prettyPhone, statusLabels, statusTones } from "@/lib/admin/format";
 import { can } from "@/lib/admin/permissions";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerControls } from "@/components/admin/customer-controls";
+import { VerifyControls } from "@/components/admin/verify-controls";
 import { Badge, Card, Empty, NoAccess, PageHeader, Stat } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "Customer" };
@@ -20,18 +22,19 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
 
   const db = await createClient();
-  const [{ data: c }, names, { data: orders }, { data: ledger }] = await Promise.all([
+  const customerOrders = (live: boolean) => {
+    const q = db.from("orders").select("id, number, total_cents, status, created_at, staff_id").eq("customer_id", id);
+    return (live ? q.is("deleted_at", null) : q).order("created_at", { ascending: false }).limit(100);
+  };
+  const [{ data: c }, names, firstOrders, { data: ledger }] = await Promise.all([
     db.from("customers").select("*, areas (name_en)").eq("id", id).maybeSingle(),
     staffNames(),
-    db
-      .from("orders")
-      .select("id, number, total_cents, status, created_at, staff_id")
-      .eq("customer_id", id)
-      .order("created_at", { ascending: false })
-      .limit(100),
+    customerOrders(true),
     db.from("points_ledger").select("id, delta, reason, note, created_at, created_by, orders (number)").eq("customer_id", id).order("created_at", { ascending: false }).limit(200),
   ]);
   if (!c) notFound();
+  // Before the admin redesign database update there is no deleted_at.
+  const { data: orders } = isMissingColumn(firstOrders.error) ? await customerOrders(false) : firstOrders;
 
   const balance = (ledger ?? []).reduce((s, p) => s + p.delta, 0);
   const spent = (orders ?? []).filter((o) => o.status !== "cancelled").reduce((s, o) => s + o.total_cents, 0);
@@ -111,8 +114,24 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
               <dd className="whitespace-pre-line">{c.address ?? "—"}</dd>
               <dt className="text-muted">Customer since</dt>
               <dd>{dateOnly(c.created_at)}</dd>
-              <dt className="text-muted">Google login</dt>
-              <dd>{c.auth_user_id ? "Yes" : "No"}</dd>
+              <dt className="text-muted">Phone</dt>
+              <dd dir="ltr" className="text-start">
+                {prettyPhone(c.phone)}
+              </dd>
+              <dt className="text-muted">Email (Google)</dt>
+              <dd className="break-all">{c.email ?? (c.auth_user_id ? "Google login" : "—")}</dd>
+              <dt className="text-muted">Last visit</dt>
+              <dd>{c.last_seen_at ? dateTime(c.last_seen_at) : "—"}</dd>
+              <dt className="text-muted">Verified</dt>
+              <dd className="flex flex-col gap-1.5">
+                <VerifyControls customerId={c.id} name={c.name} phone={c.phone} verified={Boolean(c.phone_verified_at)} canEdit={can(staff, "orders.edit")} />
+                {c.phone_verified_at && (
+                  <span className="text-xs text-muted">
+                    {dateTime(c.phone_verified_at)}
+                    {c.phone_verified_by && ` · by ${nameOf(names, c.phone_verified_by)}`}
+                  </span>
+                )}
+              </dd>
               <dt className="text-muted">Marketing</dt>
               <dd>{c.marketing_opt_in ? "Opted in" : "No"}</dd>
             </dl>

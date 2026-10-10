@@ -11,7 +11,7 @@ import { primaryButton } from "@/components/ui/styles";
 
 type Shape = "round" | "square" | "heart";
 type Metal = Extract<MetalTone, "gold" | "silver">;
-type Piece = "necklace" | "keychain";
+type Piece = "necklace" | "bracelet" | "keychain";
 
 const W = 240;
 const H = 300;
@@ -46,26 +46,44 @@ function engrave(img: HTMLImageElement): string {
   sctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, S, S);
   const px = sctx.getImageData(0, 0, S, S).data;
 
+  // How light each small cell is (0 dark, 1 light).
+  const cells = Math.floor(S / CELL);
+  const light = new Float32Array(cells * cells);
+  for (let cy = 0; cy < cells; cy++) {
+    for (let cx = 0; cx < cells; cx++) {
+      let sum = 0;
+      for (let j = 0; j < CELL; j++) {
+        for (let i = 0; i < CELL; i++) {
+          const k = ((cy * CELL + j) * S + cx * CELL + i) * 4;
+          sum += 0.299 * px[k] + 0.587 * px[k + 1] + 0.114 * px[k + 2];
+        }
+      }
+      light[cy * cells + cx] = sum / (CELL * CELL * 255);
+    }
+  }
+  // Auto contrast: the 3rd percentile becomes black and the 97th white, so a bright selfie and a dark
+  // one both show their shapes (otherwise a light photo gives almost no lines).
+  const sorted = Float32Array.from(light).sort();
+  const low = sorted[Math.floor(sorted.length * 0.03)];
+  const high = Math.max(low + 0.05, sorted[Math.floor(sorted.length * 0.97)]);
+
   const out = document.createElement("canvas");
   out.width = out.height = S;
   const ctx = out.getContext("2d")!;
-  ctx.strokeStyle = "rgba(34,24,10,0.9)";
+  ctx.strokeStyle = "rgba(34,24,10,0.92)";
   ctx.lineCap = "round";
-  for (let y = 0; y < S; y += CELL) {
-    for (let x = 0; x < S; x += CELL) {
-      let sum = 0;
-      for (let j = 0; j < CELL; j++) for (let i = 0; i < CELL; i++) {
-        const k = ((y + j) * S + x + i) * 4;
-        sum += (0.299 * px[k] + 0.587 * px[k + 1] + 0.114 * px[k + 2]) / 255;
-      }
-      // More contrast than the photo has, so faces and shapes read clearly.
-      const dark = Math.min(1, Math.max(0, (1 - sum / (CELL * CELL) - 0.15) * 1.35));
-      if (dark < 0.08) continue;
-      ctx.lineWidth = 0.6 + dark * CELL * 0.75;
+  for (let cy = 0; cy < cells; cy++) {
+    for (let cx = 0; cx < cells; cx++) {
+      const stretched = Math.min(1, Math.max(0, (light[cy * cells + cx] - low) / (high - low)));
+      const dark = Math.pow(1 - stretched, 0.85);
+      if (dark < 0.1) continue;
+      const x = cx * CELL;
+      const y = cy * CELL;
+      ctx.lineWidth = 0.7 + dark * CELL * 0.8;
       ctx.beginPath();
       ctx.moveTo(x, y + CELL);
       ctx.lineTo(x + CELL, y);
-      if (dark > 0.55) {
+      if (dark > 0.5) {
         ctx.moveTo(x, y);
         ctx.lineTo(x + CELL, y + CELL);
       }
@@ -109,6 +127,7 @@ export function PhotoPendant({ whatsapp }: { whatsapp: string }) {
   const [metal, setMetal] = useState<Metal>("gold");
   const [piece, setPiece] = useState<Piece>("necklace");
   const [rings, setRings] = useState<1 | 2>(1);
+  const [failed, setFailed] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
@@ -119,13 +138,23 @@ export function PhotoPendant({ whatsapp }: { whatsapp: string }) {
 
   const choose = (file: File | undefined) => {
     if (!file || !file.type.startsWith("image/")) return;
+    setFailed(false);
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      setArt(engrave(img));
+      try {
+        setArt(engrave(img));
+        setZoom(1);
+        setOffset({ x: 0, y: 0 });
+      } catch {
+        setFailed(true);
+      }
       URL.revokeObjectURL(url);
-      setZoom(1);
-      setOffset({ x: 0, y: 0 });
+    };
+    // A format the browser cannot open (some HEIC photos): she is told instead of seeing nothing.
+    img.onerror = () => {
+      setFailed(true);
+      URL.revokeObjectURL(url);
     };
     img.src = url;
   };
@@ -160,9 +189,11 @@ export function PhotoPendant({ whatsapp }: { whatsapp: string }) {
   const ringPoints: [number, number][] =
     piece === "keychain" ? [[120, TOP - 8]] : rings === 2 ? sideRings[shape].map(([x, y]) => [x, y + TOP]) : [[120, TOP + 2]];
   const edge = metalEdge[metal];
+  // A necklace has one or two rings; a bracelet is joined on one side or on two sides.
+  const ringName = (n: 1 | 2) => t(piece === "bracelet" ? (n === 1 ? "oneSide" : "twoSides") : n === 1 ? "oneRing" : "twoRings");
   const message = [
     t("message"),
-    `${t("shapeLabel")}: ${t(shape)} · ${tMini(metal)} · ${t(piece)}${piece === "necklace" ? ` · ${t(rings === 1 ? "oneRing" : "twoRings")}` : ""}`,
+    `${t("shapeLabel")}: ${t(shape)} · ${tMini(metal)} · ${t(piece)}${piece !== "keychain" ? ` · ${ringName(rings)}` : ""}`,
     t("sendPhoto"),
   ].join("\n");
 
@@ -199,6 +230,14 @@ export function PhotoPendant({ whatsapp }: { whatsapp: string }) {
                 ) : (
                   <path key={i} d={`M${x < 120 ? 24 : 216} 0 Q${(x < 120 ? 24 + x : 216 + x) / 2} ${y * 0.55} ${x} ${y - 6}`} />
                 ),
+              )
+            ) : piece === "bracelet" ? (
+              rings === 1 ? (
+                // one side: the bracelet is a loop, the pendant hangs from the clasp
+                <ellipse cx="120" cy="26" rx="72" ry="26" />
+              ) : (
+                // two sides: the chain runs through a ring on each side of the pendant
+                ringPoints.map(([x, y], i) => <path key={i} d={x < 120 ? `M0 ${y - 16} Q${x / 2} ${y - 16} ${x - 7} ${y - 2}` : `M240 ${y - 16} Q${(240 + x) / 2} ${y - 16} ${x + 7} ${y - 2}`} />)
               )
             ) : (
               <circle cx="120" cy="20" r="18" strokeDasharray="none" stroke={`url(#${id}-fill)`} strokeWidth="5" />
@@ -240,11 +279,17 @@ export function PhotoPendant({ whatsapp }: { whatsapp: string }) {
           {art ? t("change") : t("choose")}
         </button>
 
+        {failed && (
+          <p className="text-sm text-red-700" role="alert">
+            {t("error")}
+          </p>
+        )}
+
         <Choice label={t("shapeLabel")} value={shape} options={["round", "square", "heart"]} onChange={setShape} name={(v) => t(v)} />
         <Choice label={tMini("metalLabel")} value={metal} options={["gold", "silver"]} onChange={setMetal} name={(v) => tMini(v)} />
-        <Choice label={t("pieceLabel")} value={piece} options={["necklace", "keychain"]} onChange={setPiece} name={(v) => t(v)} />
-        {piece === "necklace" && (
-          <Choice label={t("ringsLabel")} value={String(rings) as "1" | "2"} options={["1", "2"]} onChange={(v) => setRings(v === "1" ? 1 : 2)} name={(v) => t(v === "1" ? "oneRing" : "twoRings")} />
+        <Choice label={t("pieceLabel")} value={piece} options={["necklace", "bracelet", "keychain"]} onChange={setPiece} name={(v) => t(v)} />
+        {piece !== "keychain" && (
+          <Choice label={t(piece === "bracelet" ? "sidesLabel" : "ringsLabel")} value={String(rings) as "1" | "2"} options={["1", "2"]} onChange={(v) => setRings(v === "1" ? 1 : 2)} name={(v) => ringName(v === "1" ? 1 : 2)} />
         )}
 
         {art && (

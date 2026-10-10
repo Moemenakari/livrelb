@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin/auth";
 import { can } from "@/lib/admin/permissions";
 import { CHARMS_NAV_KEY } from "@/config/navigation";
-import { STEP_COUNT, homeSectionKeys } from "@/lib/admin/home-types";
+import { STEP_COUNT, homeSectionKeys, movableSectionKeys } from "@/lib/admin/home-types";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { createClient } from "@/lib/supabase/server";
+import { HeroSlides } from "@/components/admin/hero-slides";
 import { HomeForm, type HomeFormData } from "@/components/admin/home-form";
 import { Card, NoAccess, PageHeader } from "@/components/admin/ui";
 import en from "../../../../../messages/en.json";
@@ -15,24 +17,29 @@ export default async function HomeAdminPage() {
   if (!can(staff, "collections.manage") || !can(staff, "products.edit")) return <NoAccess />;
   const db = await createClient();
 
-  const [sectionsRes, picksRes, categoriesRes, productsRes, itemsRes, navRes, charmsRes] = await Promise.all([
-    db.from("home_sections").select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible"),
+  const [firstSections, picksRes, categoriesRes, productsRes, itemsRes, navRes, charmsRes, slidesRes] = await Promise.all([
+    db.from("home_sections").select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible, sort_order"),
     db.from("home_section_products").select("section_key, sort_order, products (slug)").eq("section_key", "lira").order("sort_order"),
     db.from("categories").select("slug, name_en, rule, is_active, show_on_home, home_sort, image_url").order("home_sort").order("sort_order"),
     db.from("products").select("slug, name_en, status, is_best_seller, best_seller_sort").order("sort_order"),
     db.from("home_section_items").select("position, title_en, title_ar, text_en, text_ar").eq("section_key", "steps"),
     db.from("categories").select("slug, name_en, nav_sort").eq("is_active", true),
     db.from("site_settings").select("charms_nav_sort").eq("id", 1).maybeSingle(),
+    db.from("promotions").select("*").eq("placement", "hero_slide").order("sort_order").order("created_at", { ascending: false }),
   ]);
 
-  // The columns and tables come from the "home page controls" database update.
+  // Before the admin redesign database update there is no sort_order: the page still works, only the order can't be saved.
+  const orderReady = !isMissingColumn(firstSections.error);
+  const sectionsRes = orderReady
+    ? firstSections
+    : await db.from("home_sections").select("key, title_en, title_ar, subtitle_en, subtitle_ar, cta_href, is_visible");
   if (sectionsRes.error || picksRes.error || categoriesRes.error || productsRes.error) {
     return (
       <>
         <PageHeader title="Home page" />
         <Card>
           <p className="text-sm">
-            The database needs one update before this page works: run the file <b>20261007100000_home_page_controls.sql</b> in the Supabase SQL Editor
+            The database needs one update before this page works: run the file <b>20261009120000_admin_redesign.sql</b> in the Supabase SQL Editor
             (see docs/database.md), then reload.
           </p>
         </Card>
@@ -51,8 +58,14 @@ export default async function HomeAdminPage() {
         { key: CHARMS_NAV_KEY, name: "Charms (page)", sort: charmsRes.data?.charms_nav_sort ?? 20 },
       ].sort((a, b) => a.sort - b.sort)
     : [];
-  const rows = new Map((sectionsRes.data ?? []).map((s) => [s.key, s]));
+  const rows = new Map((sectionsRes.data ?? []).map((s) => [s.key, s as typeof s & { sort_order?: number }]));
+  // The movable sections, in the order the shop shows them (ties keep the original order).
+  const order = [...movableSectionKeys].sort(
+    (a, b) => (rows.get(a)?.sort_order ?? (movableSectionKeys.indexOf(a) + 1) * 10) - (rows.get(b)?.sort_order ?? (movableSectionKeys.indexOf(b) + 1) * 10),
+  );
   const data: HomeFormData = {
+    order,
+    orderReady,
     sections: homeSectionKeys.map((key) => {
       const s = rows.get(key);
       return {
@@ -93,7 +106,28 @@ export default async function HomeAdminPage() {
 
   return (
     <>
-      <PageHeader title="Home page" subtitle="Texts, the Lira Collection products, the Shop by style tiles and the Best sellers order. Saved changes show in the shop right away." />
+      <PageHeader
+        title="Home page"
+        subtitle="The order of the sections, the first screen's photos, the Lira Collection products, the Shop by style tiles and the Best sellers. Saved changes show in the shop right away."
+      />
+      {can(staff, "coupons.manage") && (
+        <div className="mb-4">
+          <HeroSlides
+            slides={(slidesRes.data ?? [])
+              .filter((p) => p.media_url && p.media_type)
+              .map((p) => ({
+                id: p.id,
+                url: p.media_url!,
+                type: p.media_type!,
+                headlineEn: p.headline_en ?? "",
+                headlineAr: p.headline_ar ?? "",
+                link: p.link_url ?? "",
+                order: String(p.sort_order),
+                isActive: p.is_active,
+              }))}
+          />
+        </div>
+      )}
       <HomeForm initial={data} />
     </>
   );

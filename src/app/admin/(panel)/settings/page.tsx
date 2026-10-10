@@ -19,18 +19,9 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Owner only." />
+      <PageHeader title="Settings" subtitle="Admins only. Delivery is in Delivery & times, charm prices are in Charms." />
       <SettingsForm
         initial={{
-          deliveryFee: d(s.delivery_fee_cents),
-          freeShippingOver: d(s.free_shipping_threshold_cents),
-          firstOrderFree: s.first_order_free_delivery,
-          daysMin: String(s.delivery_days_min),
-          daysMax: String(s.delivery_days_max),
-          deliveryTimeEn: s.delivery_time_en,
-          deliveryTimeAr: s.delivery_time_ar,
-          shippingInfoEn: s.shipping_info_en,
-          shippingInfoAr: s.shipping_info_ar,
           whatsapp: s.whatsapp_number,
           instagram: s.instagram_url,
           pointsEnabled: s.points_enabled,
@@ -42,9 +33,7 @@ export default async function SettingsPage() {
           redeemPoints: String(s.points_redeem_points),
           redeemDollars: d(s.points_redeem_cents),
           announcements,
-          charmPrice: d(s.charm_price_cents),
           requireLogin: s.checkout_requires_login,
-          charmMax: String(s.charm_max),
           metaPixelId: s.meta_pixel_id,
           ga4Id: s.ga4_id,
         }}

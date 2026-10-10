@@ -1,98 +1,43 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/admin/auth";
-import { dateTime, prettyPhone } from "@/lib/admin/format";
 import { can } from "@/lib/admin/permissions";
-import { findShape } from "@/lib/charms";
 import { createClient } from "@/lib/supabase/server";
-import { CharmActions } from "@/components/admin/charm-row";
-import { Badge, Card, Empty, NoAccess, PageHeader } from "@/components/admin/ui";
+import { CharmItems } from "@/components/admin/charm-items";
+import { NoAccess, PageHeader } from "@/components/admin/ui";
 
-export const metadata: Metadata = { title: "Charm designs" };
+export const metadata: Metadata = { title: "Charms" };
 
-const tones = { new: "gold", contacted: "blue", done: "green" } as const;
-
-// Charm designs customers sent from the Charms page: call or WhatsApp them
-// with the price, then mark them done.
+// The charms with photos (Charms and Turkish charms) that customers can pick on the Charms page.
 export default async function CharmsAdminPage() {
   const staff = await requireStaff();
-  if (!can(staff, "orders.view")) return <NoAccess />;
+  if (!can(staff, "products.edit")) return <NoAccess />;
   const db = await createClient();
-  const { data } = await db
-    .from("charm_requests")
-    .select("id, name, phone, shapes, letters, metal, note, image_url, status, created_at, total_cents")
-    .order("status", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(100);
-  const rows = data ?? [];
-  const { data: stock } = await db.from("charm_items").select("id, name_en");
-  const stockNames = new Map((stock ?? []).map((i) => [i.id, i.name_en]));
-  const label = (key: string) => (key.startsWith("stock:") ? `${stockNames.get(key.slice(6)) ?? "Turkish charm"} (stock)` : (findShape(key)?.name.en ?? key));
+  const [{ data: items }, { data: settings }] = await Promise.all([
+    db.from("charm_items").select("*").order("sort_order").order("created_at", { ascending: false }),
+    db.from("site_settings").select("charm_price_cents, charm_max").eq("id", 1).maybeSingle(),
+  ]);
 
   return (
     <>
-      <PageHeader title="Charm designs" subtitle={`${rows.filter((r) => r.status === "new").length} new`} />
-      {rows.length === 0 ? (
-        <Empty>No charm designs yet. They appear here when a customer sends one from the Charms page.</Empty>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {rows.map((r) => {
-            const names = r.shapes.map(label);
-            const message = `Hi ${r.name}, this is LIVRE about your charm design${names.length ? ` (${names.join(", ")})` : ""}.`;
-            return (
-              <li key={r.id}>
-                <Card
-                  title={
-                    <span className="flex items-center gap-2">
-                      {r.name} <Badge tone={tones[r.status as keyof typeof tones]}>{r.status}</Badge>
-                    </span>
-                  }
-                  actions={<span className="text-xs text-muted">{dateTime(r.created_at)}</span>}
-                >
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                    <dt className="text-muted">Phone</dt>
-                    <dd dir="ltr" className="text-start">
-                      {prettyPhone(r.phone)}
-                    </dd>
-                    {r.total_cents !== null && (
-                      <>
-                        <dt className="text-muted">Estimate</dt>
-                        <dd className="font-medium">${r.total_cents / 100}</dd>
-                      </>
-                    )}
-                    <dt className="text-muted">Metal</dt>
-                    <dd className="capitalize">{r.metal}</dd>
-                    {names.length > 0 && (
-                      <>
-                        <dt className="text-muted">Shapes</dt>
-                        <dd>{names.join(", ")}</dd>
-                      </>
-                    )}
-                    {r.letters && (
-                      <>
-                        <dt className="text-muted">Letters</dt>
-                        <dd dir="auto">{r.letters}</dd>
-                      </>
-                    )}
-                    {r.note && (
-                      <>
-                        <dt className="text-muted">Note</dt>
-                        <dd className="whitespace-pre-line">{r.note}</dd>
-                      </>
-                    )}
-                  </dl>
-                  {r.image_url && (
-                    <a href={r.image_url} target="_blank" rel="noopener noreferrer" className="mt-3 block w-32">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={r.image_url} alt="Reference photo from the customer" className="w-32 rounded-lg border border-line" />
-                    </a>
-                  )}
-                  <CharmActions id={r.id} status={r.status as "new" | "contacted" | "done"} phone={r.phone} message={message} />
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <PageHeader title="Charms" subtitle="Charms and Turkish charms with photos. They appear on the website's Charms page." />
+      <CharmItems
+        isOwner={staff.isOwner}
+        defaultPrice={String((settings?.charm_price_cents ?? 950) / 100)}
+        maxCharms={String(settings?.charm_max ?? 8)}
+        items={(items ?? []).map((i) => ({
+          id: i.id,
+          url: i.image_url,
+          nameEn: i.name_en,
+          nameAr: i.name_ar,
+          price: i.price_cents === null ? "" : String(i.price_cents / 100),
+          inStock: i.in_stock,
+          isActive: i.is_active,
+          order: String(i.sort_order),
+          family: i.family === "charms" ? ("charms" as const) : ("turkish" as const),
+          metal: i.metal === "gold" || i.metal === "silver" ? i.metal : ("" as const),
+          code: i.code ?? "",
+        }))}
+      />
     </>
   );
 }

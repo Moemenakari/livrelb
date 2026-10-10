@@ -13,7 +13,9 @@ export default async function DeliveryPage() {
   if (!staff.isOwner) return <NoAccess />;
   const db = await createClient();
   const [{ data: s }, { data: areas }] = await Promise.all([
-    db.from("site_settings").select("delivery_fee_cents, delivery_days_min, delivery_days_max, processing_days_min, processing_days_max").eq("id", 1).single(),
+    db.from("site_settings").select(
+        "delivery_fee_cents, free_shipping_threshold_cents, first_order_free_delivery, delivery_days_min, delivery_days_max, delivery_time_en, shipping_info_en, processing_days_min, processing_days_max",
+      ).eq("id", 1).single(),
     db
       .from("areas")
       .select("id, name_en, name_ar, delivery_fee_cents, delivery_days_min, delivery_days_max, is_active")
@@ -27,8 +29,14 @@ export default async function DeliveryPage() {
       <DeliveryForm
         // New areas get an id when saved: remount so they are not added twice.
         key={(areas ?? []).map((a) => a.id).join(",")}
-        defaults={{ fee: String(s.delivery_fee_cents / 100), daysMin: s.delivery_days_min, daysMax: s.delivery_days_max }}
         initial={{
+          fee: String(s.delivery_fee_cents / 100),
+          freeOver: String(s.free_shipping_threshold_cents / 100),
+          daysMin: String(s.delivery_days_min),
+          daysMax: String(s.delivery_days_max),
+          firstOrderFree: s.first_order_free_delivery,
+          timeEn: s.delivery_time_en,
+          shippingEn: s.shipping_info_en,
           processingMin: String(s.processing_days_min),
           processingMax: String(s.processing_days_max),
           areas: (areas ?? []).map((a) => ({

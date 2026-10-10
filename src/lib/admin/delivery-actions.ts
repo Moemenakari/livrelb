@@ -17,7 +17,19 @@ export type AreaInput = {
   active: boolean;
 };
 
-export type DeliveryInput = { processingMin: string; processingMax: string; areas: AreaInput[] };
+export type DeliveryInput = {
+  /** The shop's defaults, used by every area that leaves its own empty. */
+  fee: string;
+  freeOver: string;
+  daysMin: string;
+  daysMax: string;
+  firstOrderFree: boolean;
+  timeEn: string;
+  shippingEn: string;
+  processingMin: string;
+  processingMax: string;
+  areas: AreaInput[];
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -34,10 +46,18 @@ const slugOf = (name: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
 
-/** Delivery & times page (owner only): days to make a piece, and each area's fee and delivery days. */
+const cents = (v: string, label: string) => {
+  const n = Number(v);
+  if (v.trim() === "" || !Number.isFinite(n) || n < 0 || n > 10000) throw new AdminError(`${label}: check the amount.`);
+  return Math.round(n * 100);
+};
+
+/** Delivery & times page (owner only): the shop's delivery defaults, days to make a piece, and each area's fee and delivery days. */
 export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> {
   return run(async () => {
     const { db } = await authorize("owner");
+    const daysMin = whole(input.daysMin, "Delivery days (from)", 0, 60);
+    const daysMax = whole(input.daysMax, "Delivery days (to)", daysMin, 90);
     const processingMin = whole(input.processingMin, "Making days (from)", 0, 60);
     const processingMax = whole(input.processingMax, "Making days (to)", processingMin, 60);
     const list = Array.isArray(input.areas) ? input.areas : [];
@@ -83,7 +103,17 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
     try {
       const { error: settingsError } = await db
         .from("site_settings")
-        .update({ processing_days_min: processingMin, processing_days_max: processingMax })
+        .update({
+          delivery_fee_cents: cents(input.fee, "Delivery fee"),
+          free_shipping_threshold_cents: cents(input.freeOver, "Free delivery over"),
+          first_order_free_delivery: Boolean(input.firstOrderFree),
+          delivery_days_min: daysMin,
+          delivery_days_max: daysMax,
+          delivery_time_en: str(input.timeEn, 120),
+          shipping_info_en: str(input.shippingEn, 3000),
+          processing_days_min: processingMin,
+          processing_days_max: processingMax,
+        })
         .eq("id", 1);
       if (settingsError) throw settingsError;
 

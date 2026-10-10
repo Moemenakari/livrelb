@@ -3,8 +3,9 @@
 import { siteConfig } from "@/config/site";
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ExternalLink, Loader2, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
 import { deleteProduct, saveProduct } from "@/lib/admin/product-actions";
+import { suggestCategories } from "@/lib/admin/suggest-actions";
 import { artKey, artPresets, type ProductForm } from "@/lib/admin/product-types";
 import type { ChainConnection, FontKey, MaterialKey } from "@/lib/catalog/types";
 import { AdminPreview } from "./admin-preview";
@@ -70,6 +71,24 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const set = <K extends keyof ProductForm>(key: K, value: ProductForm[K]) => setF((prev) => ({ ...prev, [key]: value }));
+  const [suggestion, setSuggestion] = useState<{ reason: string; ai: boolean } | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [autoTried, setAutoTried] = useState(false);
+
+  // Suggests the shop pages for this piece (AI when it is set up, else keyword rules).
+  const suggest = async (auto: boolean) => {
+    if (!f.nameEn.trim()) return;
+    setSuggesting(true);
+    const r = await suggestCategories({ nameEn: f.nameEn, summaryEn: f.summaryEn, descriptionEn: f.descriptionEn, personalization: f.personalization });
+    setSuggesting(false);
+    if (!r.ok || !r.data) {
+      if (!auto) setSuggestion({ reason: r.ok ? "Something went wrong." : r.error, ai: false });
+      return;
+    }
+    const slugs = r.data.slugs.filter((slug) => lookups.categories.some((c) => c.slug === slug));
+    if (slugs.length > 0) set("categories", slugs);
+    if (slugs.length > 0 || !auto) setSuggestion({ reason: r.data.reason, ai: r.data.ai });
+  };
 
   const material = (key: MaterialKey) => f.materials.find((m) => m.key === key);
   const setMaterial = (key: MaterialKey, patch: Partial<ProductForm["materials"][number]>) =>
@@ -106,7 +125,9 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
   const save = () =>
     start(async () => {
       setMessage(null);
-      const result = await saveProduct(f);
+      // The link is made from the name; a name with no latin letters gets a short code.
+      const slug = f.slug || slugify(f.nameEn) || `piece-${Date.now().toString(36)}`;
+      const result = await saveProduct({ ...f, slug });
       if (!result.ok) {
         setMessage({ ok: false, text: result.error });
         return;
@@ -148,35 +169,18 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
                 set("nameEn", e.target.value);
                 if (!slugTouched) set("slug", slugify(e.target.value));
               }}
+              onBlur={() => {
+                // A new piece with no pages yet: suggest them once, when the name is written.
+                if (!f.id && f.categories.length === 0 && !autoTried) {
+                  setAutoTried(true);
+                  void suggest(true);
+                }
+              }}
               className={inputClass}
             />
           </Field>
           <Field label="Short tagline (English)" hint="One line under the name on the product page." htmlFor="p-sum-en">
             <input id="p-sum-en" maxLength={300} value={f.summaryEn} onChange={(e) => set("summaryEn", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Link" hint={`${siteConfig.host}/en/product/${f.slug || "…"}`} htmlFor="p-slug">
-            <input
-              id="p-slug"
-              required
-              maxLength={80}
-              value={f.slug}
-              onChange={(e) => {
-                setSlugTouched(true);
-                set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
-              }}
-              className={inputClass}
-              dir="ltr"
-            />
-          </Field>
-          <Field label="Style" hint="Groups the piece under a round style picture on its category page." htmlFor="p-style">
-            <select id="p-style" value={f.style} onChange={(e) => set("style", e.target.value)} className={inputClass}>
-              <option value="">No style</option>
-              {styleOptions.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
           </Field>
           <Field label="Shown in the shop" htmlFor="p-status">
             <select id="p-status" value={f.status} onChange={(e) => set("status", e.target.value as ProductForm["status"])} className={inputClass}>
@@ -200,22 +204,47 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         )}
       </Card>
 
+      <Card
+        title="Where does it show?"
+        actions={
+          <button type="button" disabled={suggesting || !f.nameEn.trim()} onClick={() => suggest(false)} className={smallButtonClass}>
+            {suggesting ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Sparkles className="size-3.5" aria-hidden />}
+            Suggest for me
+          </button>
+        }
+      >
+        <div className="flex flex-wrap gap-2">
+          {lookups.categories.map((c) => {
+            const on = f.categories.includes(c.slug);
+            return (
+              <button
+                key={c.slug}
+                type="button"
+                aria-pressed={on}
+                onClick={() => set("categories", on ? f.categories.filter((x) => x !== c.slug) : [...f.categories, c.slug])}
+                className={`rounded-full border px-3 py-1.5 text-sm ${on ? "border-ink bg-ink text-white" : "border-line hover:border-ink"}`}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+        </div>
+        {suggestion && (
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-muted">
+            <Sparkles className="mt-0.5 size-3.5 shrink-0 text-gold-dark" aria-hidden />
+            <span>
+              {suggestion.ai ? "AI suggestion" : "Suggestion"}: {suggestion.reason} Change it if you like.
+            </span>
+          </p>
+        )}
+        <p className="mt-2 text-xs text-muted">
+          Each one is a page of the shop (Men&apos;s Jewelry, Gifts, Rings...). The first one picked is the main page (breadcrumbs, “#1 Best Seller in…”). Best sellers and New
+          arrivals follow the badges above.
+        </p>
+      </Card>
+
       <Card title="Photos & video">
         <MediaManager slug={f.slug} media={f.media} onChange={(m) => set("media", m)} />
-        <Field label="Type of piece (drawing shown until there are photos)" htmlFor="p-art" className="mt-4 sm:max-w-xs">
-          <select
-            id="p-art"
-            value={artKey(f.art)}
-            onChange={(e) => set("art", artPresets.find((p) => artKey(p.art) === e.target.value)?.art ?? f.art)}
-            className={inputClass}
-          >
-            {artPresets.map((p) => (
-              <option key={p.label} value={artKey(p.art)}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </Field>
       </Card>
 
       <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver follows the Gold price until you change it; type the others by hand.</span>}>
@@ -395,26 +424,6 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         <p className="mt-2 text-xs text-muted">Price change is added to the material price (e.g. 2 for a longer chain, 0 for the same price).</p>
       </Card>
 
-      <Card title="Categories">
-        <div className="flex flex-wrap gap-2">
-          {lookups.categories.map((c) => {
-            const on = f.categories.includes(c.slug);
-            return (
-              <button
-                key={c.slug}
-                type="button"
-                aria-pressed={on}
-                onClick={() => set("categories", on ? f.categories.filter((x) => x !== c.slug) : [...f.categories, c.slug])}
-                className={`rounded-full border px-3 py-1.5 text-sm ${on ? "border-ink bg-ink text-white" : "border-line hover:border-ink"}`}
-              >
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-2 text-xs text-muted">The first one picked is the main category (breadcrumbs, “#1 Best Seller in…”).</p>
-      </Card>
-
       <Card title="Description">
         <div className="grid gap-3 lg:grid-cols-2">
           <Field label="Description (English)" htmlFor="p-desc-en">
@@ -425,6 +434,49 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
           </Field>
         </div>
       </Card>
+
+      <details className="rounded-xl border border-line bg-background p-4 sm:p-5">
+        <summary className="cursor-pointer text-base font-semibold">Advanced (you rarely need this)</summary>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field label="Link" hint={`${siteConfig.host}/en/product/${f.slug || "…"}. Made from the name; changing it breaks links already sent.`} htmlFor="p-slug">
+            <input
+              id="p-slug"
+              maxLength={80}
+              value={f.slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+              }}
+              className={inputClass}
+              dir="ltr"
+            />
+          </Field>
+          <Field label="Style" hint="Groups the piece under a round style picture on its category page." htmlFor="p-style">
+            <select id="p-style" value={f.style} onChange={(e) => set("style", e.target.value)} className={inputClass}>
+              <option value="">No style</option>
+              {styleOptions.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Drawing shown until there are photos" htmlFor="p-art">
+            <select
+              id="p-art"
+              value={artKey(f.art)}
+              onChange={(e) => set("art", artPresets.find((p) => artKey(p.art) === e.target.value)?.art ?? f.art)}
+              className={inputClass}
+            >
+              {artPresets.map((p) => (
+                <option key={p.label} value={artKey(p.art)}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      </details>
 
       <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t border-line bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:start-60">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">

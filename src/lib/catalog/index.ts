@@ -83,6 +83,18 @@ export function homeSection(catalog: Catalog, key: string): HomeSection {
   return catalog.home[key] ?? { key, visible: true, products: [], items: {} };
 }
 
+/** The homepage sections the owner can reorder, in their original order (the Hero and the Lira Collection always stay first). */
+export const HOME_SECTION_ORDER = ["shop_by_style", "best_sellers", "steps", "try_picture", "reviews", "new_arrivals", "why_us", "create", "trust"] as const;
+export type HomeSectionKey = (typeof HOME_SECTION_ORDER)[number];
+
+/** The visible movable sections, top to bottom, as the admin's Home page set them. */
+export function homeSectionsInOrder(catalog: Catalog): HomeSectionKey[] {
+  return HOME_SECTION_ORDER.map((key, i) => ({ key, i, sort: catalog.home[key]?.sort ?? (i + 1) * 10 }))
+    .filter(({ key }) => homeSection(catalog, key).visible)
+    .sort((a, b) => a.sort - b.sort || a.i - b.i)
+    .map(({ key }) => key);
+}
+
 /** Homepage "Shop by style" tiles, in the admin's order. */
 export function homeCategories(catalog: Catalog): Category[] {
   return catalog.categories

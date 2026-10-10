@@ -5,7 +5,7 @@ import { createClient as createSessionClient } from "@/lib/supabase/server";
 import { getSupabaseEnv, getSupabaseSecretKey, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { hmac, same } from "@/lib/security/sign";
-import { CUSTOMER_COOKIE, CUSTOMER_MAX_AGE } from "./cookies";
+import { CUSTOMER_COOKIE, CUSTOMER_MAX_AGE, KNOWN_COOKIE, REF_CODE, REF_COOKIE } from "./cookies";
 import type { SavedCustomer } from "./types";
 
 // Who is at the checkout, as verified by the server (never by phone):
@@ -35,18 +35,16 @@ export async function rememberCustomer(customerId: string) {
   if (!key || !UUID.test(customerId)) return;
   const issued = String(Math.floor(Date.now() / 1000));
   const value = `${customerId}.${issued}.${await hmac(`${customerId}.${issued}`, key)}`;
-  (await cookies()).set(CUSTOMER_COOKIE, value, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: CUSTOMER_MAX_AGE,
-  });
+  const jar = await cookies();
+  const base = { sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: CUSTOMER_MAX_AGE } as const;
+  jar.set(CUSTOMER_COOKIE, value, { ...base, httpOnly: true });
+  jar.set(KNOWN_COOKIE, "1", base);
 }
 
 export async function forgetCustomer() {
   const jar = await cookies();
   jar.delete(CUSTOMER_COOKIE);
+  jar.delete(KNOWN_COOKIE);
   if (jar.getAll().some((c) => c.name.startsWith("sb-"))) {
     await (await createSessionClient()).auth.signOut();
   }
@@ -89,6 +87,47 @@ export async function verifiedCustomer(): Promise<VerifiedCustomer> {
   return { customerId: device, ...auth };
 }
 
+/**
+ * Called when she has just signed in (Google or an email link): she gets her customer
+ * account right away, so staff see her in Admin > Customers before any order. An old
+ * customer with the same email (verified by Google / the email link) is linked, never
+ * one found by phone. Safe to call again; never throws (the account is also made at the
+ * first order).
+ */
+export async function ensureAccount(): Promise<void> {
+  try {
+    const db = isSupabaseConfigured() ? createAdminClient() : null;
+    const user = await sessionUser();
+    if (!db || !user) return;
+    let { data: mine } = await db.from("customers").select("id").eq("auth_user_id", user.id).maybeSingle();
+    if (!mine && user.email) {
+      const { data: old } = await db.from("customers").select("id").ilike("email", user.email).is("auth_user_id", null).limit(1).maybeSingle();
+      if (old) {
+        await db.from("customers").update({ auth_user_id: user.id }).eq("id", old.id);
+        mine = old;
+      }
+    }
+    if (!mine) {
+      const name = user.name?.trim().slice(0, 100) || user.email?.split("@")[0] || "Customer";
+      const ref = (await cookies()).get(REF_COOKIE)?.value;
+      const { data: made } = await db
+        .from("customers")
+        .insert({ auth_user_id: user.id, email: user.email, name })
+        .select("id")
+        .single();
+      mine = made;
+      // The employee who brought her (personal link) keeps the credit.
+      if (made && ref && REF_CODE.test(ref)) {
+        const { data: staff } = await db.from("staff").select("id").eq("ref_code", ref).eq("is_active", true).maybeSingle();
+        if (staff) await db.from("customers").update({ referred_by_staff_id: staff.id, referred_at: new Date().toISOString() }).eq("id", made.id);
+      }
+    }
+    if (mine) await rememberCustomer(mine.id);
+  } catch {
+    // Before the database update, or a race with another tab: the order creates the account later.
+  }
+}
+
 /** Saved details to prefill the checkout, and her points. */
 export async function savedCustomer(): Promise<SavedCustomer | null> {
   if (!isSupabaseConfigured()) return null;
@@ -98,14 +137,14 @@ export async function savedCustomer(): Promise<SavedCustomer | null> {
   if (!customerId || !db) return authUserId ? { google: true, name: authName ?? undefined, email: authEmail ?? undefined } : null;
   const { data } = await db.rpc("customer_profile", { p_customer_id: customerId });
   if (!data) return null;
-  const c = data as { name: string; phone: string; area: string | null; address: string | null; points: number };
+  const c = data as { name: string; phone: string | null; area: string | null; address: string | null; points: number };
   // The checkout saves "address\nbuilding / floor".
   const [address, ...building] = (c.address ?? "").split("\n");
   return {
     google: Boolean(authUserId),
     email: authEmail ?? undefined,
     name: c.name,
-    phone: c.phone,
+    phone: c.phone ?? undefined,
     area: c.area ?? "",
     address,
     building: building.join(" "),

@@ -13,6 +13,7 @@ import { ORDERS_COOKIE } from "@/lib/checkout/cookies";
 import { orderPoints } from "@/lib/checkout/points";
 import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { createAdminClient } from "@/lib/supabase/public";
 import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { TrackingPanel } from "@/components/checkout/tracking-panel";
@@ -48,8 +49,9 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
   const span = (r: DayRange) => (r.min === r.max ? tTime("exact", { n: r.min }) : tTime("days", { min: r.min, max: r.max }));
 
   const mine = ((await cookies()).get(ORDERS_COOKIE)?.value ?? "").split(".");
-  const [{ data: order }, catalog] = await Promise.all([
-    db
+  // Deleted orders are gone for the customer (before the admin redesign database update there is no deleted_at).
+  const lookup = (live: boolean) => {
+    const q = db
       .from("orders")
       .select(
         `id, number, status, created_at, carrier, tracking_number, area_id, customer_name, phone, payment_method, subtotal_cents, discount_cents,
@@ -57,10 +59,11 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
          order_items (id, product_slug, product_name, custom_text, size_kind, size_value,
            chain_connection, qty, line_total_cents, material_name, materials (key), fonts (key))`,
       )
-      .eq("number", Number(number))
-      .maybeSingle(),
-    getCatalog(),
-  ]);
+      .eq("number", Number(number));
+    return (live ? q.is("deleted_at", null) : q).maybeSingle();
+  };
+  const [first, catalog] = await Promise.all([lookup(true), getCatalog()]);
+  const { data: order } = isMissingColumn(first.error) ? await lookup(false) : first;
 
   if (!order || !mine.includes(order.id)) {
     return (

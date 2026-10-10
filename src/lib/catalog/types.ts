@@ -284,6 +284,8 @@ export type HomeSection = {
   /** A page of this site for the section's button; the default when missing. */
   ctaHref?: string;
   visible: boolean;
+  /** Place on the page among the movable sections (lowest first); missing = the original order. */
+  sort?: number;
   /** Product slugs picked by hand, in order. */
   products: string[];
   /** Texts of the items inside the section (How it works steps), by position starting at 1. */

@@ -16,3 +16,5 @@ export const REF_CODE = /^[a-z0-9-]{2,30}$/;
 /** Signed customer id: this browser is remembered as her (checkout prefill, points). */
 export const CUSTOMER_COOKIE = "livre_customer";
 export const CUSTOMER_MAX_AGE = 60 * 60 * 24 * 365;
+/** A readable flag set with the customer cookie: only remembered visitors tell /api/seen they are back. */
+export const KNOWN_COOKIE = "livre_known";

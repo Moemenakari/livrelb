@@ -10,15 +10,24 @@ For each part of the storefront: where it is controlled in the admin, and how.
 Admin → **Home page** (`/admin/home`). One page, one **Save home page** button at the bottom. Saved changes show in the shop right away.
 لوحة الإدارة ← **Home page**. صفحة واحدة وزر **Save home page** بالأسفل. التغييرات تظهر في المتجر مباشرة.
 
-> First time only: the database needs the update `supabase/migrations/20261007100000_home_page_controls.sql` (Supabase → SQL Editor → paste → Run). Until then the page says so, and the shop keeps working with its old homepage.
-> مرة واحدة فقط: لازم تشغيل ملف التحديث أعلاه في Supabase → SQL Editor. قبلها الصفحة تخبرك بذلك والمتجر يعمل كالمعتاد.
+> First time only: the database needs the update `supabase/migrations/20261009120000_admin_redesign.sql` (Supabase → SQL Editor → paste → Run). It is ONE file for the whole admin update (order of the home sections, deleted orders, automatic points, customer verification, two Admins). Until then everything keeps working; only the new features say so.
+> مرة واحدة فقط: لازم تشغيل ملف التحديث أعلاه في Supabase → SQL Editor. هو ملف واحد لكل تحديث الأدمن. قبلها كل شيء يعمل كالمعتاد، والميزات الجديدة فقط تخبرك.
+
+### 0. Page layout / ترتيب أقسام الصفحة
+
+- **Page layout** lists the sections top to bottom, as the shop shows them. The **Hero** and the **Lira Collection** are locked (the 3D coin lives there).
+- Every other section has a **number box**: type a number and press Enter to move it there (for example Best sellers last, New arrivals fourth). The arrows also move it. The **eye** hides a section. **Edit the texts** opens its title, line and button.
+- The first screen's photos and videos are the **Homepage slides** card above (they used to be in Promotions).
+- **Page layout** يعرض الأقسام من فوق لتحت كما يظهرها المتجر. **Hero** و **Lira Collection** مقفلان (الليرة ثلاثية الأبعاد هناك).
+- لكل قسم آخر **خانة رقم**: اكتبي الرقم ثم Enter ينتقل القسم إلى هذا المكان. الأسهم تنقله أيضاً، و**العين** تخفيه، و **Edit the texts** يفتح عنوانه ونصه وزره.
+- صور وفيديوهات الشاشة الأولى في بطاقة **Homepage slides** أعلاه (كانت في Promotions).
 
 ### 1. Lira Collection products / منتجات مجموعة الليرة
 
 - **Add a product…** picks a product from the list. Up to **8**.
 - The arrows set the order; **×** removes one. The shop shows them in this order.
 - Nothing picked = the shop shows every product of the *Lira Collection* category.
-- Section title, text and button link: see "Section texts" below.
+- Section title, text and button link: **Edit the texts** inside the section in Page layout.
 
 - اختاري منتجاً من **Add a product…** (حتى **8**)، والأسهم للترتيب و **×** للحذف.
 - إذا لم تختاري شيئاً يظهر كل منتجات فئة *Lira Collection*.

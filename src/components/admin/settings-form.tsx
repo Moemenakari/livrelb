@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Loader2, Plus, X } from "lucide-react";
 import { saveSettings, type SettingsInput } from "@/lib/admin/settings-actions";
 import { FormError, useSave } from "./promo-forms";
-import { Card, Field, buttonClass, inputClass, smallButtonClass, textareaClass } from "./ui";
+import { Card, Field, buttonClass, inputClass, smallButtonClass } from "./ui";
 
 function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: ReactNode }) {
   return (
@@ -36,34 +36,6 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
         save(() => saveSettings(s), () => setSaved(true));
       }}
     >
-      <Card title="Delivery">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="Delivery fee ($)" htmlFor="st-fee">
-            <input id="st-fee" type="number" min="0" step="0.01" value={s.deliveryFee} onChange={(e) => set("deliveryFee", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Free delivery over ($)" htmlFor="st-free">
-            <input id="st-free" type="number" min="0" step="0.01" value={s.freeShippingOver} onChange={(e) => set("freeShippingOver", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Delivery days from" htmlFor="st-dmin">
-            <input id="st-dmin" type="number" min="0" value={s.daysMin} onChange={(e) => set("daysMin", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="to" htmlFor="st-dmax">
-            <input id="st-dmax" type="number" min="0" value={s.daysMax} onChange={(e) => set("daysMax", e.target.value)} className={inputClass} />
-          </Field>
-        </div>
-        <div className="mt-3">
-          <Toggle label="First order: free delivery" checked={s.firstOrderFree} onChange={(v) => set("firstOrderFree", v)} />
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Delivery time text (English)" hint={`Empty = "${s.daysMin}–${s.daysMax} days"`} htmlFor="st-dten">
-            <input id="st-dten" maxLength={120} value={s.deliveryTimeEn} onChange={(e) => set("deliveryTimeEn", e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Shipping information (English)" hint="Shown in the product page's Shipping tab." htmlFor="st-shen">
-            <textarea id="st-shen" rows={4} maxLength={3000} value={s.shippingInfoEn} onChange={(e) => set("shippingInfoEn", e.target.value)} className={textareaClass} />
-          </Field>
-        </div>
-      </Card>
-
       <Card title="Contacts">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="WhatsApp number" hint="With the country code, e.g. 96170123456. Empty hides every WhatsApp button." htmlFor="st-wa">
@@ -104,9 +76,9 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
         </div>
         <p className="mt-2 text-xs text-muted">
           Example: every ${s.pointsStepDollars} paid gives {Number(s.pointsPerStep)} points = $
-          {(Number(s.pointsPerStep) * pointValue).toFixed(2)} off next time. After the order is Delivered, a
-          team member approves the points on the order page and gets a message to send with a {s.rewardPercent}% coupon for {s.rewardDays} days.
-          Cancelling an order removes its points.
+          {(Number(s.pointsPerStep) * pointValue).toFixed(2)} off next time. The points are added automatically when the order is
+          marked Delivered, together with a {s.rewardPercent}% thank-you coupon for {s.rewardDays} days. Cancelling or deleting an order
+          takes its points back.
         </p>
       </Card>
 
@@ -130,19 +102,6 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
         </ul>
       </Card>
 
-      <Card title="Charms page">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Price of one charm ($)" hint="Every charm a customer picks costs this, unless a charm photo has its own price. The chain's price is the product “Charm necklace or bracelet” in Products." htmlFor="st-charm">
-            <input id="st-charm" type="number" min="0" step="0.01" value={s.charmPrice} onChange={(e) => set("charmPrice", e.target.value)} className={inputClass} />
-          </Field>
-          {s.charmMax !== undefined && (
-            <Field label="Most charms on one chain" htmlFor="st-charmmax">
-              <input id="st-charmmax" type="number" min="1" max="30" value={s.charmMax} onChange={(e) => set("charmMax", e.target.value)} className={inputClass} />
-            </Field>
-          )}
-        </div>
-      </Card>
-
       <Card title="Checkout">
         <Toggle
           label="Checkout needs an account"
@@ -152,7 +111,7 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
         />
       </Card>
 
-      <Card title="Analytics (off while empty)">
+      <Card title="Ad tracking" actions={<span className="text-xs text-muted">Meta Pixel and Google Analytics. Leave empty if you don&apos;t run ads: nothing is loaded.</span>}>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Meta Pixel ID" hint="Digits only. Loads only after the visitor accepts cookies." htmlFor="st-pixel">
             <input id="st-pixel" inputMode="numeric" value={s.metaPixelId} onChange={(e) => set("metaPixelId", e.target.value)} className={inputClass} dir="ltr" />

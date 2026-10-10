@@ -114,3 +114,52 @@ export async function setPermission(staffId: string, permission: Permission, all
     refresh();
   });
 }
+
+/** Make someone an Admin (like the owners: everything allowed) or an Employee. Not for yourself. */
+export async function setStaffRole(staffId: string, role: "owner" | "staff"): Promise<ActionResult> {
+  return run(async () => {
+    if (!UUID.test(staffId) || (role !== "owner" && role !== "staff")) throw new AdminError("Invalid value.");
+    const { db, staff: me } = await authorize("owner");
+    if (staffId === me.id) throw new AdminError("You can't change your own role.");
+    const { error } = await db.from("staff").update({ role }).eq("id", staffId);
+    if (error) {
+      // The database from before the admin redesign allows one owner only.
+      if (error.code === "23505") throw new AdminError("The database update 20261009120000_admin_redesign.sql is needed to have more than one Admin.");
+      throw error;
+    }
+    refresh();
+  });
+}
+
+/**
+ * Delete an employee without losing history: they disappear from the lists and
+ * can't log in, but their name stays on old orders, customers and the activity log.
+ */
+export async function deleteStaff(staffId: string): Promise<ActionResult> {
+  return run(async () => {
+    if (!UUID.test(staffId)) throw new AdminError("Invalid employee.");
+    const { db, staff: me } = await authorize("owner");
+    if (staffId === me.id) throw new AdminError("You can't delete your own account.");
+    const { data: row } = await db.from("staff").select("user_id, role").eq("id", staffId).single();
+    if (!row) throw new AdminError("Employee not found.");
+    if (row.role === "owner") throw new AdminError("Make her an Employee first, then delete.");
+    const { error } = await db.from("staff").update({ is_active: false, deleted_at: new Date().toISOString() }).eq("id", staffId);
+    if (error) throw error;
+    if (row.user_id) {
+      const { error: authError } = await authAdmin().updateUserById(row.user_id, { ban_duration: "876000h" });
+      if (authError) throw new AdminError("Deleted, but the login couldn't be blocked. Disable it from Supabase.");
+    }
+    refresh();
+  });
+}
+
+/** Bring a deleted employee back as Suspended (switch her to Active when ready). */
+export async function restoreStaff(staffId: string): Promise<ActionResult> {
+  return run(async () => {
+    if (!UUID.test(staffId)) throw new AdminError("Invalid employee.");
+    const { db } = await authorize("owner");
+    const { error } = await db.from("staff").update({ deleted_at: null }).eq("id", staffId);
+    if (error) throw error;
+    refresh();
+  });
+}

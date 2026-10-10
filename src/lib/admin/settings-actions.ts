@@ -5,15 +5,6 @@ import { CATALOG_TAG } from "@/lib/catalog";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 
 export type SettingsInput = {
-  deliveryFee: string;
-  freeShippingOver: string;
-  firstOrderFree: boolean;
-  daysMin: string;
-  daysMax: string;
-  deliveryTimeEn: string;
-  deliveryTimeAr: string;
-  shippingInfoEn: string;
-  shippingInfoAr: string;
   whatsapp: string;
   instagram: string;
   pointsEnabled: boolean;
@@ -25,11 +16,8 @@ export type SettingsInput = {
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
-  charmPrice: string;
   /** Checkout needs an account (Google or email). */
   requireLogin: boolean;
-  /** From the Phase 1 database update (always there now). */
-  charmMax?: string;
   metaPixelId: string;
   ga4Id: string;
 };
@@ -46,12 +34,10 @@ const centsOf = (v: string, label: string) => {
   return Math.round(n * 100);
 };
 
-/** Shop settings (owner only): delivery, contacts, LIVRE Points, announcement bar. */
+/** Shop settings (owner only): contacts, LIVRE Points, announcement bar, checkout, ad tracking. */
 export async function saveSettings(input: SettingsInput): Promise<ActionResult> {
   return run(async () => {
     const { db } = await authorize("owner");
-    const daysMin = whole(input.daysMin, "Delivery days (from)", 0, 60);
-    const daysMax = whole(input.daysMax, "Delivery days (to)", daysMin, 90);
     const whatsapp = str(input.whatsapp, 20).replace(/\D/g, "");
     if (whatsapp && !/^[1-9]\d{7,14}$/.test(whatsapp)) throw new AdminError("WhatsApp: the full number with the country code, e.g. 96170123456.");
     const instagram = str(input.instagram, 200);
@@ -70,15 +56,6 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
     const { error } = await db
       .from("site_settings")
       .update({
-        delivery_fee_cents: centsOf(input.deliveryFee, "Delivery fee"),
-        free_shipping_threshold_cents: centsOf(input.freeShippingOver, "Free delivery over"),
-        first_order_free_delivery: Boolean(input.firstOrderFree),
-        delivery_days_min: daysMin,
-        delivery_days_max: daysMax,
-        delivery_time_en: str(input.deliveryTimeEn, 120),
-        delivery_time_ar: str(input.deliveryTimeAr, 120),
-        shipping_info_en: str(input.shippingInfoEn, 3000),
-        shipping_info_ar: str(input.shippingInfoAr, 3000),
         whatsapp_number: whatsapp,
         instagram_url: instagram,
         points_enabled: Boolean(input.pointsEnabled),
@@ -90,9 +67,7 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
         points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
         reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
         reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
-        charm_price_cents: centsOf(input.charmPrice, "Charm price"),
         checkout_requires_login: Boolean(input.requireLogin),
-        ...(input.charmMax !== undefined ? { charm_max: whole(input.charmMax, "Most charms on a chain", 1, 30) } : {}),
         meta_pixel_id: metaPixelId,
         ga4_id: ga4Id,
       })

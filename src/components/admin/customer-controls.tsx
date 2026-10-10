@@ -74,7 +74,7 @@ export function CustomerControls({ customerId, staffId, staffName, since, isOwne
               );
             }}
           >
-            <Field label="Points" hint="100 points = $1. Use − to remove." htmlFor="pts">
+            <Field label="Points" hint="Use − to remove points." htmlFor="pts">
               <input id="pts" type="number" step="1" inputMode="numeric" value={delta} onChange={(e) => setDelta(e.target.value)} className={inputClass} required />
             </Field>
             <Field label="Why" htmlFor="pts-note">

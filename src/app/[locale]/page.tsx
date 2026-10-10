@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import { alternates } from "@/lib/seo";
 import { resolveLocale } from "@/i18n/resolve-locale";
-import { getCatalog } from "@/lib/catalog";
+import { getCatalog, homeSectionsInOrder, type HomeSectionKey } from "@/lib/catalog";
 import { CoinStage } from "@/components/coin/coin-stage";
 import { BestSellers } from "@/components/home/best-sellers";
 import { CreatePersonal } from "@/components/home/create-personal";
@@ -34,21 +35,28 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const t = await getTranslations("home");
   const catalog = await getCatalog();
 
+  // The Hero and the Lira Collection carry the coin and stay first; the rest follow the order set in the admin's Home page.
+  const sections: Record<HomeSectionKey, React.ReactNode> = {
+    shop_by_style: <ShopByStyle catalog={catalog} locale={locale} />,
+    best_sellers: <BestSellers catalog={catalog} locale={locale} />,
+    steps: <HowItWorks catalog={catalog} locale={locale} />,
+    try_picture: <TryYourPicture catalog={catalog} locale={locale} />,
+    reviews: <LovedByCustomers catalog={catalog} locale={locale} />,
+    new_arrivals: <NewArrivals catalog={catalog} locale={locale} />,
+    why_us: <WhyUs />,
+    create: <CreatePersonal catalog={catalog} locale={locale} />,
+    trust: <TrustBar />,
+  };
+
   return (
     <>
       <CoinStage />
       <h1 className="sr-only">{t("title")}</h1>
       <Hero catalog={catalog} locale={locale} />
       <LiraSection catalog={catalog} locale={locale} />
-      <ShopByStyle catalog={catalog} locale={locale} />
-      <BestSellers catalog={catalog} locale={locale} />
-      <HowItWorks catalog={catalog} locale={locale} />
-      <TryYourPicture catalog={catalog} locale={locale} />
-      <LovedByCustomers catalog={catalog} locale={locale} />
-      <NewArrivals catalog={catalog} locale={locale} />
-      <WhyUs />
-      <CreatePersonal catalog={catalog} locale={locale} />
-      <TrustBar />
+      {homeSectionsInOrder(catalog).map((key) => (
+        <Fragment key={key}>{sections[key]}</Fragment>
+      ))}
     </>
   );
 }

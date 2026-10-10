@@ -35,8 +35,7 @@ const items: Item[] = [
   { href: "/admin/orders", label: "Orders", icon: ClipboardList, need: "orders.view", main: true },
   { href: "/admin/products", label: "Products", icon: Gem, main: true },
   { href: "/admin/customers", label: "Customers", icon: Users, need: "customers.view", main: true },
-  { href: "/admin/charms", label: "Charm designs", icon: Star, need: "orders.view" },
-  { href: "/admin/charms/items", label: "Charm photos", icon: Gem, need: "products.edit" },
+  { href: "/admin/charms", label: "Charms", icon: Star, need: "products.edit" },
   { href: "/admin/home", label: "Home page", icon: House, need: "collections.manage" },
   { href: "/admin/promotions", label: "Promotions", icon: BadgePercent, need: "coupons.manage" },
   { href: "/admin/seasons", label: "Seasons", icon: Sparkles, need: "collections.manage" },
@@ -88,7 +87,7 @@ export function AdminNav({ staff, pushKey }: { staff: StaffSession; pushKey: str
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{staff.name}</p>
-          <p className="text-xs text-muted">{staff.isOwner ? "Owner" : "Staff"}</p>
+          <p className="text-xs text-muted">{staff.isOwner ? "Admin" : "Employee"}</p>
         </div>
         <form
         action={async () => {
@@ -121,7 +120,9 @@ export function AdminNav({ staff, pushKey }: { staff: StaffSession; pushKey: str
         <Link href="/admin" className="text-lg">
           <AdminLogo />
         </Link>
-        <span className="text-xs text-muted">{staff.name}</span>
+        <span className="text-xs text-muted">
+          {staff.isOwner ? "Admin" : "Employee"} · {staff.name}
+        </span>
       </header>
 
       <nav

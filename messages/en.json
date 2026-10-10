@@ -400,15 +400,20 @@
       "zoom": "Zoom",
       "hint": "Drag the photo to move it. Pinch or use the slider to zoom.",
       "privacy": "Your photo stays on your phone until you send it to us on WhatsApp.",
-      "cta": "Order on WhatsApp",
+      "cta": "Save & connect on WhatsApp",
       "pieceLabel": "Worn as",
       "necklace": "Necklace",
+      "bracelet": "Bracelet",
       "keychain": "Keychain",
       "ringsLabel": "Rings",
       "oneRing": "One ring",
       "twoRings": "Two rings",
+      "sidesLabel": "Joined on",
+      "oneSide": "One side",
+      "twoSides": "Two sides",
       "message": "Hi LIVRE! I want a photo pendant:",
-      "sendPhoto": "I'm sending my photo in this chat."
+      "sendPhoto": "I'm sending my photo in this chat.",
+      "error": "We couldn't open this photo. Please try a JPG or PNG picture."
     }
   },
   "cart": {
@@ -481,6 +486,7 @@
     "errors": {
       "name_required": "Please write your full name.",
       "phone_invalid": "Please check your phone number.",
+      "phone_taken": "This number is already registered to another account. Write to us on WhatsApp and we will sort it out.",
       "area_invalid": "Please choose your area.",
       "address_required": "Please write your address.",
       "text_too_long": "Some fields are too long. Please shorten them.",
@@ -542,7 +548,8 @@
   "charms": {
     "nav": "Charms",
     "title": "Charms",
-    "subtitle": "Charms you design. Pick as many as you like, in gold or silver, {price} each, on a necklace or a bracelet.",
+    "tagline": "Add your favorite charms",
+    "subtitle": "Make your own piece: pick the charms you love, in gold or silver, {price} each, on a necklace, a bracelet or a keychain.",
     "count": "{count} shapes, letters and numbers",
     "each": "{price} each",
     "total": "{count, plural, one {# charm} other {# charms}} × {price} = {total}",
@@ -569,7 +576,21 @@
     "clear": "Clear all",
     "yourDesign": "Your charms",
     "empty": "Tap a charm to add it. Up to {max}.",
-    "picked": "Tap a charm on the chain to remove it.",
+    "picked": "Tap a charm to select it, drag it to move it.",
+    "removeSelected": "Remove",
+    "close": "Close",
+    "reopen": "Your design ({count})",
+    "keychainNote": "Keychains are ordered on WhatsApp.",
+    "name": {
+      "label": "Add a name or number",
+      "placeholder": "Name or number (up to {max})",
+      "add": "Add"
+    },
+    "sides": {
+      "label": "Charms on",
+      "one": "One side",
+      "two": "Two sides"
+    },
     "full": "You reached {max} charms.",
     "showMore": "Show {left} more",
     "noResults": "No charm found. Try another word.",
@@ -588,7 +609,8 @@
       "shapes": "Charms",
       "metal": "Metal",
       "total": "Estimated total",
-      "piece": "Worn as"
+      "piece": "Worn as",
+      "sides": "Charms on"
     },
     "family": {
       "label": "Which charms?",
@@ -599,6 +621,7 @@
       "label": "Worn as",
       "necklace": "Necklace",
       "bracelet": "Bracelet",
+      "keychain": "Keychain",
       "size": "Size"
     },
     "breakdown": "Chain {chain} + {count, plural, one {# charm} other {# charms}} {charms} = {total}",
@@ -727,7 +750,11 @@
   },
   "auth": {
     "title": "Sign up or log in",
-    "text": "One tap with Google, or we send a link to your email. Then your bag and your orders are all in one place.",
+    "tabIn": "Sign in",
+    "tabUp": "Sign up",
+    "textIn": "Welcome back. One tap with Google, or we send a link to your email.",
+    "textUp": "New here? One tap with Google, or we send a link to your email. Your orders and LIVRE Points are kept in your account.",
+    "nudge": "Sign in to keep your orders and collect LIVRE Points.",
     "google": "Continue with Google",
     "emailLabel": "Or your email",
     "emailSend": "Send me a link",

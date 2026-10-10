@@ -37,6 +37,7 @@ type Field = "name" | "phone" | "area" | "address";
 const fieldFor: Partial<Record<CheckoutError, Field>> = {
   name_required: "name",
   phone_invalid: "phone",
+  phone_taken: "phone",
   area_invalid: "area",
   address_required: "address",
 };

@@ -45,11 +45,12 @@ export default async function CharmsPage({ params }: PageProps<"/[locale]/charms
       : null;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pt-3 pb-24 lg:px-8 lg:pt-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pt-3 pb-72 lg:px-8 lg:pt-6">
       <Breadcrumbs label={tPages("breadcrumbLabel")} items={[{ label: tPages("home"), href: "/" }, { label: t("nav") }]} />
-      <header className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-4xl lg:text-6xl">{t("title")}</h1>
-        <p className="max-w-xl text-muted">{t("subtitle", { price: formatPrice(price) })}</p>
+      <header className="flex flex-col items-center gap-2 pt-4 text-center">
+        <h1 className="text-5xl font-semibold lg:text-6xl">{t("title")}</h1>
+        <p className="font-display text-2xl text-gold-dark lg:text-3xl">{t("tagline")}</p>
+        <p className="max-w-xl text-sm text-muted lg:text-base">{t("subtitle", { price: formatPrice(price) })}</p>
       </header>
       <CharmBuilder whatsapp={settings.whatsappNumber} price={price} max={max} stock={stock} design={design} />
     </div>

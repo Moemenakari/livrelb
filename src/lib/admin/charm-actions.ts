@@ -1,21 +1,24 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { refresh, revalidatePath, revalidateTag } from "next/cache";
+import { CATALOG_TAG } from "@/lib/catalog";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { authorize, AdminError, run, type ActionResult } from "./auth";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** New → Contacted → Done, for a charm design a customer sent from the Charms page. */
-export async function setCharmStatus(id: string, status: "new" | "contacted" | "done"): Promise<ActionResult> {
+/** Owner: the standard price of one charm and the most charms on one chain (Charms page). */
+export async function saveCharmSettings(input: { price: string; max: string }): Promise<ActionResult> {
   return run(async () => {
-    if (!UUID.test(id) || !["new", "contacted", "done"].includes(status)) throw new AdminError("Invalid request.");
-    const { db, staff } = await authorize("orders.edit");
-    const { error } = await db
-      .from("charm_requests")
-      .update({ status, handled_by: status === "new" ? null : staff.id })
-      .eq("id", id);
+    const { db } = await authorize("owner");
+    const price = Number(input.price);
+    const max = Number(input.max);
+    if (!Number.isFinite(price) || price < 0 || price > 10000) throw new AdminError("Price of one charm: check the amount.");
+    if (!Number.isInteger(max) || max < 1 || max > 30) throw new AdminError("Most charms on one chain: 1–30.");
+    const { error } = await db.from("site_settings").update({ charm_price_cents: Math.round(price * 100), charm_max: max }).eq("id", 1);
     if (error) throw error;
+    revalidateTag(CATALOG_TAG, { expire: 0 });
+    revalidatePath("/[locale]/charms", "page");
     refresh();
   });
 }
@@ -85,7 +88,8 @@ export async function saveCharmItem(input: CharmItemInput): Promise<ActionResult
   });
 }
 
-export type CharmImportRow = { family: "charms" | "turkish"; metal: "gold" | "silver"; code: string; url: string };
+/** priceCents: from the folder name; null = the standard charm price. Only used for a charm that is new. */
+export type CharmImportRow = { family: "charms" | "turkish"; metal: "gold" | "silver"; code: string; url: string; priceCents: number | null };
 
 const humanize = (code: string) => {
   const text = code.replace(/-/g, " ").trim();
@@ -93,10 +97,10 @@ const humanize = (code: string) => {
 };
 
 /**
- * Bulk import: the photos are already uploaded; each row is one charm named by its
- * file (family_metal_code.png). A new charm is created (name from the code, standard
- * price); a charm with the same family, metal and code only gets its new photo, so its
- * name and price are kept.
+ * Bulk import: the photos are already uploaded; each row is one charm (family, metal and
+ * price come from the folders it was in, the code from the file name). A new charm is
+ * created (name from the code, price from the folder or the standard charm price); a charm
+ * with the same family, metal and code only gets its new photo, so its name and price are kept.
  */
 export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionResult<{ created: number; updated: number }>> {
   return run(async () => {
@@ -107,6 +111,7 @@ export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionRe
     for (const r of list) {
       if ((r.family !== "charms" && r.family !== "turkish") || (r.metal !== "gold" && r.metal !== "silver")) throw new AdminError("Invalid file name.");
       if (!/^[a-z0-9-]{1,60}$/.test(r.code)) throw new AdminError("Invalid file name.");
+      if (r.priceCents !== null && (!Number.isInteger(r.priceCents) || r.priceCents < 0 || r.priceCents > 1_000_000)) throw new AdminError("Invalid price.");
       if (!base || !r.url.startsWith(`${base}/`) || r.url.length > 500) throw new AdminError("Upload the photos again.");
     }
 
@@ -119,7 +124,7 @@ export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionRe
     }
     const idOf = new Map((existing ?? []).map((e) => [`${e.family}|${e.metal}|${e.code}`, e.id]));
 
-    const fresh: { family: string; metal: string; code: string; image_url: string; name_en: string; name_ar: string }[] = [];
+    const fresh: { family: string; metal: string; code: string; image_url: string; name_en: string; name_ar: string; price_cents: number | null }[] = [];
     let updated = 0;
     for (const r of list) {
       const id = idOf.get(`${r.family}|${r.metal}|${r.code}`);
@@ -129,7 +134,7 @@ export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionRe
         updated += 1;
       } else {
         const name = humanize(r.code);
-        fresh.push({ family: r.family, metal: r.metal, code: r.code, image_url: r.url, name_en: name, name_ar: name });
+        fresh.push({ family: r.family, metal: r.metal, code: r.code, image_url: r.url, name_en: name, name_ar: name, price_cents: r.priceCents });
       }
     }
     if (fresh.length > 0) {
@@ -150,5 +155,50 @@ export async function deleteCharmItem(id: string): Promise<ActionResult> {
     if (error) throw error;
     revalidatePath("/[locale]/charms", "page");
     refresh();
+  });
+}
+
+export type CharmBulk = {
+  ids: string[];
+  /** Dollars; empty string = the standard charm price. Undefined = leave as it is. */
+  price?: string;
+  inStock?: boolean;
+  isActive?: boolean;
+};
+
+/** Change many charms at once (price, stock, shown) or delete them. */
+export async function bulkUpdateCharms(input: CharmBulk & { remove?: boolean }): Promise<ActionResult<{ count: number }>> {
+  return run(async () => {
+    const { db } = await authorize("products.edit");
+    const ids = Array.isArray(input.ids) ? input.ids : [];
+    if (ids.length === 0 || ids.length > 100 || !ids.every((id) => UUID.test(id))) throw new AdminError("Select the charms first.");
+
+    if (input.remove) {
+      const { error, count } = await db.from("charm_items").delete({ count: "exact" }).in("id", ids);
+      if (error) throw error;
+      revalidatePath("/[locale]/charms", "page");
+      refresh();
+      return { count: count ?? 0 };
+    }
+
+    const patch: { price_cents?: number | null; in_stock?: boolean; is_active?: boolean } = {};
+    if (input.price !== undefined) {
+      const text = input.price.trim();
+      if (text === "") patch.price_cents = null;
+      else {
+        const n = Number(text);
+        if (!Number.isFinite(n) || n < 0 || n > 10000) throw new AdminError("Price: check the amount (or leave it empty).");
+        patch.price_cents = Math.round(n * 100);
+      }
+    }
+    if (input.inStock !== undefined) patch.in_stock = Boolean(input.inStock);
+    if (input.isActive !== undefined) patch.is_active = Boolean(input.isActive);
+    if (Object.keys(patch).length === 0) throw new AdminError("Nothing to change.");
+
+    const { error, count } = await db.from("charm_items").update(patch, { count: "exact" }).in("id", ids);
+    if (error) throw error;
+    revalidatePath("/[locale]/charms", "page");
+    refresh();
+    return { count: count ?? 0 };
   });
 }

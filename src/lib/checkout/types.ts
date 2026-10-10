@@ -80,6 +80,7 @@ export type CheckoutInput = {
 export type CheckoutError =
   | "name_required"
   | "phone_invalid"
+  | "phone_taken"
   | "area_invalid"
   | "address_required"
   | "text_too_long"

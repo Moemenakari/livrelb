@@ -2,12 +2,12 @@
 
 import { siteConfig } from "@/config/site";
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
-import { createStaff, setPermission, updateStaff, type NewStaffInput, type StaffUpdate } from "@/lib/admin/staff-actions";
+import { Loader2, Plus, Trash2, Undo2 } from "lucide-react";
+import { createStaff, deleteStaff, restoreStaff, setPermission, setStaffRole, updateStaff, type NewStaffInput, type StaffUpdate } from "@/lib/admin/staff-actions";
 import { permissionLabels, permissions, type Permission } from "@/lib/admin/permissions";
 import { CopyButton } from "./copy-button";
 import { EditableRow, FormError, useSave } from "./promo-forms";
-import { Badge, Field, buttonClass, inputClass, smallButtonClass } from "./ui";
+import { Badge, Field, buttonClass, dangerButtonClass, inputClass, secondaryButtonClass, smallButtonClass } from "./ui";
 
 export type StaffRow = {
   id: string;
@@ -15,12 +15,20 @@ export type StaffRow = {
   phone: string;
   refCode: string;
   isActive: boolean;
+  /** An Admin (an owner of the shop). */
   isOwner: boolean;
+  isSelf: boolean;
+  deleted: boolean;
   link: string;
   coupons: string[];
-  monthOrders: number;
-  monthSales: string;
+  today: { orders: number; sales: string };
+  week: { orders: number; sales: string };
+  month: { orders: number; sales: string };
   customers: number;
+  /** Products added / removed this week. */
+  added: number;
+  removed: number;
+  lastActivity: string | null;
   off: Permission[];
 };
 
@@ -105,11 +113,13 @@ function EditStaff({ row, onDone }: { row: StaffRow; onDone: () => void }) {
             <input id={`es-pass-${row.id}`} type="text" autoComplete="new-password" value={s.password} onChange={(e) => set("password", e.target.value)} className={inputClass} />
           </Field>
         </div>
-        {!row.isOwner && (
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={s.isActive} onChange={(e) => set("isActive", e.target.checked)} className="size-4 accent-[var(--cedar)]" />
-            Active (unticked = can&apos;t log in; her customers stay hers)
-          </label>
+        {!row.isSelf && !row.deleted && (
+          <Field label="Status" hint="Suspended = can't log in; her customers and sales stay hers." htmlFor={`es-status-${row.id}`} className="sm:max-w-xs">
+            <select id={`es-status-${row.id}`} value={s.isActive ? "active" : "suspended"} onChange={(e) => set("isActive", e.target.value === "active")} className={inputClass}>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </Field>
         )}
         <FormError error={error} />
         <button disabled={pending} className={`${buttonClass} self-start`}>
@@ -118,7 +128,31 @@ function EditStaff({ row, onDone }: { row: StaffRow; onDone: () => void }) {
         </button>
       </form>
 
-      {!row.isOwner && (
+      {!row.isSelf && !row.deleted && (
+        <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
+          <Field label="Role" hint="An Admin can do everything, including Staff and Settings." htmlFor={`es-role-${row.id}`} className="sm:max-w-xs">
+            <select
+              id={`es-role-${row.id}`}
+              value={row.isOwner ? "owner" : "staff"}
+              disabled={pending}
+              onChange={(e) => {
+                const role = e.target.value as "owner" | "staff";
+                if (!confirm(role === "owner" ? `Make ${row.name} an Admin? She will see and change everything.` : `Make ${row.name} an Employee?`)) {
+                  e.target.value = row.isOwner ? "owner" : "staff";
+                  return;
+                }
+                save(() => setStaffRole(row.id, role), onDone);
+              }}
+              className={inputClass}
+            >
+              <option value="staff">Employee</option>
+              <option value="owner">Admin</option>
+            </select>
+          </Field>
+        </div>
+      )}
+
+      {!row.isOwner && !row.deleted && (
         <fieldset>
           <legend className="mb-2 text-sm font-medium">Permissions</legend>
           <div className="grid gap-1.5 sm:grid-cols-2">
@@ -145,8 +179,35 @@ function EditStaff({ row, onDone }: { row: StaffRow; onDone: () => void }) {
               </label>
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted">Saved on each switch. Staff and Settings are always owner-only.</p>
+          <p className="mt-2 text-xs text-muted">Saved on each switch. Staff and Settings are always for Admins only.</p>
         </fieldset>
+      )}
+
+      {!row.isSelf && !row.isOwner && (
+        <div className="flex flex-col gap-2 border-t border-line pt-3">
+          {row.deleted ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => save(() => restoreStaff(row.id), onDone)}
+              className={`${secondaryButtonClass} self-start`}
+            >
+              <Undo2 className="size-4" aria-hidden /> Restore (comes back as Suspended)
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                if (confirm(`Delete ${row.name}? She can't log in anymore. Her name stays on old orders and customers.`)) save(() => deleteStaff(row.id), onDone);
+              }}
+              className={`${dangerButtonClass} self-start`}
+            >
+              <Trash2 className="size-4" aria-hidden /> Delete employee
+            </button>
+          )}
+          <FormError error={error} />
+        </div>
       )}
     </div>
   );
@@ -154,7 +215,10 @@ function EditStaff({ row, onDone }: { row: StaffRow; onDone: () => void }) {
 
 export function StaffManager({ rows }: { rows: StaffRow[] }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const toggle = (k: string) => setOpen((o) => (o === k ? null : k));
+  const shown = rows.filter((r) => showDeleted || !r.deleted);
+  const deletedCount = rows.filter((r) => r.deleted).length;
   return (
     <section className="rounded-xl border border-line bg-background p-4 sm:p-5">
       <div className="mb-1 flex items-center justify-between gap-2">
@@ -168,8 +232,14 @@ export function StaffManager({ rows }: { rows: StaffRow[] }) {
           <NewStaff onDone={() => setOpen(null)} />
         </div>
       )}
+      {deletedCount > 0 && (
+        <label className="mt-2 flex items-center gap-2 text-xs text-muted">
+          <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="size-4 accent-[var(--cedar)]" />
+          Show deleted ({deletedCount})
+        </label>
+      )}
       <ul className="divide-y divide-line">
-        {rows.map((r) => (
+        {shown.map((r) => (
           <EditableRow
             key={r.id}
             open={open === r.id}
@@ -178,7 +248,8 @@ export function StaffManager({ rows }: { rows: StaffRow[] }) {
               <>
                 <span className="font-medium">{r.name}</span> <span className="text-muted" dir="ltr">· {r.phone}</span>
                 <span className="mt-1 flex flex-wrap gap-1.5">
-                  {r.isOwner ? <Badge tone="gold">Owner</Badge> : r.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Disabled</Badge>}
+                  {r.isOwner ? <Badge tone="gold">Admin</Badge> : <Badge>Employee</Badge>}
+                  {r.deleted ? <Badge tone="red">Deleted</Badge> : r.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Suspended</Badge>}
                   {r.coupons.map((c) => (
                     <Badge key={c} tone="violet">
                       {c}
@@ -186,8 +257,19 @@ export function StaffManager({ rows }: { rows: StaffRow[] }) {
                   ))}
                   {r.off.length > 0 && <Badge>{r.off.length} permissions off</Badge>}
                 </span>
-                <span className="mt-1.5 block text-xs text-muted">
-                  This month: {r.monthOrders} orders · {r.monthSales} · {r.customers} customers (all time)
+                <span className="mt-1.5 grid gap-x-4 gap-y-0.5 text-xs text-muted sm:grid-cols-3">
+                  <span>
+                    Today: <b className="font-medium text-foreground">{r.today.orders}</b> orders · {r.today.sales}
+                  </span>
+                  <span>
+                    This week: <b className="font-medium text-foreground">{r.week.orders}</b> orders · {r.week.sales}
+                  </span>
+                  <span>
+                    This month: <b className="font-medium text-foreground">{r.month.orders}</b> orders · {r.month.sales}
+                  </span>
+                </span>
+                <span className="mt-1 block text-xs text-muted">
+                  {r.customers} customers (all time) · Products this week: +{r.added} added, −{r.removed} removed · Last activity: {r.lastActivity ?? "none in the last 30 days"}
                 </span>
                 <span className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                   <span dir="ltr">{r.link}</span>

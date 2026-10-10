@@ -8,11 +8,12 @@ import { siteConfig } from "@/config/site";
 import { defaultOgImage } from "@/lib/seo";
 import { Analytics } from "@/components/analytics/analytics";
 import { PwaRegister } from "@/components/layout/pwa";
+import { SeenPing } from "@/components/layout/seen-ping";
 import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
-import { LoginDialog } from "@/components/auth/login-dialog";
+import { LoginDialog, LoginReminder } from "@/components/auth/login-dialog";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { PromoBar } from "@/components/layout/promo-bar";
@@ -93,9 +94,11 @@ export default async function LocaleLayout({
           <WhatsAppFloat />
           <CartDrawer freeShippingOver={settings.freeShippingOver} />
           <LoginDialog required={settings.requireLogin} />
+          <LoginReminder />
           <Analytics pixelId={settings.metaPixelId} ga4Id={settings.ga4Id} />
           <PwaRegister />
           <PageViews />
+          <SeenPing />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -7,6 +7,7 @@ import { CoinAnchor } from "@/components/coin/coin-anchor";
 import { Countdown } from "@/components/home/countdown";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { HeroMiniPreview } from "@/components/home/hero-mini-preview";
+import { HeroReviewsWall } from "@/components/home/hero-reviews-wall";
 import { CopyCode } from "@/components/layout/copy-code";
 import { eyebrow, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { homeInner } from "./layout";
@@ -22,8 +23,8 @@ export async function Hero({ catalog, locale }: { catalog: Catalog; locale: Loca
   const media = slides.length > 0;
 
   return (
-    <section className={media ? "relative isolate overflow-hidden text-white" : "bg-gradient-to-b from-surface to-background"}>
-      {media && <HeroCarousel slides={slides} />}
+    <section className={media ? "relative isolate overflow-hidden text-white" : "relative overflow-x-clip"}>
+      {media ? <HeroCarousel slides={slides} /> : <HeroReviewsWall catalog={catalog} locale={locale} />}
       <div
         className={`${homeInner} grid items-center gap-6 pt-6 pb-14 lg:gap-10 lg:pt-14 lg:pb-20 ${
           media ? "min-h-[34rem] lg:min-h-[40rem]" : "lg:grid-cols-[1.05fr_1fr]"

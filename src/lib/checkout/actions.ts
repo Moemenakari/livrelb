@@ -7,6 +7,7 @@ import { normalizePhone } from "@/lib/phone";
 import { rateLimit } from "@/lib/security/rate-limit";
 import type { Json } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { createAdminClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
 import { forgetCustomer, rememberCustomer, verifiedCustomer } from "./customer";
@@ -203,6 +204,18 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
     if (rule?.checkout_requires_login ?? true) return { ok: false, error: "login_required" };
   }
 
+  // Her account (made when she signed in) has no phone yet: she gives it here, once.
+  // A number that already belongs to another customer is never taken over.
+  if (customerId) {
+    const { data: mine } = await db.from("customers").select("phone").eq("id", customerId).maybeSingle();
+    if (mine && !mine.phone) {
+      const { data: owner } = await db.from("customers").select("id").eq("phone", e164).maybeSingle();
+      if (owner && owner.id !== customerId) return { ok: false, error: "phone_taken" };
+      const { error: saveError } = await db.from("customers").update({ phone: e164 }).eq("id", customerId);
+      if (saveError) return { ok: false, error: "phone_taken" };
+    }
+  }
+
   const { data, error } = await db.rpc("place_order", {
     p_customer: { name, phone: str(input.phone, 30), area, address: building ? `${address}\n${building}` : address },
     p_items: items as unknown as Json,
@@ -273,15 +286,21 @@ export async function trackOrder(_prev: TrackState, form: FormData): Promise<Tra
   if (!db || !number || !e164) return notFound;
   if (!(await rateLimit("track", e164))) return { status: "rate_limited", number, phone };
 
-  const { data } = await db
-    .from("orders")
-    .select(
-      `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number, area_id,
-       order_items (product_slug, product_name, custom_text, qty)`,
-    )
-    .eq("number", Number(number))
-    .eq("phone", e164)
-    .maybeSingle();
+  // Deleted orders can't be tracked (before the admin redesign database update there is no deleted_at).
+  const lookup = (live: boolean) => {
+    const q = db
+      .from("orders")
+      .select(
+        `id, number, status, created_at, total_cents, subtotal_cents, discount_cents, points_discount_cents, carrier, tracking_number, area_id,
+         order_items (product_slug, product_name, custom_text, qty)`,
+      )
+      .eq("number", Number(number))
+      .eq("phone", e164);
+    return (live ? q.is("deleted_at", null) : q).maybeSingle();
+  };
+  let found = await lookup(true);
+  if (isMissingColumn(found.error)) found = await lookup(false);
+  const data = found.data;
   if (!data) return notFound;
   const catalog = await getCatalog();
   const [points, tracking] = await Promise.all([
@@ -322,12 +341,13 @@ export async function lookupPoints(_prev: PointsState, form: FormData): Promise<
   if (!db || !number || !e164) return notFound;
   if (!(await rateLimit("points", e164))) return { status: "rate_limited", number, phone };
 
-  const { data: order } = await db
-    .from("orders")
-    .select("customer_id")
-    .eq("number", Number(number))
-    .eq("phone", e164)
-    .maybeSingle();
+  const lookup = (live: boolean) => {
+    const q = db.from("orders").select("customer_id").eq("number", Number(number)).eq("phone", e164);
+    return (live ? q.is("deleted_at", null) : q).maybeSingle();
+  };
+  let found = await lookup(true);
+  if (isMissingColumn(found.error)) found = await lookup(false);
+  const order = found.data;
   if (!order) return notFound;
   const [{ data: profile }, { data: s }] = await Promise.all([
     db.rpc("customer_profile", { p_customer_id: order.customer_id }),

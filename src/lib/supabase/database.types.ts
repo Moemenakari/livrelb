@@ -492,8 +492,10 @@ export type Database = {
           marketing_opt_in: boolean
           name: string
           notes: string | null
-          phone: string
+          phone: string | null
+          last_seen_at: string | null
           phone_verified_at: string | null
+          phone_verified_by: string | null
           referred_at: string | null
           referred_by_staff_id: string | null
           updated_at: string
@@ -509,8 +511,10 @@ export type Database = {
           marketing_opt_in?: boolean
           name: string
           notes?: string | null
-          phone: string
+          phone?: string | null
+          last_seen_at?: string | null
           phone_verified_at?: string | null
+          phone_verified_by?: string | null
           referred_at?: string | null
           referred_by_staff_id?: string | null
           updated_at?: string
@@ -526,8 +530,10 @@ export type Database = {
           marketing_opt_in?: boolean
           name?: string
           notes?: string | null
-          phone?: string
+          phone?: string | null
+          last_seen_at?: string | null
           phone_verified_at?: string | null
+          phone_verified_by?: string | null
           referred_at?: string | null
           referred_by_staff_id?: string | null
           updated_at?: string
@@ -671,6 +677,7 @@ export type Database = {
           cta_href: string
           is_visible: boolean
           key: string
+          sort_order: number
           subtitle_ar: string
           subtitle_en: string
           title_ar: string
@@ -682,6 +689,7 @@ export type Database = {
           cta_href?: string
           is_visible?: boolean
           key: string
+          sort_order?: number
           subtitle_ar?: string
           subtitle_en?: string
           title_ar?: string
@@ -693,6 +701,7 @@ export type Database = {
           cta_href?: string
           is_visible?: boolean
           key?: string
+          sort_order?: number
           subtitle_ar?: string
           subtitle_en?: string
           title_ar?: string
@@ -1080,6 +1089,11 @@ export type Database = {
           created_at: string
           customer_id: string
           customer_name: string
+          delete_note: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          reward_coupon_code: string | null
           delivery_fee_cents: number
           discount_cents: number
           id: string
@@ -1120,6 +1134,11 @@ export type Database = {
           created_at?: string
           customer_id: string
           customer_name: string
+          delete_note?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          reward_coupon_code?: string | null
           delivery_fee_cents?: number
           discount_cents?: number
           id?: string
@@ -1160,6 +1179,11 @@ export type Database = {
           created_at?: string
           customer_id?: string
           customer_name?: string
+          delete_note?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          reward_coupon_code?: string | null
           delivery_fee_cents?: number
           discount_cents?: number
           id?: string
@@ -2084,6 +2108,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          deleted_at: string | null
           is_active: boolean
           name: string
           phone: string
@@ -2095,6 +2120,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          deleted_at?: string | null
           is_active?: boolean
           name: string
           phone: string
@@ -2106,6 +2132,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          deleted_at?: string | null
           is_active?: boolean
           name?: string
           phone?: string

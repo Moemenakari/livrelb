@@ -1,23 +1,28 @@
 "use client";
 
-import { useDeferredValue, useId, useMemo, useState } from "react";
-import { MessageCircle, Search, ShoppingBag, Trash2 } from "lucide-react";
+import { useDeferredValue, useEffect, useId, useMemo, useState } from "react";
+import { MessageCircle, Plus, Search, ShoppingBag, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { whatsappUrl } from "@/config/site";
 import { addToCart } from "@/lib/cart";
 import { ensureLogin } from "@/components/auth/login-dialog";
-import { allShapes, findShape, groupOrder, type CharmGroup, type CharmShape } from "@/lib/charms";
+import { allShapes, findShape, groupOrder, isGlyph, type CharmGroup } from "@/lib/charms";
 import type { CharmFamily, StockCharm } from "@/lib/charms/data";
 import type { Localized, MetalTone, ProductArt } from "@/lib/catalog/types";
 import { formatPrice } from "@/lib/format";
 import { useWhatsappNumber } from "@/lib/use-whatsapp";
-import { metalEdge } from "@/components/preview/metal";
 import { ScrollRow } from "@/components/ui/scroll-row";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 import { CharmArt, CharmDefs } from "./charm-art";
+import { CharmPreview, type Entry, type Piece, type Sides } from "./charm-preview";
 
 type Metal = Extract<MetalTone, "gold" | "silver">;
-type Piece = "necklace" | "bracelet";
+
+const NAME_MAX = 8;
+// Every letter (Latin and Arabic) and digit is a charm: a name is typed as its letters.
+const glyphSlug = new Map(allShapes.filter(isGlyph).map((s) => [s.glyph.toUpperCase(), s.slug]));
+// The demo card slides up this long after the page opens.
+const DEMO_MS = 4000;
 
 /** The chain a design hangs on: the "charm-design" product (price and sizes from the admin). */
 export type CharmDesign = {
@@ -26,7 +31,7 @@ export type CharmDesign = {
   art: ProductArt;
   /** Price of the chain alone, per metal (USD). */
   base: Record<Metal, number>;
-  sizes: Record<Piece, { values: number[]; default: number } | null>;
+  sizes: Record<Exclude<Piece, "keychain">, { values: number[]; default: number } | null>;
 };
 
 type Props = {
@@ -41,9 +46,6 @@ type Props = {
   /** null until the database has the chain product: the page then only offers WhatsApp. */
   design: CharmDesign | null;
 };
-
-/** What is on the chain: a drawn shape or a charm with a photo. */
-type Entry = { key: string; price: number; name: Localized } & ({ shape: CharmShape } | { image: string });
 
 const PAGE = 60;
 const input =
@@ -71,6 +73,16 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
   const deferred = useDeferredValue(query);
   const [shown, setShown] = useState(PAGE);
   const [picked, setPicked] = useState<string[]>([]);
+  const [sides, setSides] = useState<Sides>("two");
+  const [name, setName] = useState("");
+  // The demo card: opens by itself once, stays shut after she closes it.
+  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setOpen(true), DEMO_MS);
+    return () => clearTimeout(id);
+  }, []);
 
   const stockById = useMemo(() => new Map(stock.map((s) => [s.id, s])), [stock]);
   const available = (s: StockCharm) => s.metal === null || s.metal === tone;
@@ -106,20 +118,41 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
   const total = base + charmsTotal;
   const full = picked.length >= max;
 
-  const sizeList = design?.sizes[piece] ?? null;
-  const size = sizeList ? (sizes[piece] ?? sizeList.default) : undefined;
+  // The bag takes a chain or a bracelet; a keychain is sent on WhatsApp.
+  const bagPiece = piece === "keychain" ? null : piece;
+  const sizeList = (bagPiece && design?.sizes[bagPiece]) || null;
+  const size = sizeList && bagPiece ? (sizes[bagPiece] ?? sizeList.default) : undefined;
 
-  const add = (key: string) => setPicked((p) => (p.length >= max ? p : [...p, key]));
+  const show = () => {
+    if (!dismissed) setOpen(true);
+  };
+  const add = (key: string) => {
+    setPicked((p) => (p.length >= max ? p : [...p, key]));
+    show();
+  };
+  const addName = () => {
+    const keys = [...name.toUpperCase()].flatMap((ch) => glyphSlug.get(ch) ?? []);
+    if (keys.length === 0) return;
+    setPicked((p) => [...p, ...keys].slice(0, max));
+    setName("");
+    show();
+  };
   const removeAt = (i: number) => setPicked((p) => p.filter((_, j) => j !== i));
+  const moveTo = (from: number, to: number) =>
+    setPicked((p) => {
+      const next = [...p];
+      next.splice(to, 0, ...next.splice(from, 1));
+      return next;
+    });
 
   const toBag = async () => {
-    if (!design || entries.length === 0) return;
+    if (!design || !bagPiece || entries.length === 0) return;
     if (!(await ensureLogin())) return;
     addToCart({
       slug: design.slug,
       name: design.name,
       art: design.art,
-      sizeKind: piece === "necklace" ? "chain" : "bracelet",
+      sizeKind: bagPiece === "necklace" ? "chain" : "bracelet",
       size,
       material: tone,
       charms: entries.map((e) => e.key),
@@ -135,6 +168,7 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
       entries.length > 0 && `${t("summary.shapes")}: ${entries.map((e) => e.name.en).join(", ")}`,
       `${t("summary.piece")}: ${t(`piece.${piece}`)}${size ? ` ${size} cm` : ""}`,
       `${t("summary.metal")}: ${t(`metal.${tone}`)}`,
+      `${t("summary.sides")}: ${t(`sides.${sides}`)}`,
       entries.length > 0 && design && `${t("summary.total")}: ${formatPrice(total)}`,
     ]
       .filter(Boolean)
@@ -184,32 +218,37 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
               </button>
             ))}
           </div>
-          {design && (
-            <div role="group" aria-label={t("piece.label")} className="flex gap-2">
-              {(["necklace", "bracelet"] as const).map(
-                (p) =>
-                  design.sizes[p] && (
-                    <button key={p} type="button" aria-pressed={piece === p} onClick={() => setPiece(p)} className={`${chip} ${piece === p ? chipOn : chipOff}`}>
-                      {t(`piece.${p}`)}
-                    </button>
-                  ),
-              )}
-              {sizeList && (
-                <select
-                  aria-label={t("piece.size")}
-                  value={size}
-                  onChange={(e) => setSizes((s) => ({ ...s, [piece]: Number(e.target.value) }))}
-                  className="h-10 rounded-full border border-line bg-background px-3 text-sm"
-                >
-                  {sizeList.values.map((v) => (
-                    <option key={v} value={v}>
-                      {tProduct("cm", { value: v })}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          )}
+          <div role="group" aria-label={t("piece.label")} className="flex flex-wrap gap-2">
+            {(["necklace", "bracelet", "keychain"] as const).map(
+              (p) =>
+                (p === "keychain" || !design || design.sizes[p]) && (
+                  <button key={p} type="button" aria-pressed={piece === p} onClick={() => setPiece(p)} className={`${chip} ${piece === p ? chipOn : chipOff}`}>
+                    {t(`piece.${p}`)}
+                  </button>
+                ),
+            )}
+            {sizeList && bagPiece && (
+              <select
+                aria-label={t("piece.size")}
+                value={size}
+                onChange={(e) => setSizes((s) => ({ ...s, [bagPiece]: Number(e.target.value) }))}
+                className="h-10 rounded-full border border-line bg-background px-3 text-sm"
+              >
+                {sizeList.values.map((v) => (
+                  <option key={v} value={v}>
+                    {tProduct("cm", { value: v })}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div role="group" aria-label={t("sides.label")} className="flex gap-2">
+            {(["one", "two"] as const).map((s) => (
+              <button key={s} type="button" aria-pressed={sides === s} onClick={() => setSides(s)} className={`${chip} ${sides === s ? chipOn : chipOff}`}>
+                {t(`sides.${s}`)}
+              </button>
+            ))}
+          </div>
           <p className="text-sm font-medium text-gold-dark">{t("each", { price: formatPrice(price) })}</p>
         </div>
       </div>
@@ -218,6 +257,26 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
       <section className="flex flex-col gap-4" aria-label={t(`family.${family}`)}>
         {family === "charms" && (
           <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                addName();
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={NAME_MAX}
+                placeholder={t("name.placeholder", { max: NAME_MAX })}
+                aria-label={t("name.label")}
+                className={input}
+              />
+              <button type="submit" disabled={full || name.trim() === ""} className={`${secondaryButton} shrink-0`}>
+                <Plus className="size-4.5" aria-hidden />
+                {t("name.add")}
+              </button>
+            </form>
             <div className="relative">
               <Search className="pointer-events-none absolute start-4 top-1/2 size-4.5 -translate-y-1/2 text-muted" strokeWidth={1.5} aria-hidden />
               <input
@@ -306,24 +365,58 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
       </section>
 
       {/* The chosen charms on a chain, with the price breakdown. */}
+      {!open && dismissed && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="fixed end-3 bottom-3 z-30 inline-flex items-center gap-2 rounded-full border border-line/70 bg-surface/90 px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-md"
+        >
+          <ShoppingBag className="size-4.5" strokeWidth={1.5} aria-hidden />
+          {t("reopen", { count: picked.length })}
+        </button>
+      )}
+      {open && (
       <section
-        className="sticky bottom-0 z-10 rounded-2xl border border-line bg-background/95 p-4 shadow-[0_-8px_30px_-16px_rgba(43,38,34,0.4)] backdrop-blur lg:static lg:shadow-none"
+        className="fixed inset-x-3 bottom-3 z-30 mx-auto max-w-md animate-rise-in rounded-2xl border border-line/70 bg-surface/80 p-3 shadow-[0_10px_40px_-14px_rgba(43,38,34,0.45)] backdrop-blur-md lg:inset-x-auto lg:end-6 lg:mx-0 lg:w-[26rem]"
         aria-label={t("yourDesign")}
       >
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl">{t("yourDesign")}</h2>
-          {picked.length > 0 && (
-            <button type="button" onClick={() => setPicked([])} className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100">
-              <Trash2 className="size-4" strokeWidth={1.5} aria-hidden />
-              {t("clear")}
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg">{t("yourDesign")}</h2>
+          <div className="flex items-center gap-2">
+            {picked.length > 0 && (
+              <button type="button" onClick={() => setPicked([])} className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100">
+                <Trash2 className="size-3.5" strokeWidth={1.5} aria-hidden />
+                {t("clear")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setDismissed(true);
+              }}
+              aria-label={t("close")}
+              className="inline-flex items-center gap-1 rounded-full border border-line bg-background/80 px-3 py-1.5 text-xs font-medium hover:border-muted"
+            >
+              <X className="size-3.5" strokeWidth={1.5} aria-hidden />
+              {t("close")}
             </button>
-          )}
+          </div>
         </div>
-        <ChainPreview entries={entries} gradient={gradient} tone={tone} onRemove={removeAt} removeLabel={(e) => t("remove", { name: e.name[locale] })} />
-        <div className="mt-2 text-sm" aria-live="polite">
-          {entries.length === 0 ? (
-            <span className="text-xs text-muted">{t("empty", { max })}</span>
-          ) : (
+        <CharmPreview
+          entries={entries}
+          gradient={gradient}
+          tone={tone}
+          piece={piece}
+          sides={sides}
+          onMove={moveTo}
+          onRemove={removeAt}
+          removeLabel={(e) => t("remove", { name: e.name[locale] })}
+          removeSelected={t("removeSelected")}
+          hint={entries.length === 0 ? t("empty", { max }) : t("picked")}
+        />
+        <div className="text-sm" aria-live="polite">
+          {entries.length > 0 && (
             <>
               {design ? (
                 <strong className="font-semibold">
@@ -332,14 +425,15 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
               ) : (
                 <strong className="font-semibold">{t("total", { count: entries.length, price: formatPrice(charmsTotal / entries.length), total: formatPrice(charmsTotal) })}</strong>
               )}
-              <span className="mt-0.5 block text-xs text-muted">{full ? t("full", { max }) : t("picked")}</span>
-              {design && <span className="block text-xs text-muted">{t("deliveryNote")}</span>}
+              {full && <span className="block text-xs text-muted">{t("full", { max })}</span>}
+              {design && bagPiece && <span className="block text-xs text-muted">{t("deliveryNote")}</span>}
+              {piece === "keychain" && <span className="block text-xs text-muted">{t("keychainNote")}</span>}
             </>
           )}
         </div>
 
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          {design && (
+          {design && bagPiece && (
             <button type="button" disabled={entries.length === 0} onClick={toBag} className={`${primaryButton} flex-1`}>
               <ShoppingBag className="size-4.5" aria-hidden />
               {t("addToBag")}
@@ -354,6 +448,7 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
         </div>
         {!design && <p className="mt-2 text-xs text-muted">{t("noBag")}</p>}
       </section>
+      )}
     </div>
   );
 }
@@ -365,66 +460,5 @@ function Count({ n }: { n: number }) {
     <span className="absolute -end-1 -top-1 flex min-w-5 items-center justify-center rounded-full bg-ink px-1 text-[11px] leading-5 font-medium text-white" dir="ltr">
       {`×${n}`}
     </span>
-  );
-}
-
-// The chosen charms hanging from a fine chain. Tap one to remove it.
-function ChainPreview({
-  entries,
-  gradient,
-  tone,
-  onRemove,
-  removeLabel,
-}: {
-  entries: Entry[];
-  gradient: string;
-  tone: MetalTone;
-  onRemove: (index: number) => void;
-  removeLabel: (entry: Entry) => string;
-}) {
-  const W = 360;
-  const H = 120;
-  const count = entries.length;
-  const size = count > 8 ? 26 : count > 5 ? 32 : 38;
-  // Quadratic chain: from (0, 10) dipping and back up.
-  const point = (u: number) => ({
-    x: W * u,
-    y: (1 - u) * (1 - u) * 10 + 2 * (1 - u) * u * 100 + u * u * 10,
-  });
-  const edge = metalEdge[tone];
-
-  return (
-    <div className="overflow-hidden rounded-xl bg-surface">
-      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block h-auto max-h-28 w-full sm:max-h-none" role="group" aria-label="">
-        <path d={`M 0 10 Q ${W / 2} 100 ${W} 10`} fill="none" stroke={edge} strokeWidth="2.2" strokeDasharray="3.2 1.6" strokeLinecap="round" />
-        {entries.map((e, i) => {
-          const { x, y } = point((i + 1) / (count + 1));
-          const k = size / 24;
-          return (
-            <g key={`${e.key}-${i}`}>
-              <circle cx={x} cy={y} r="3.2" fill="none" stroke={`url(#${gradient}-fill)`} strokeWidth="1.6" />
-              <g
-                transform={`translate(${x - size / 2} ${y + 3}) scale(${k})`}
-                className="cursor-pointer"
-                role="button"
-                tabIndex={0}
-                aria-label={removeLabel(e)}
-                onClick={() => onRemove(i)}
-                onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && onRemove(i)}
-              >
-                <title>{removeLabel(e)}</title>
-                <rect x="-2" y="-2" width="28" height="28" fill="transparent" />
-                {"shape" in e ? (
-                  <CharmArt as="g" shape={e.shape} gradient={gradient} tone={tone} />
-                ) : (
-                  // The cut-out is drawn with its own outline: whole, centered, nothing cropped.
-                  <image href={e.image} x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet" />
-                )}
-              </g>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
   );
 }

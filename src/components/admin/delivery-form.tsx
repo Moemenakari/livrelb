@@ -4,17 +4,17 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Loader2, Plus } from "lucide-react";
 import { saveDelivery, type AreaInput, type DeliveryInput } from "@/lib/admin/delivery-actions";
 import { FormError, useSave } from "./promo-forms";
-import { Card, Field, buttonClass, inputClass, smallButtonClass } from "./ui";
-
-type Defaults = { fee: string; daysMin: number; daysMax: number };
+import { Card, Field, buttonClass, inputClass, smallButtonClass, textareaClass } from "./ui";
 
 const range = (min: number, max: number) => (min === max ? `${min} day${min === 1 ? "" : "s"}` : `${min}–${max} days`);
 
-// Delivery & times (owner): how long we take to make a piece, and for each
-// area its delivery fee and days. The shop, the order page and order tracking
-// all show "made in X days, then delivered in Y days" from these numbers.
-export function DeliveryForm({ initial, defaults }: { initial: DeliveryInput; defaults: Defaults }) {
+// Delivery & times (owner): the shop's delivery defaults, how long we take to
+// make a piece, and for each area its delivery fee and days. The shop, the order
+// page and order tracking all show "made in X days, then delivered in Y days"
+// from these numbers.
+export function DeliveryForm({ initial }: { initial: DeliveryInput }) {
   const [d, setD] = useState(initial);
+  const defaults = { fee: d.fee, daysMin: Number(d.daysMin) || 0, daysMax: Math.max(Number(d.daysMin) || 0, Number(d.daysMax) || 0) };
   const [saved, setSaved] = useState(false);
   const { pending, error, save } = useSave();
   const change = (patch: Partial<DeliveryInput>) => {
@@ -40,6 +40,35 @@ export function DeliveryForm({ initial, defaults }: { initial: DeliveryInput; de
         save(() => saveDelivery(d), () => setSaved(true));
       }}
     >
+      <Card title="Delivery defaults" actions={<span className="text-xs text-muted">Used by every area below that leaves its own fee or days empty.</span>}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Field label="Delivery fee ($)" htmlFor="dl-fee">
+            <input id="dl-fee" type="number" min="0" step="0.01" required value={d.fee} onChange={(e) => change({ fee: e.target.value })} className={inputClass} />
+          </Field>
+          <Field label="Free delivery over ($)" htmlFor="dl-free">
+            <input id="dl-free" type="number" min="0" step="0.01" required value={d.freeOver} onChange={(e) => change({ freeOver: e.target.value })} className={inputClass} />
+          </Field>
+          <Field label="Delivery days from" htmlFor="dl-dmin">
+            <input id="dl-dmin" type="number" min="0" max="60" required value={d.daysMin} onChange={(e) => change({ daysMin: e.target.value })} className={inputClass} />
+          </Field>
+          <Field label="to" htmlFor="dl-dmax">
+            <input id="dl-dmax" type="number" min="0" max="90" required value={d.daysMax} onChange={(e) => change({ daysMax: e.target.value })} className={inputClass} />
+          </Field>
+        </div>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
+          First order: free delivery
+          <input type="checkbox" role="switch" checked={d.firstOrderFree} onChange={(e) => change({ firstOrderFree: e.target.checked })} className="size-5 shrink-0 accent-[var(--cedar)]" />
+        </label>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Field label="Delivery time text" hint={`Empty = "${d.daysMin}–${d.daysMax} days"`} htmlFor="dl-ten">
+            <input id="dl-ten" maxLength={120} value={d.timeEn} onChange={(e) => change({ timeEn: e.target.value })} className={inputClass} />
+          </Field>
+          <Field label="Shipping information" hint="Shown in the product page's Shipping tab." htmlFor="dl-shen">
+            <textarea id="dl-shen" rows={4} maxLength={3000} value={d.shippingEn} onChange={(e) => change({ shippingEn: e.target.value })} className={textareaClass} />
+          </Field>
+        </div>
+      </Card>
+
       <Card title="Making time" actions={<span className="text-xs text-muted">Days to design and handmake a piece, before it ships.</span>}>
         <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
           <Field label="From (days)" htmlFor="dl-pmin">
@@ -55,7 +84,7 @@ export function DeliveryForm({ initial, defaults }: { initial: DeliveryInput; de
         title="Delivery areas"
         actions={
           <span className="text-xs text-muted">
-            Empty fee = ${defaults.fee}, empty days = {range(defaults.daysMin, defaults.daysMax)} (Settings).
+            Empty fee = ${defaults.fee}, empty days = {range(defaults.daysMin, defaults.daysMax)} (the defaults above).
           </span>
         }
       >

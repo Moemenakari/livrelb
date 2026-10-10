@@ -77,6 +77,9 @@ export async function run<T>(body: () => Promise<T>): Promise<ActionResult<T>> {
     const e = error as { message?: string; code?: string };
     // Unexpected: log the code only (never customer data).
     console.error("admin action failed", e.code ?? "", e.message?.slice(0, 120) ?? "");
+    if (e.code === "42703" || e.code === "PGRST204") {
+      return { ok: false, error: "The database needs one update first: run 20261009120000_admin_redesign.sql in the Supabase SQL Editor." };
+    }
     if (e.code === "42501") return { ok: false, error: "You don't have permission to do this." };
     if (e.code === "23505") return { ok: false, error: "This already exists (duplicate slug, code or phone)." };
     if (e.code === "22023" || e.code === "23514") {
