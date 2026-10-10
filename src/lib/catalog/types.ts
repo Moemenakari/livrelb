@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import type { HeroCard } from "@/lib/hero-cards";
 
 // Shapes follow the database tables in PROJECT_BRIEF §7, so the static
 // sample data in this folder can be swapped for Supabase queries in Phase 2
@@ -197,6 +198,8 @@ export type StoreSettings = {
   /** Empty until the owner sets it: the Instagram link is hidden. */
   instagramUrl: string;
   announcements: Localized[];
+  /** Cards that drift behind the Lira coin (Admin > Settings). Empty = the wall shows the approved reviews. */
+  heroCards: HeroCard[];
   /** "Estimated delivery" text; empty = built from the days below. */
   deliveryTime: Localized;
   /** Delivery days of an area without its own (areas table). */

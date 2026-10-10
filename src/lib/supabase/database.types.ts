@@ -1976,6 +1976,7 @@ export type Database = {
           processing_days_max: number
           processing_days_min: number
           announcements: Json
+          hero_cards: Json
           card_online_enabled: boolean
           charm_price_cents: number
           created_at: string
@@ -2020,6 +2021,7 @@ export type Database = {
           processing_days_max?: number
           processing_days_min?: number
           announcements?: Json
+          hero_cards?: Json
           card_online_enabled?: boolean
           charm_price_cents?: number
           created_at?: string
@@ -2064,6 +2066,7 @@ export type Database = {
           processing_days_max?: number
           processing_days_min?: number
           announcements?: Json
+          hero_cards?: Json
           card_online_enabled?: boolean
           charm_price_cents?: number
           created_at?: string

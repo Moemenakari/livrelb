@@ -2,6 +2,7 @@ import "server-only";
 import type { Json } from "@/lib/supabase/database.types";
 import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
 import { CHARM_DESIGN_SLUG, defaultNavSort } from "@/config/navigation";
+import { parseHeroCards } from "@/lib/hero-cards";
 import { defaultHomeTiles, styleKeys } from "./categories";
 import { isFontKey, materials } from "./materials";
 import { reviews as sampleReviews, showSampleReviews } from "./reviews";
@@ -301,6 +302,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
             a?.en && a?.ar ? [loc(a.en, a.ar)] : [],
           )
         : [],
+      // Before the hero cards database update there is no column: no cards, the wall shows reviews.
+      heroCards: parseHeroCards((s as { hero_cards?: unknown }).hero_cards),
       deliveryTime: loc(s.delivery_time_en, s.delivery_time_ar),
       deliveryDays: { min: s.delivery_days_min, max: s.delivery_days_max },
       processingDays: { min: s.processing_days_min ?? 3, max: s.processing_days_max ?? 4 },
