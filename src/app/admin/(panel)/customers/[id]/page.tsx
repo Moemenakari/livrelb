@@ -37,7 +37,10 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
   const { data: orders } = isMissingColumn(firstOrders.error) ? await customerOrders(false) : firstOrders;
 
   const balance = (ledger ?? []).reduce((s, p) => s + p.delta, 0);
-  const spent = (orders ?? []).filter((o) => o.status !== "cancelled").reduce((s, o) => s + o.total_cents, 0);
+  // Same rule as the customers list and the dashboard: cancelled and deleted orders do not count.
+  // The order history below still lists them, with their status.
+  const counted = (orders ?? []).filter((o) => o.status !== "cancelled");
+  const spent = counted.reduce((s, o) => s + o.total_cents, 0);
 
   return (
     <>
@@ -47,7 +50,7 @@ export default async function CustomerPage({ params }: PageProps<"/admin/custome
         <div className="flex flex-col gap-4">
           <Card>
             <div className="grid grid-cols-3 gap-4">
-              <Stat label="Orders" value={(orders ?? []).length} />
+              <Stat label="Orders" value={counted.length} />
               <Stat label="Spent" value={money(spent)} />
               <Stat label="Points" value={balance} sub={`= ${money(balance)} off`} />
             </div>
