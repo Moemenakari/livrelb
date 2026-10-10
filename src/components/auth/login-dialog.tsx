@@ -5,6 +5,7 @@ import { Loader2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleIcon } from "@/components/icons/brand-icons";
+import { usePathname } from "@/i18n/navigation";
 
 // One sign-in dialog for the whole shop. Anything that needs an account (add to bag,
 // checkout, place order) calls ensureLogin() / openLogin(): with no session it opens this
@@ -193,9 +194,13 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
 const NUDGE_KEY = "livre-login-nudge";
 const NUDGE_EVERY = 24 * 60 * 60 * 1000;
 
+// Pages where she types or looks something up: the reminder never floats over them.
+const NO_REMINDER = ["/track", "/account", "/checkout"];
+
 /** A small reminder, at most once a day, for a visitor who is not signed in. */
 export function LoginReminder() {
   const t = useTranslations("auth");
+  const pathname = usePathname();
   const user = useSyncExternalStore(
     (l) => {
       watch();
@@ -235,7 +240,7 @@ export function LoginReminder() {
     }
   };
 
-  if (!show || user !== false) return null;
+  if (!show || user !== false || NO_REMINDER.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
   return (
     <div role="status" className="fixed inset-x-4 bottom-24 z-30 flex items-center gap-3 rounded-2xl border border-white/40 bg-background/85 p-3 shadow-lg backdrop-blur-md sm:start-6 sm:end-auto sm:w-96">
       <p className="flex-1 text-sm">{t("nudge")}</p>
