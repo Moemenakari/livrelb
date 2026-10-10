@@ -168,6 +168,7 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
               type="email"
               required
               autoComplete="email"
+              placeholder={t("emailPlaceholder")}
               dir="ltr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

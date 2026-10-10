@@ -757,6 +757,7 @@
     "nudge": "Sign in to keep your orders and collect LIVRE Points.",
     "google": "Continue with Google",
     "emailLabel": "Or your email",
+    "emailPlaceholder": "name@example.com",
     "emailSend": "Send me a link",
     "sent": "We sent a link to {email}. Open it on this phone to continue.",
     "error": "Something went wrong. Please try again.",
