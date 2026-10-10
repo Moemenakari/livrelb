@@ -125,7 +125,8 @@ export function TrackingCard({ orderId, orderNumber, customerName, customerPhone
             <input id="ship-number" value={trackingNumber} maxLength={60} dir="ltr" onChange={(e) => setTrackingNumber(e.target.value)} className={inputClass} />
           </Field>
         </div>
-        <div className="flex flex-wrap gap-2">
+        {/* Phones: the courier buttons share the row; from sm up they keep their own size. */}
+        <div className="flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
           <button type="button" disabled={!dirty} onClick={() => saveCourier(carrier, trackingNumber)} className={secondaryButtonClass}>
             {dirty ? "Save courier" : "Saved"}
           </button>
@@ -190,7 +191,7 @@ export function TrackingCard({ orderId, orderNumber, customerName, customerPhone
         </ol>
 
         <form
-          className="flex gap-2"
+          className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
             e.preventDefault();
             add();
