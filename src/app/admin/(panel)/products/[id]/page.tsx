@@ -17,6 +17,9 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
   const [product, lookups, names] = await Promise.all([loadProduct(id), editorLookups(), staffNames()]);
   if (!product) notFound();
   const { meta } = product;
+  // "Created by Amal on 3 Oct · Last edited by Nour on 5 Oct"; "by …" is left out when nobody is recorded.
+  const by = (id: string | null) => (id ? ` by ${nameOf(names, id)}` : "");
+  const metaLine = `Created${by(meta.createdBy)} on ${dateTime(meta.createdAt)} · Last edited${by(meta.updatedBy)} on ${dateTime(meta.updatedAt)}`;
 
   return (
     <>
@@ -26,7 +29,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
         lookups={lookups}
         canSave={can(staff, "products.edit")}
         canDelete={can(staff, "products.delete")}
-        meta={`Created by ${nameOf(names, meta.createdBy)} on ${dateTime(meta.createdAt)} · Last edited by ${nameOf(names, meta.updatedBy)} on ${dateTime(meta.updatedAt)}`}
+        meta={metaLine}
       />
     </>
   );
