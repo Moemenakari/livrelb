@@ -625,6 +625,7 @@
       "size": "Size"
     },
     "breakdown": "Chain {chain} + {count, plural, one {# charm} other {# charms}} {charms} = {total}",
+    "breakdownKeychain": "Keychain {chain} + {count, plural, one {# charm} other {# charms}} {charms} = {total}",
     "deliveryNote": "Delivery is added at checkout.",
     "addToBag": "Add to bag",
     "noBag": "Adding to the bag opens soon. Send your design on WhatsApp for now."

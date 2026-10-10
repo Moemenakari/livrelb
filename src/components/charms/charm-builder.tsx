@@ -420,7 +420,7 @@ export function CharmBuilder({ whatsapp, price, max, stock, design }: Props) {
             <>
               {design ? (
                 <strong className="font-semibold">
-                  {t("breakdown", { chain: formatPrice(base), count: entries.length, charms: formatPrice(charmsTotal), total: formatPrice(total) })}
+                  {t(piece === "keychain" ? "breakdownKeychain" : "breakdown", { chain: formatPrice(base), count: entries.length, charms: formatPrice(charmsTotal), total: formatPrice(total) })}
                 </strong>
               ) : (
                 <strong className="font-semibold">{t("total", { count: entries.length, price: formatPrice(charmsTotal / entries.length), total: formatPrice(charmsTotal) })}</strong>
