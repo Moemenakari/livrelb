@@ -112,7 +112,7 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
           </p>
         </div>
         <div className="flex flex-col gap-1 rounded-xl border border-line p-4 text-sm">
-          <p className="font-medium">{t("confirmWhatsapp")}</p>
+          {whatsapp && <p className="font-medium">{t("confirmWhatsapp")}</p>}
           <p className="text-muted">{t("codNote", { total: formatPrice(dollars(order.total_cents)) })}</p>
         </div>
       </div>
