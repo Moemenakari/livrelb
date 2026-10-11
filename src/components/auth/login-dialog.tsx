@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ExternalLink, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleIcon } from "@/components/icons/brand-icons";
 import { CedarMark } from "@/components/icons/cedar-mark";
 import { usePathname } from "@/i18n/navigation";
-import { browserHandoffUrl } from "@/lib/open-in-browser";
+import { isEmbeddedBrowser } from "@/lib/open-in-browser";
+import { OpenInBrowserButton } from "@/components/auth/open-in-browser";
 
 // One sign-in dialog for the whole shop. Anything that needs an account (add to bag,
 // checkout, place order) calls ensureLogin() / openLogin(): with no session it opens this
@@ -60,20 +61,10 @@ function rememberPage() {
   document.cookie = `livre_next=${encodeURIComponent(window.location.pathname + window.location.search)}; path=/; max-age=900; samesite=lax`;
 }
 
-// Google refuses to sign anyone in inside the in-app browsers of Instagram, Facebook, TikTok and the like
-// ("disallowed_useragent"), where most of our visitors arrive. There the button opens this page in the
-// phone's real browser instead.
-const EMBEDDED = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|TikTok|musical_ly|Bytedance|Snapchat|LinkedInApp|Line\/|MicroMessenger|Twitter|; wv\)|(iPhone|iPod|iPad)(?!.*Safari)/i;
-const noopSubscribe = () => () => {};
-const isEmbeddedBrowser = () => EMBEDDED.test(navigator.userAgent);
-
-/** Hands the current page to Safari (iPhone) or Chrome (Android). */
-const openInBrowser = () => {
-  window.location.href = browserHandoffUrl(window.location, navigator.userAgent);
-};
-
 // The one sign-in dialog: the LIVRE mark, one line and one big Google button. Google signs up and
 // signs in; she comes back to the page she was on (see /auth/callback).
+const noopSubscribe = () => () => {};
+
 export function LoginDialog({ required: needed }: { required: boolean }) {
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
@@ -136,10 +127,7 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
 
         {embedded ? (
           <>
-            <button type="button" onClick={openInBrowser} className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-ink text-sm font-medium text-white">
-              <ExternalLink className="size-5" strokeWidth={1.5} aria-hidden />
-              {t("openInBrowser")}
-            </button>
+            <OpenInBrowserButton className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-ink text-sm font-medium text-white">{t("openInBrowser")}</OpenInBrowserButton>
             <p className="text-xs text-muted">{t("openInBrowserTip")}</p>
           </>
         ) : (

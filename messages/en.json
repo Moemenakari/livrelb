@@ -758,6 +758,8 @@
     "google": "Continue with Google",
     "inApp": "Google doesn't allow sign-in inside this app.",
     "openInBrowser": "Open in Safari / Chrome to continue",
+    "openShort": "Open in Safari / Chrome",
+    "inAppBar": "For the best experience, open in Safari / Chrome",
     "openInBrowserTip": "Nothing happened? Tap the ⋯ menu and choose “Open in browser”.",
     "error": "Something went wrong. Please try again.",
     "failed": "We couldn't sign you in. Please try again.",
