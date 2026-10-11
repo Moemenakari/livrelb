@@ -1,6 +1,10 @@
 import { getCatalog } from "@/lib/catalog";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // GET /api/health: are the Supabase env vars set, does the project answer,
 // and where does the storefront catalog come from (supabase or static)?
 export async function GET() {

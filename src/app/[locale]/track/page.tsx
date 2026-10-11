@@ -3,6 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { PointsLookup, TrackForm } from "@/components/checkout/track-form";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/track">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "track" });

@@ -4,6 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ensureAccount } from "@/lib/checkout/customer";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // Google (or the link sent to her email) brings the customer back here: swap the code
 // for a session (cookies), make her customer account, then back to the page she was on (cookie livre_next).
 // The session cookies are written onto the redirect response itself, so the browser always keeps them

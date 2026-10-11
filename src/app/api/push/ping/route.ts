@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/public";
 import { processOutbox } from "@/lib/push/notify";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // POST /api/push/ping: called by the database (pg_net, after commit) when a
 // new order or an audit_log line was queued in push_outbox. The ping carries
 // a secret that only the database and this server know (private.push_config,
