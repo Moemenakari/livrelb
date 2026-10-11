@@ -3,7 +3,8 @@
 // ONE place for the public address: canonical links, sitemap, share pictures
 // and the admin's link hints all read it. To move to livrelb.com later, set
 // NEXT_PUBLIC_SITE_URL (a build variable) or change the fallback below.
-const url = (process.env.NEXT_PUBLIC_SITE_URL || "https://shop.livrelb.workers.dev").replace(/\/$/, "");
+// trim(): a build variable pasted with a trailing newline put a line break inside sitemap.xml and robots.txt.
+const url = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://shop.livrelb.workers.dev").replace(/\/$/, "");
 
 export const siteConfig = {
   url,
