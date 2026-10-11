@@ -12,6 +12,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/checkout
   return { title: t("title"), robots: { index: false } };
 }
 
+// Always rendered per request: who is signed in decides what this page shows.
+export const dynamic = "force-dynamic";
+
 // Checkout: she signs in first (Google or email), writes her name, phone and address (prefilled),
 // and Place order saves the order and sends it to the shop's WhatsApp. Rendered per request.
 export default async function CheckoutPage({ params }: PageProps<"/[locale]/checkout">) {

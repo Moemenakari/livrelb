@@ -65,6 +65,14 @@ async function sessionUser(): Promise<SessionUser | null> {
 }
 
 export type VerifiedCustomer = {
+  /**
+   * Signed in: verified by a valid login (Google or the email code) OR by this browser's signed
+   * customer cookie (remembered after a trusted order). Every page and server action that asks
+   * "who is she?" (checkout, account, place order) uses this one answer.
+   */
+  signedIn: boolean;
+  /** How she was verified: "login", "device" (the signed cookie) or null. */
+  via: "login" | "device" | null;
   /** The customer this browser is verified as, if any. */
   customerId: string | null;
   /** Her Google login, if signed in (linked at her next order). */
@@ -74,17 +82,27 @@ export type VerifiedCustomer = {
   authName: string | null;
 };
 
-export async function verifiedCustomer(): Promise<VerifiedCustomer> {
+const signedOut: VerifiedCustomer = { signedIn: false, via: null, customerId: null, authUserId: null, authEmail: null, authName: null };
+
+/**
+ * THE one answer to "who is signed in on this browser?", for the checkout, the account page and
+ * place order. Reading the cookies comes first, always: a page that asks this can never be
+ * prerendered (the Cloudflare build has no secret key, and without this line the checkout was
+ * frozen as a signed-out page for everybody).
+ */
+export async function getSignedInCustomer(): Promise<VerifiedCustomer> {
+  const jar = await cookies();
   const db = isSupabaseConfigured() ? createAdminClient() : null;
-  if (!db) return { customerId: null, authUserId: null, authEmail: null, authName: null };
+  if (!db) return signedOut;
   const user = await sessionUser();
   const auth = { authUserId: user?.id ?? null, authEmail: user?.email ?? null, authName: user?.name ?? null };
   if (user) {
     const { data } = await db.from("customers").select("id").eq("auth_user_id", user.id).maybeSingle();
-    if (data) return { customerId: data.id, ...auth };
+    if (data) return { signedIn: true, via: "login", customerId: data.id, ...auth };
   }
-  const device = await readDeviceCookie((await cookies()).get(CUSTOMER_COOKIE)?.value);
-  return { customerId: device, ...auth };
+  const device = await readDeviceCookie(jar.get(CUSTOMER_COOKIE)?.value);
+  const via = user ? "login" : device ? "device" : null;
+  return { signedIn: via !== null, via, customerId: device, ...auth };
 }
 
 /**
@@ -130,11 +148,12 @@ export async function ensureAccount(): Promise<void> {
 
 /** Saved details to prefill the checkout, and her points. */
 export async function savedCustomer(): Promise<SavedCustomer | null> {
+  const me = await getSignedInCustomer();
   if (!isSupabaseConfigured()) return null;
-  const { customerId, authUserId, authEmail, authName } = await verifiedCustomer();
+  const { customerId, authUserId, authEmail, authName, signedIn } = me;
   const db = createAdminClient();
   // Signed in with Google but no order yet: her Google name starts the form.
-  if (!customerId || !db) return authUserId ? { google: true, name: authName ?? undefined, email: authEmail ?? undefined } : null;
+  if (!customerId || !db) return authUserId ? { google: true, signedIn, name: authName ?? undefined, email: authEmail ?? undefined } : null;
   const { data } = await db.rpc("customer_profile", { p_customer_id: customerId });
   if (!data) return null;
   const c = data as { name: string; phone: string | null; area: string | null; address: string | null; points: number };
@@ -142,6 +161,7 @@ export async function savedCustomer(): Promise<SavedCustomer | null> {
   const [address, ...building] = (c.address ?? "").split("\n");
   return {
     google: Boolean(authUserId),
+    signedIn,
     email: authEmail ?? undefined,
     name: c.name,
     phone: c.phone ?? undefined,

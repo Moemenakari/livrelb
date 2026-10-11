@@ -1,4 +1,4 @@
-import { verifiedCustomer } from "@/lib/checkout/customer";
+import { getSignedInCustomer } from "@/lib/checkout/customer";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 
@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/public";
 export async function POST() {
   const headers = { "Cache-Control": "private, no-store" };
   if (!isSupabaseConfigured()) return new Response(null, { status: 204, headers });
-  const { customerId } = await verifiedCustomer();
+  const { customerId } = await getSignedInCustomer();
   const db = createAdminClient();
   if (customerId && db) {
     const now = new Date();

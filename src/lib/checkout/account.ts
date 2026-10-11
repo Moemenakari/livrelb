@@ -4,7 +4,7 @@ import type { PointsRules } from "@/lib/catalog/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isMissingColumn } from "@/lib/supabase/compat";
 import { createAdminClient } from "@/lib/supabase/public";
-import { verifiedCustomer } from "./customer";
+import { getSignedInCustomer } from "./customer";
 import { orderPoints } from "./points";
 import { orderTracking, type Tracking } from "./tracking";
 import type { OrderStatus } from "./types";
@@ -37,7 +37,7 @@ export type Account = {
 /** null = nobody is signed in on this browser. */
 export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> {
   if (!isSupabaseConfigured()) return null;
-  const { customerId, authUserId, authName } = await verifiedCustomer();
+  const { customerId, authUserId, authName } = await getSignedInCustomer();
   const db = createAdminClient();
   const catalog = await getCatalog();
   if (!customerId || !db) {
