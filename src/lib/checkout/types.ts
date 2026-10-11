@@ -101,7 +101,10 @@ export type CheckoutResult = { ok: true; number: number } | { ok: false; error: 
  * Google but no order yet.
  */
 export type SavedCustomer = {
+  /** Has a Google / email login. */
   google: boolean;
+  /** Signed in by a login OR by the remembered device: the checkout never blocks her. */
+  signedIn: boolean;
   /** The email Google shares (kept with her account). */
   email?: string;
   name?: string;

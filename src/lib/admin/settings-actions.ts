@@ -20,7 +20,7 @@ export type SettingsInput = {
   announcements: { en: string; ar: string }[];
   /** Cards behind the Lira coin on the homepage. */
   heroCards: HeroCard[];
-  /** Checkout needs an account (Google or email). */
+  /** Checkout needs an account (Google). */
   requireLogin: boolean;
   metaPixelId: string;
   ga4Id: string;

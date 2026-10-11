@@ -74,6 +74,20 @@ export function addToCart(item: Omit<CartItem, "id" | "qty">) {
   setDrawer(true);
 }
 
+/** The bag as it is now (to carry it to another browser). Browser only. */
+export const readBag = () => items.read();
+
+/** Lines that came from another browser (already checked and priced by the server): added to the bag, never doubled. */
+export function restoreToCart(lines: Omit<CartItem, "id">[]) {
+  let list = items.read();
+  for (const line of lines) {
+    const same = list.find((i) => sameDesign(i, line));
+    if (same) list = list.map((i) => (i === same ? { ...i, qty: Math.max(i.qty, Math.min(MAX_QTY, line.qty)) } : i));
+    else if (list.length < MAX_LINES) list = [...list, { ...line, qty: Math.min(MAX_QTY, line.qty), id: crypto.randomUUID() }];
+  }
+  items.write(list);
+}
+
 export function setQty(id: string, qty: number) {
   items.write(
     items.read().map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(MAX_QTY, qty)) } : i)),

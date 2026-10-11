@@ -10,7 +10,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isMissingColumn } from "@/lib/supabase/compat";
 import { createAdminClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
-import { forgetCustomer, rememberCustomer, verifiedCustomer } from "./customer";
+import { forgetCustomer, rememberCustomer, getSignedInCustomer } from "./customer";
 import { orderPoints } from "./points";
 import { orderTracking, type Tracking } from "./tracking";
 import type {
@@ -102,7 +102,7 @@ export async function quoteCart(input: {
   if (!items) return { ok: false, error: "invalid" };
 
   // Points only for the customer the server verified, never from the browser.
-  const { customerId } = await verifiedCustomer();
+  const { customerId } = await getSignedInCustomer();
   const { data, error } = await db.rpc("quote_order", {
     p_items: items as unknown as Json,
     p_coupon_code: str(input.coupon, 30) || undefined,
@@ -197,9 +197,10 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
 
   const jar = await cookies();
   const ref = jar.get(REF_COOKIE)?.value;
-  const { customerId, authUserId, authEmail } = await verifiedCustomer();
-  // Checkout needs an account (Google or email) unless the owner switched that off in Settings.
-  if (!authUserId) {
+  const { customerId, authUserId, authEmail } = await getSignedInCustomer();
+  // Checkout needs an account (Google, the email code, or this browser remembered after a trusted
+  // order: the same rule as the checkout screen) unless the owner switched that off in Settings.
+  if (!authUserId && !customerId) {
     const { data: rule } = await db.from("site_settings").select("checkout_requires_login").eq("id", 1).maybeSingle();
     if (rule?.checkout_requires_login ?? true) return { ok: false, error: "login_required" };
   }
@@ -238,7 +239,7 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
 
   const order = data as { order_id: string; number: number; customer_id: string; trusted: boolean };
-  // We keep her email (Google or email login), to know the real person.
+  // We keep her email (from Google), to know the real person.
   if (authUserId && authEmail && order.trusted) await db.from("customers").update({ email: authEmail }).eq("id", order.customer_id);
   // Next time this browser's checkout is prefilled (only when the database
   // trusts it with this customer: see place_order).

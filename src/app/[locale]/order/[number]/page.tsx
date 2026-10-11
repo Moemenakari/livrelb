@@ -23,6 +23,10 @@ import { ProductArt } from "@/components/product/product-art";
 import { GiftBoxNote } from "@/components/product/gift-box-note";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/order/[number]">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const { number } = await params;

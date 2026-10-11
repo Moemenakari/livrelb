@@ -5,11 +5,14 @@ import { Loader2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleIcon } from "@/components/icons/brand-icons";
+import { CedarMark } from "@/components/icons/cedar-mark";
 import { usePathname } from "@/i18n/navigation";
+import { isEmbeddedBrowser } from "@/lib/open-in-browser";
+import { OpenInBrowserButton } from "@/components/auth/open-in-browser";
 
 // One sign-in dialog for the whole shop. Anything that needs an account (add to bag,
 // checkout, place order) calls ensureLogin() / openLogin(): with no session it opens this
-// dialog (Google, or a link sent to her email) and brings her back to the same page.
+// dialog (Google) and brings her back to the same page.
 // There is no password and she is asked nothing here: her account is made the moment she
 // signs in (see ensureAccount). Her name, phone and area are asked once, at her first order.
 
@@ -36,6 +39,9 @@ export const openLogin = () => set({ open: true });
 /** True when she is signed in. Otherwise opens the sign-in dialog and returns false. */
 export async function ensureLogin(): Promise<boolean> {
   if (!state.required) return true;
+  // Inside an in-app browser (Instagram...) Google cannot run: she fills the bag here, and signs in, in
+  // Safari / Chrome (the bag goes with her), at the checkout. The order itself still needs the account.
+  if (isEmbeddedBrowser()) return true;
   watch();
   if (state.user === null) set({ user: Boolean((await createClient().auth.getSession()).data.session) });
   if (state.user) return true;
@@ -58,15 +64,18 @@ function rememberPage() {
   document.cookie = `livre_next=${encodeURIComponent(window.location.pathname + window.location.search)}; path=/; max-age=900; samesite=lax`;
 }
 
+// The one sign-in dialog: the LIVRE mark, one line and one big Google button. Google signs up and
+// signs in; she comes back to the page she was on (see /auth/callback).
+const noopSubscribe = () => () => {};
+
 export function LoginDialog({ required: needed }: { required: boolean }) {
   const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const ref = useRef<HTMLDialogElement>(null);
-  const [mode, setMode] = useState<"in" | "up">("in");
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState<"google" | "email" | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const embedded = useSyncExternalStore(noopSubscribe, isEmbeddedBrowser, () => false);
   useEffect(() => set({ required: needed }), [needed]);
   const open = useSyncExternalStore(
     (l) => {
@@ -89,24 +98,14 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
   const redirectTo = `${typeof window === "undefined" ? "" : window.location.origin}/${locale}/auth/callback`;
 
   const google = async () => {
-    setBusy("google");
+    setBusy(true);
     setError(false);
     rememberPage();
     const { error: e } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
     if (e) {
-      setBusy(null);
+      setBusy(false);
       setError(true);
     }
-  };
-
-  const byEmail = async () => {
-    setBusy("email");
-    setError(false);
-    rememberPage();
-    const { error: e } = await createClient().auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } });
-    setBusy(null);
-    if (e) setError(true);
-    else setSent(true);
   };
 
   return (
@@ -115,71 +114,35 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
       aria-label={t("title")}
       onClose={() => set({ open: false })}
       onClick={(e) => e.target === e.currentTarget && set({ open: false })}
-      className="m-auto w-[min(92vw,26rem)] rounded-2xl border border-white/40 bg-background/85 p-0 text-foreground shadow-xl backdrop-blur-md backdrop:bg-foreground/30"
+      className="m-auto w-[min(92vw,24rem)] rounded-2xl border border-white/40 bg-background/85 p-0 text-foreground shadow-xl backdrop-blur-md backdrop:bg-foreground/30"
     >
-      <div className="flex flex-col gap-4 p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div role="tablist" aria-label={t("title")} className="flex gap-1 rounded-full bg-surface p-1">
-            {(["in", "up"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                role="tab"
-                aria-selected={mode === m}
-                onClick={() => setMode(m)}
-                className={`rounded-full px-4 py-1.5 text-sm transition-colors ${mode === m ? "bg-ink text-white" : "text-muted"}`}
-              >
-                {t(m === "in" ? "tabIn" : "tabUp")}
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={() => set({ open: false })} aria-label={t("close")} className="flex size-9 items-center justify-center rounded-full hover:bg-surface">
-            <X className="size-5" strokeWidth={1.5} />
-          </button>
-        </div>
-        <p className="text-sm text-muted">{t(mode === "in" ? "textIn" : "textUp")}</p>
-
-        <button
-          type="button"
-          disabled={busy !== null}
-          onClick={google}
-          className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line text-sm font-medium transition-colors hover:border-muted disabled:opacity-60"
-        >
-          {busy === "google" ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <GoogleIcon className="size-5" />}
-          {t("google")}
+      <div className="relative flex flex-col items-center gap-5 px-6 pt-9 pb-8 text-center">
+        <button type="button" onClick={() => set({ open: false })} aria-label={t("close")} className="absolute end-3 top-3 flex size-9 items-center justify-center rounded-full hover:bg-surface">
+          <X className="size-5" strokeWidth={1.5} />
         </button>
+        <div className="flex flex-col items-center gap-[0.15em] font-logo text-2xl leading-none font-semibold">
+          <CedarMark className="h-[0.6em] w-auto text-cedar" />
+          <span lang="en" className="-me-[0.22em] tracking-[0.22em] text-gold-dark">
+            {tCommon("brandName")}
+          </span>
+        </div>
+        <p className="text-base text-muted">{embedded ? t("inApp") : t("line")}</p>
 
-        {sent ? (
-          <p className="rounded-lg bg-surface px-4 py-3 text-sm" role="status">
-            {t("sent", { email })}
-          </p>
+        {embedded ? (
+          <>
+            <p className="text-xl leading-snug font-bold text-red-600">{t("inAppInstruction")}</p>
+            <OpenInBrowserButton className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line bg-white text-sm font-medium text-ink">{t("openInBrowser")}</OpenInBrowserButton>
+          </>
         ) : (
-          <form
-            className="flex flex-col gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void byEmail();
-            }}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={google}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-full border border-line bg-white text-base font-medium transition-colors hover:border-muted disabled:opacity-60"
           >
-            <label htmlFor="login-email" className="text-sm font-medium">
-              {t("emailLabel")}
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder={t("emailPlaceholder")}
-              dir="ltr"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 w-full rounded-lg border border-line bg-background px-4 text-base outline-none focus:border-gold"
-            />
-            <button type="submit" disabled={busy !== null} className="flex h-12 items-center justify-center gap-2 rounded-full bg-ink text-sm font-medium text-white disabled:opacity-60">
-              {busy === "email" && <Loader2 className="size-4 animate-spin" aria-hidden />}
-              {t("emailSend")}
-            </button>
-          </form>
+            {busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <GoogleIcon className="size-5" />}
+            {t("google")}
+          </button>
         )}
         {error && (
           <p className="text-sm text-red-700" role="alert">
@@ -252,7 +215,7 @@ export function LoginReminder() {
         }}
         className="h-10 shrink-0 rounded-full bg-ink px-4 text-sm font-medium text-white"
       >
-        {t("tabIn")}
+        {t("signIn")}
       </button>
       <button type="button" onClick={hide} aria-label={t("close")} className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-surface">
         <X className="size-5" strokeWidth={1.5} />

@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendMetaEvent, type MetaEventInput } from "@/lib/analytics/capi";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 const EVENTS = ["ViewContent", "AddToCart", "InitiateCheckout", "Purchase"] as const;
 
 // Receives a shopping event from the browser (only sent after the visitor

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { openLogin } from "@/components/auth/login-dialog";
 
 /**
- * Shown when Google (or the email link) sent her back with ?auth=failed (see /auth/callback):
+ * Shown when Google sent her back with ?auth=failed (see /auth/callback):
  * a clear message and "Try again", on whatever page she was on, the checkout included.
  * The flag is removed from the address so a refresh does not show it again.
  */

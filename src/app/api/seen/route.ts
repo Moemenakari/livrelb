@@ -1,6 +1,10 @@
-import { verifiedCustomer } from "@/lib/checkout/customer";
+import { getSignedInCustomer } from "@/lib/checkout/customer";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
+
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
 
 // POST /api/seen: a remembered customer (or one signed in with Google) is back.
 // Stamps customers.last_seen_at, at most once an hour, for the admin's
@@ -8,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/public";
 export async function POST() {
   const headers = { "Cache-Control": "private, no-store" };
   if (!isSupabaseConfigured()) return new Response(null, { status: 204, headers });
-  const { customerId } = await verifiedCustomer();
+  const { customerId } = await getSignedInCustomer();
   const db = createAdminClient();
   if (customerId && db) {
     const now = new Date();
