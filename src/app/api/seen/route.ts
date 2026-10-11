@@ -2,6 +2,10 @@ import { getSignedInCustomer } from "@/lib/checkout/customer";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // POST /api/seen: a remembered customer (or one signed in with Google) is back.
 // Stamps customers.last_seen_at, at most once an hour, for the admin's
 // "Last visit" column. Only browsers with the customer flag cookie call it.

@@ -3,6 +3,10 @@ import { REF_CODE, REF_COOKIE } from "@/lib/checkout/cookies";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // GET /api/whatsapp: the WhatsApp number a visitor should write to. A visitor
 // who came by an employee's link (the ref cookie) writes to that employee;
 // everyone else (and a link that no longer matches) writes to the shop. Digits

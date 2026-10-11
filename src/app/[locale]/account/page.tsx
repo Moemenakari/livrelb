@@ -8,6 +8,10 @@ import { AccountTabs, type AccountTab } from "@/components/account/account-tabs"
 import { LoginButton } from "@/components/auth/login-dialog";
 import { primaryButton, secondaryButton } from "@/components/ui/styles";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/account">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "account" });

@@ -2,6 +2,10 @@ import { requireStaff } from "@/lib/admin/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { vapidPublicKey } from "@/lib/push/web-push";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 // Every admin page: logged-in, active staff only (per request, never cached).
 export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
   const staff = await requireStaff();

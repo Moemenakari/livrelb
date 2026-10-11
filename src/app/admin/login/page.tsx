@@ -4,6 +4,10 @@ import { getStaff } from "@/lib/admin/auth";
 import { AdminLogo } from "@/components/admin/admin-logo";
 import { LoginForm } from "@/components/admin/login-form";
 
+// Per-person data: never prerendered or cached. scripts/check-dynamic-routes.mjs fails the build if this
+// route ever comes out static (a build without secret keys used to freeze pages like this one).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Log in" };
 
 export default async function AdminLoginPage({ searchParams }: PageProps<"/admin/login">) {

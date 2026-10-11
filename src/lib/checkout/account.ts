@@ -1,4 +1,5 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { findProduct, getCatalog } from "@/lib/catalog";
 import type { PointsRules } from "@/lib/catalog/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -36,6 +37,8 @@ export type Account = {
 
 /** null = nobody is signed in on this browser. */
 export async function loadAccount(locale: "en" | "ar"): Promise<Account | null> {
+  // Cookies first, before any early return: a page that shows her account is never prerendered.
+  await cookies();
   if (!isSupabaseConfigured()) return null;
   const { customerId, authUserId, authName } = await getSignedInCustomer();
   const db = createAdminClient();
