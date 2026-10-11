@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { Loader2, Lock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -55,6 +55,11 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
   const tCart = useTranslations("cart");
   const router = useRouter();
   const items = useCart();
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const coupon = useCoupon();
 
   const locale = useLocale();
@@ -184,6 +189,17 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
     );
   }
 
+  // The bag lives in this phone's storage, so it is only known once the page is open here. Until then
+  // a calm loader, never "Your bag is empty".
+  if (!hydrated) {
+    return (
+      <p className="flex items-center justify-center gap-3 py-24 text-muted" role="status">
+        <Loader2 className="size-5 animate-spin" aria-hidden />
+        {t("loading")}
+      </p>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center gap-5 py-20 text-center">
@@ -195,7 +211,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
     );
   }
 
-  if (loginRequired && !saved?.google) {
+  if (loginRequired && !saved?.signedIn) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-5 rounded-2xl border border-line bg-surface p-8 text-center">
         <Lock className="size-8 text-gold-dark" strokeWidth={1.25} aria-hidden />

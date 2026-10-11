@@ -511,6 +511,7 @@
       "done": "Done"
     },
     "secure": "Secure checkout. Your information is protected.",
+    "loading": "Loading your bag…",
     "loginTitle": "Sign in to place your order",
     "loginText": "Sign in with Google or your email. Your details are saved for next time and you can follow every order from your account. Your bag is kept.",
     "whatsappIntro": "Hi LIVRE! New order #{number}:",
