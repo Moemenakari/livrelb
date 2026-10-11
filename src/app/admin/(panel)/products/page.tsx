@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { Plus } from "lucide-react";
 import { requireStaff } from "@/lib/admin/auth";
 import { money } from "@/lib/admin/format";

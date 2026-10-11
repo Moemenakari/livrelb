@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { routing } from "@/i18n/routing";
 import messages from "../../messages/en.json";
 import "./globals.css";
