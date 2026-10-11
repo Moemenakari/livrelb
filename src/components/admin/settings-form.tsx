@@ -105,7 +105,7 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
       <Card title="Checkout">
         <Toggle
           label="Checkout needs an account"
-          hint="Before she orders (or adds a piece to the bag) she signs in with Google or her email. Every order is sent to your WhatsApp number (Contacts above), or to the employee's own when she came by that employee's link."
+          hint="Before she orders (or adds a piece to the bag) she signs in with Google. Every order is sent to your WhatsApp number (Contacts above), or to the employee's own when she came by that employee's link."
           checked={s.requireLogin}
           onChange={(v) => set("requireLogin", v)}
         />

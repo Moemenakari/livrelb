@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ensureAccount } from "@/lib/checkout/customer";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
-// Google (or the link sent to her email) brings the customer back here: swap the code
+// Google brings the customer back here: swap the code
 // for a session (cookies), make her customer account, then back to the page she was on (cookie livre_next).
 // The session cookies are written onto the redirect response itself, so the browser always keeps them
 // (she stays signed in on every page after this).

@@ -239,7 +239,7 @@ export async function placeOrder(input: CheckoutInput): Promise<CheckoutResult> 
   }
 
   const order = data as { order_id: string; number: number; customer_id: string; trusted: boolean };
-  // We keep her email (Google or email login), to know the real person.
+  // We keep her email (from Google), to know the real person.
   if (authUserId && authEmail && order.trusted) await db.from("customers").update({ email: authEmail }).eq("id", order.customer_id);
   // Next time this browser's checkout is prefilled (only when the database
   // trusts it with this customer: see place_order).

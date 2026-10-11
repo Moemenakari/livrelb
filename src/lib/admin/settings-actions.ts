@@ -16,7 +16,7 @@ export type SettingsInput = {
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
-  /** Checkout needs an account (Google or email). */
+  /** Checkout needs an account (Google). */
   requireLogin: boolean;
   metaPixelId: string;
   ga4Id: string;

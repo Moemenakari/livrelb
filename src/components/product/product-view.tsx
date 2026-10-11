@@ -165,7 +165,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       inputRef.current?.focus();
       return;
     }
-    // An account first (Google or email), then the piece goes to the bag.
+    // An account first (Google), then the piece goes to the bag.
     if (!(await ensureLogin())) return;
     track("AddToCart", { id: product.slug, name: product.name, value: unitPrice, quantity: 1 });
     // Opens the cart drawer.

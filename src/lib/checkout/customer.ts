@@ -66,7 +66,7 @@ async function sessionUser(): Promise<SessionUser | null> {
 
 export type VerifiedCustomer = {
   /**
-   * Signed in: verified by a valid login (Google or the email code) OR by this browser's signed
+   * Signed in: verified by a valid login (Google) OR by this browser's signed
    * customer cookie (remembered after a trusted order). Every page and server action that asks
    * "who is she?" (checkout, account, place order) uses this one answer.
    */
@@ -106,9 +106,9 @@ export async function getSignedInCustomer(): Promise<VerifiedCustomer> {
 }
 
 /**
- * Called when she has just signed in (Google or an email link): she gets her customer
+ * Called when she has just signed in with Google: she gets her customer
  * account right away, so staff see her in Admin > Customers before any order. An old
- * customer with the same email (verified by Google / the email link) is linked, never
+ * customer with the same email (verified by Google) is linked, never
  * one found by phone. Safe to call again; never throws (the account is also made at the
  * first order).
  */
