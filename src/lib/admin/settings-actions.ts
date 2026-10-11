@@ -2,6 +2,8 @@
 
 import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
+import { cleanHeroCards, type HeroCard } from "@/lib/hero-cards";
+import { isMissingColumn } from "@/lib/supabase/compat";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 
 export type SettingsInput = {
@@ -16,6 +18,8 @@ export type SettingsInput = {
   redeemPoints: string;
   redeemDollars: string;
   announcements: { en: string; ar: string }[];
+  /** Cards behind the Lira coin on the homepage. */
+  heroCards: HeroCard[];
   /** Checkout needs an account (Google). */
   requireLogin: boolean;
   metaPixelId: string;
@@ -53,25 +57,33 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
       .filter((a) => a.en);
     if (announcements.length > 8) throw new AdminError("Up to 8 announcements.");
 
-    const { error } = await db
-      .from("site_settings")
-      .update({
-        whatsapp_number: whatsapp,
-        instagram_url: instagram,
-        points_enabled: Boolean(input.pointsEnabled),
-        points_per_step: whole(input.pointsPerStep, "Points per step", 0, 100000),
-        points_per_review: whole(input.pointsPerReview, "Points per review", 0, 10000),
-        points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
-        points_redeem_cents: centsOf(input.redeemDollars, "Their value"),
-        announcements,
-        points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
-        reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
-        reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
-        checkout_requires_login: Boolean(input.requireLogin),
-        meta_pixel_id: metaPixelId,
-        ga4_id: ga4Id,
-      })
-      .eq("id", 1);
+    // The cards behind the coin: rows, limits and photo address are checked in src/lib/hero-cards.ts.
+    const checked = cleanHeroCards(input.heroCards, process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.replace(/\/$/, ""));
+    if (!checked.ok) throw new AdminError(checked.error);
+    const heroCards = checked.cards;
+
+    const fields = {
+      whatsapp_number: whatsapp,
+      instagram_url: instagram,
+      points_enabled: Boolean(input.pointsEnabled),
+      points_per_step: whole(input.pointsPerStep, "Points per step", 0, 100000),
+      points_per_review: whole(input.pointsPerReview, "Points per review", 0, 10000),
+      points_redeem_points: whole(input.redeemPoints, "Points to redeem", 1, 100000),
+      points_redeem_cents: centsOf(input.redeemDollars, "Their value"),
+      announcements,
+      points_step_cents: centsOf(input.pointsStepDollars, "Points step"),
+      reward_coupon_percent: whole(input.rewardPercent, "Reward coupon %", 1, 100),
+      reward_coupon_days: whole(input.rewardDays, "Reward coupon days", 1, 365),
+      checkout_requires_login: Boolean(input.requireLogin),
+      meta_pixel_id: metaPixelId,
+      ga4_id: ga4Id,
+    };
+    let { error } = await db.from("site_settings").update({ ...fields, hero_cards: heroCards }).eq("id", 1);
+    // Before the hero cards database update there is no column: everything else still saves.
+    if (isMissingColumn(error)) {
+      if (heroCards.length > 0) throw new AdminError("The cards behind the coin need the database update 20261011090000_hero_cards.sql.");
+      ({ error } = await db.from("site_settings").update(fields).eq("id", 1));
+    }
     if (error) throw error;
     revalidateTag(CATALOG_TAG, { expire: 0 });
     refresh();

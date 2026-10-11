@@ -58,6 +58,7 @@
 @theme {
   --animate-marquee: marquee 35s linear infinite;
   --animate-marquee-rtl: marquee-rtl 35s linear infinite;
+  --animate-marquee-right: marquee-right 35s linear infinite;
   --animate-drawer-in: drawer-in 250ms ease-out;
   --animate-drawer-in-rtl: drawer-in-rtl 250ms ease-out;
   --animate-fade-in: fade-in 250ms ease-out;
@@ -71,6 +72,15 @@
   @keyframes marquee-rtl {
     to {
       transform: translateX(50%);
+    }
+  }
+  /* Left to right, seamless with two identical copies (the wall behind the coin). */
+  @keyframes marquee-right {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
     }
   }
   @keyframes drawer-in {

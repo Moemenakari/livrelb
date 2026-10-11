@@ -19,6 +19,7 @@ export const sampleSettings: StoreSettings = {
       ar: "جودة ممتازة ★★★★★ — تحبّها زبوناتنا",
     },
   ],
+  heroCards: [],
   deliveryTime: { en: "", ar: "" },
   deliveryDays: { min: 2, max: 7 },
   processingDays: { min: 3, max: 4 },
