@@ -39,6 +39,9 @@ export const openLogin = () => set({ open: true });
 /** True when she is signed in. Otherwise opens the sign-in dialog and returns false. */
 export async function ensureLogin(): Promise<boolean> {
   if (!state.required) return true;
+  // Inside an in-app browser (Instagram...) Google cannot run: she fills the bag here, and signs in, in
+  // Safari / Chrome (the bag goes with her), at the checkout. The order itself still needs the account.
+  if (isEmbeddedBrowser()) return true;
   watch();
   if (state.user === null) set({ user: Boolean((await createClient().auth.getSession()).data.session) });
   if (state.user) return true;
