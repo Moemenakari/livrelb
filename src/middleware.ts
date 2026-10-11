@@ -118,6 +118,11 @@ export default async function proxy(request: NextRequest) {
 async function refreshSession(request: NextRequest, response: NextResponse) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  // Not for link prefetches (a page opens 10+ of them at once: each one refreshing the same login at
+  // the same moment makes Supabase cancel it, and the customer is signed out), and not for the sign-in
+  // return trip itself (/auth/callback sets the new session; nothing to refresh yet).
+  const prefetch = request.headers.has("next-router-prefetch") || request.headers.get("purpose") === "prefetch";
+  if (prefetch || /^\/en\/auth\/callback\/?$/.test(request.nextUrl.pathname)) return response;
   if (url && key && request.cookies.getAll().some((c) => c.name.startsWith("sb-"))) {
     const supabase = createServerClient(url, key, {
       cookies: {
