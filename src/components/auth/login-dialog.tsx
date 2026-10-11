@@ -130,8 +130,8 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
 
         {embedded ? (
           <>
-            <OpenInBrowserButton className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-ink text-sm font-medium text-white">{t("openInBrowser")}</OpenInBrowserButton>
-            <p className="text-xs text-muted">{t("openInBrowserTip")}</p>
+            <p className="text-xl leading-snug font-bold text-red-600">{t("inAppInstruction")}</p>
+            <OpenInBrowserButton className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line bg-white text-sm font-medium text-ink">{t("openInBrowser")}</OpenInBrowserButton>
           </>
         ) : (
           <button
