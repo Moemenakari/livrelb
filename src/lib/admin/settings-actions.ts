@@ -2,7 +2,7 @@
 
 import { refresh, revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/lib/catalog";
-import { HERO_TEXT_MAX, HERO_PRICE_MAX, MAX_HERO_CARDS, isHeroIcon, isReviewId, type HeroCard } from "@/lib/hero-cards";
+import { cleanHeroCards, type HeroCard } from "@/lib/hero-cards";
 import { isMissingColumn } from "@/lib/supabase/compat";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 
@@ -38,32 +38,6 @@ const centsOf = (v: string, label: string) => {
   return Math.round(n * 100);
 };
 
-/** Checks the cards behind the coin and drops the empty ones. */
-function cleanHeroCards(input: unknown): HeroCard[] {
-  const list = Array.isArray(input) ? (input as Partial<HeroCard>[]) : [];
-  if (list.length > MAX_HERO_CARDS) throw new AdminError(`Up to ${MAX_HERO_CARDS} cards behind the coin.`);
-  const cards: HeroCard[] = [];
-  for (const c of list) {
-    const id = str(c?.id, 40) || Math.random().toString(36).slice(2, 10);
-    const visible = c?.visible !== false;
-    if (c?.kind === "review") {
-      if (!isReviewId(c.reviewId)) continue;
-      cards.push({ id, kind: "review", icon: "", text: "", stars: 0, price: "", reviewId: c.reviewId, visible });
-      continue;
-    }
-    const icon = isHeroIcon(c?.icon) ? c.icon : "";
-    const text = str(c?.text, HERO_TEXT_MAX + 1);
-    if (text.length > HERO_TEXT_MAX) throw new AdminError(`A card's text can have up to ${HERO_TEXT_MAX} characters.`);
-    const price = str(c?.price, HERO_PRICE_MAX + 1);
-    if (price.length > HERO_PRICE_MAX) throw new AdminError(`A card's price can have up to ${HERO_PRICE_MAX} characters.`);
-    const stars = Math.round(Number(c?.stars ?? 0));
-    if (!Number.isFinite(stars) || stars < 0 || stars > 5) throw new AdminError("Stars: 0 to 5.");
-    if (!text && !price && !icon && stars === 0) continue;
-    cards.push({ id, kind: "note", icon, text, stars, price, reviewId: "", visible });
-  }
-  return cards;
-}
-
 /** Shop settings (owner only): contacts, LIVRE Points, announcement bar, checkout, ad tracking. */
 export async function saveSettings(input: SettingsInput): Promise<ActionResult> {
   return run(async () => {
@@ -83,7 +57,10 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
       .filter((a) => a.en);
     if (announcements.length > 8) throw new AdminError("Up to 8 announcements.");
 
-    const heroCards = cleanHeroCards(input.heroCards);
+    // The cards behind the coin: rows, limits and photo address are checked in src/lib/hero-cards.ts.
+    const checked = cleanHeroCards(input.heroCards, process.env.NEXT_PUBLIC_R2_PUBLIC_URL?.replace(/\/$/, ""));
+    if (!checked.ok) throw new AdminError(checked.error);
+    const heroCards = checked.cards;
 
     const fields = {
       whatsapp_number: whatsapp,
