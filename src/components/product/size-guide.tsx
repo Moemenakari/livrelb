@@ -16,7 +16,7 @@ export function SizeGuide({ size }: { size: SizeOption }) {
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className="inline-flex items-center gap-1.5 text-[13px] text-muted underline underline-offset-4 transition-colors hover:text-foreground"
+        className="relative before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] inline-flex items-center gap-1.5 text-[13px] text-muted underline underline-offset-4 transition-colors hover:text-foreground"
       >
         <Ruler className="size-4" strokeWidth={1.5} aria-hidden />
         {t("sizeGuide")}

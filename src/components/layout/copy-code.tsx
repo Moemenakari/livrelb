@@ -29,7 +29,7 @@ export function CopyCode({ code, value, copyLabel, copiedLabel, className = "" }
           // Clipboard blocked: the code is still visible to type.
         }
       }}
-      className={`rounded-md border border-dashed border-current px-2 py-0.5 font-semibold tracking-wider transition-colors hover:bg-white/10 ${className}`}
+      className={`relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] rounded-md border border-dashed border-current px-2 py-0.5 font-semibold tracking-wider transition-colors hover:bg-white/10 ${className}`}
     >
       <span lang="en" aria-live="polite">
         {copied ? copiedLabel : code}

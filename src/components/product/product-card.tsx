@@ -147,7 +147,7 @@ export function ProductCard({ product, previewText, preferredTone, font, title, 
                   aria-label={t("showSlide", { index: i + 1 })}
                   aria-current={slide === i || undefined}
                   onClick={() => goTo(i)}
-                  className="flex size-6 items-center justify-center"
+                  className="relative before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] flex size-6 items-center justify-center"
                 >
                   <span className={`size-1.5 rounded-full transition-colors ${slide === i ? "bg-ink" : "bg-ink/25"}`} />
                 </button>
@@ -184,7 +184,7 @@ export function ProductCard({ product, previewText, preferredTone, font, title, 
               aria-pressed={material === o.material}
               onClick={() => setMaterial(o.material)}
               style={{ backgroundColor: o.swatch }}
-              className={`size-4 rounded-full border border-black/10 transition-shadow ${material === o.material ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
+              className={`relative before:absolute before:-inset-1 before:content-[''] size-4 rounded-full border border-black/10 transition-shadow ${material === o.material ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
             />
           ))}
         </div>

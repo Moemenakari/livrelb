@@ -208,7 +208,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {product.reviews && (
-            <a href="#reviews" className="flex items-center gap-2 text-sm text-muted hover:text-foreground">
+            <a href="#reviews" className="relative before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] flex items-center gap-2 text-sm text-muted hover:text-foreground">
               <Stars
                 rating={product.reviews.rating}
                 label={tCommon("stars", { rating: product.reviews.rating.toFixed(1) })}
