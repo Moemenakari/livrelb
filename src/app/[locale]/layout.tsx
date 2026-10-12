@@ -11,6 +11,7 @@ import { PwaRegister } from "@/components/layout/pwa";
 import { AuthFailed } from "@/components/auth/auth-failed";
 import { BagRestore } from "@/components/layout/bag-restore";
 import { InAppBar } from "@/components/layout/in-app-bar";
+import { RefCapture } from "@/components/layout/ref-capture";
 import { SeenPing } from "@/components/layout/seen-ping";
 import { PageViews } from "@/components/analytics/page-views";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -105,6 +106,7 @@ export default async function LocaleLayout({
           <PwaRegister />
           <PageViews />
           <SeenPing />
+          <RefCapture />
         </NextIntlClientProvider>
       </body>
     </html>
