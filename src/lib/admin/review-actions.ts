@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh } from "next/cache";
+import { publishStorefront } from "@/lib/catalog/publish";
 import { normalizePhone } from "@/lib/phone";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
@@ -62,7 +62,7 @@ export async function addReview(input: ReviewInput): Promise<ActionResult> {
       is_approved: Boolean(input.approve),
     });
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    await publishStorefront();
     refresh();
   });
 }
@@ -74,7 +74,7 @@ export async function setReviewApproved(id: string, approved: boolean): Promise<
     const { db } = await authorize("reviews.manage");
     const { error } = await db.from("reviews").update({ is_approved: approved }).eq("id", id);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    await publishStorefront();
     refresh();
   });
 }

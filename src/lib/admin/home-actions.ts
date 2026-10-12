@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh } from "next/cache";
+import { publishStorefront } from "@/lib/catalog/publish";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 import { CHARMS_NAV_KEY } from "@/config/navigation";
@@ -140,8 +140,8 @@ export async function saveHomePage(input: HomePageInput): Promise<ActionResult> 
         if (error) throw error;
       }
     } finally {
-      // Whatever was saved shows in the shop right away, even after a failure.
-      revalidateTag(CATALOG_TAG, { expire: 0 });
+      // Whatever was saved is published, even after a failure.
+      await publishStorefront();
     }
     refresh();
   });

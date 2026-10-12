@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh } from "next/cache";
+import { publishStorefront } from "@/lib/catalog/publish";
 import { allMaterials, isFontKey } from "@/lib/catalog/materials";
 import type { Json } from "@/lib/supabase/database.types";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
@@ -133,7 +133,7 @@ export async function saveProduct(form: ProductForm): Promise<ActionResult<{ id:
     const payload = toPayload(form, existing);
     const { data, error } = await db.rpc("admin_save_product", { p: payload as unknown as Json });
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    await publishStorefront();
     refresh();
     return { id: data as string };
   });
@@ -149,7 +149,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     const { error, count: deleted } = await db.from("products").delete({ count: "exact" }).eq("id", id);
     if (error) throw error;
     if (!deleted) throw new AdminError("You don't have permission to do this.");
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    await publishStorefront();
   });
 }
 
@@ -160,7 +160,7 @@ export async function setProductStatus(id: string, status: "active" | "draft" | 
     const { db } = await authorize("products.edit");
     const { error } = await db.from("products").update({ status }).eq("id", id);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    await publishStorefront();
     refresh();
   });
 }

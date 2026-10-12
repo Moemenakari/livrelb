@@ -21,7 +21,7 @@ export default async function PromotionsPage() {
 
   return (
     <>
-      <PageHeader title="Promotions" subtitle="Discount codes, the offer on the first screen and the promo bar. The first screen's photos and videos are on the Home page. Changes show in the shop right away." />
+      <PageHeader title="Promotions" subtitle="Discount codes, the offer on the first screen and the promo bar. The first screen's photos and videos are on the Home page. Changes reach customers in about 5 minutes." />
       <PromotionsManager
         staff={names.filter((s) => s.isActive).map((s) => ({ id: s.id, name: s.name }))}
         coupons={(coupons ?? []).map((c) => ({

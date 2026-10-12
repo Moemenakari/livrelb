@@ -108,7 +108,7 @@ export default async function HomeAdminPage() {
     <>
       <PageHeader
         title="Home page"
-        subtitle="The order of the sections, the first screen's photos, the Lira Collection products, the Shop by style tiles and the Best sellers. Saved changes show in the shop right away."
+        subtitle="The order of the sections, the first screen's photos, the Lira Collection products, the Shop by style tiles and the Best sellers. Saved changes reach customers in about 5 minutes."
       />
       {can(staff, "coupons.manage") && (
         <div className="mb-4">
