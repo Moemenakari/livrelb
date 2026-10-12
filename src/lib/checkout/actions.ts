@@ -8,7 +8,7 @@ import { rateLimit } from "@/lib/security/rate-limit";
 import type { Json } from "@/lib/supabase/database.types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isMissingColumn } from "@/lib/supabase/compat";
-import { createAdminClient } from "@/lib/supabase/public";
+import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
 import { ORDERS_COOKIE, ORDERS_MAX_AGE, REF_CODE, REF_COOKIE } from "./cookies";
 import { forgetCustomer, rememberCustomer, getSignedInCustomer } from "./customer";
 import { orderPoints } from "./points";
@@ -88,6 +88,29 @@ type DbQuote = {
   first_order_free_delivery: boolean;
 };
 
+/**
+ * What each line saves against its old price ("sale" lines), read straight from the database: one small query for
+ * the pieces in the bag. (This used to read the whole catalog through the Worker's cache layers (D1, R2, a big
+ * JSON): about nine tenths of this route's CPU, on the free plan where a request gets 10 ms.)
+ */
+async function oldPriceSavings(slugs: string[]): Promise<Map<string, number>> {
+  const savings = new Map<string, number>();
+  if (slugs.length === 0) return savings;
+  const { data } = await createPublicClient()
+    .from("products")
+    .select("slug, product_materials (price_cents, compare_at_price_cents, materials (key))")
+    .eq("status", "active")
+    .in("slug", slugs);
+  for (const product of data ?? []) {
+    for (const pm of product.product_materials) {
+      if (pm.compare_at_price_cents && pm.materials?.key) {
+        savings.set(`${product.slug}|${pm.materials.key}`, dollars(Math.max(0, pm.compare_at_price_cents - pm.price_cents)));
+      }
+    }
+  }
+  return savings;
+}
+
 /** Prices the bag for the cart and checkout summary (nothing is saved). */
 export async function quoteCart(input: {
   items: unknown;
@@ -114,14 +137,11 @@ export async function quoteCart(input: {
   if (error || !data) return { ok: false, error: "unavailable" };
 
   const q = data as unknown as DbQuote;
-  // Old prices come from the catalog (same database, cached): only lines the
-  // database priced count.
-  const catalog = await getCatalog();
+  // Old prices come straight from the database; only lines the database priced count.
+  const savingOf = await oldPriceSavings([...new Set(items.map((item) => item.product))]);
   const saleSavings = items.reduce((sum, item, i) => {
     if ("error" in q.lines[i]) return sum;
-    const offer = findProduct(catalog, item.product)?.offers.find((o) => o.material === item.material);
-    const save = offer?.compareAtPrice ? Math.max(0, offer.compareAtPrice - offer.price) : 0;
-    return sum + save * item.qty;
+    return sum + (savingOf.get(`${item.product}|${item.material}`) ?? 0) * item.qty;
   }, 0);
   return {
     ok: true,

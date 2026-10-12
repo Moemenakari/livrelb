@@ -46,10 +46,23 @@ So the pages customers browse are **plain files** that Cloudflare serves without
 - `?ref=amal` on any page is handled in the browser (`src/components/layout/ref-capture.tsx` asks `/r/amal`),
   because no server code sees a page that is a file.
 
-**Publishing.** The files are only as new as the last build. When the admin saves something customers can see,
-`publishStorefront()` (`src/lib/catalog/publish.ts`) asks Cloudflare for a new build through a **Deploy Hook**, and
-the change reaches customers in about 5 minutes. Saving many times in a row costs one or two builds (Cloudflare
-skips repeated requests that arrive before a build starts).
+**Publishing: once a night.** The files are only as new as the last build. Admin saves ONLY save to the database
+(`storefrontChanged()` in `src/lib/catalog/publish.ts` does not start a build). A build starts:
+
+- **Every night at 00:00 Beirut time**, if something that shows on the pages was saved since the last build. Cloudflare's
+  cron is UTC and Beirut is UTC+2 in winter and UTC+3 in summer, so `wrangler.jsonc` wakes the Worker **every hour**
+  (`0 * * * *`) and `publish-due.mjs` asks the Beirut clock (`Intl`, with the daylight-saving rules) whether it is the night
+  window (00:00-03:59, so a missed run is retried), whether the pages were already built today, and whether anything was
+  saved: it looks in `audit_log` for lines of the storefront tables (`STOREFRONT_TABLES` in
+  `src/lib/publish/rules.mjs`) newer than the build start. Nothing saved = no build, no minutes used.
+- **When a promotion starts or ends** (the hourly check, no extra setup): see below.
+- **"Publish now"** in the admin (the bar at the top of every page): asks the Deploy Hook right away, at most **3 a day**
+  (Beirut day), only when something is waiting. Each press and each automatic start is written in `audit_log`
+  (`table_name = 'publish'`, action `publish_now` / `publish_auto`): that is what counts the 3 and shows
+  "publishing started". No database migration was needed.
+
+`next.config.ts` stamps the build start (`BUILD_STARTED_AT`); the admin bar shows it as "Last published", and
+`scripts/static-pages.mjs` copies it into `.open-next/publish-at.mjs` for the Worker.
 
 Set up once (Moemen, in the Cloudflare dashboard):
 
@@ -58,13 +71,25 @@ Set up once (Moemen, in the Cloudflare dashboard):
 2. Workers & Pages > `shop` > Settings > **Variables and Secrets** > Add > type **Secret**, name
    `DEPLOY_HOOK_URL`, value = that address > Deploy. It is a *runtime* secret, not a build variable.
 
-The address does not expire. It stops working only if the hook is deleted or re-created in the dashboard; then
-saves still work but nothing is published (the Worker logs `publish: the deploy hook answered 404`). Until the
-secret exists the admin shows an amber "Publishing is not connected yet" note.
+The address does not expire. It stops working only if the hook is deleted or re-created in the dashboard; then saves
+still work but nothing is published (the Worker logs `publish check: ... the deploy hook answered 404`). Until the secret
+exists the admin shows an amber "Publishing is not connected yet" note.
+
+**Build minutes.** Workers Builds on the free plan: **3,000 minutes a month**, 1 build at a time, 20 minutes at most. A build
+takes about 4-5 minutes (the push of 2026-10-11 went live in about 4). Nightly-only is at most ~30 builds (150 min); with
+promotions (2 builds each) and the worst case of 3 "Publish now" a day it stays under ~700 minutes. Each push to GitHub
+also builds (previews too). Deploy Hooks skip repeats that arrive before a build starts.
 
 **Promotions that start or end by the clock.** Which promotions run is decided at build time, so
-`scripts/static-pages.mjs` writes the next start/end time into `.open-next/publish-at.mjs` and `worker.mjs`
-(the Worker's entry file) checks it every 15 minutes (`triggers.crons`), asking for a new build once it passed.
+`scripts/static-pages.mjs` writes the next start/end time (after the build start) into `.open-next/publish-at.mjs` and the
+hourly check asks for a build once it has passed (a lag of up to an hour plus the build). Note that such a build also
+publishes everything else that was saved by then.
+
+**Checkout.** `/en/checkout` is a static file too. Who she is, her saved details and the employees come from
+`GET /api/checkout-init`; prices from `POST /api/quote`; Place order is `POST /api/order` and "Not you?" `POST /api/forget`
+(`src/lib/checkout/client.ts`: two retries on 503 / 1102 / network errors, the same `requestId` each time; `place_order`
+returns the first order for a repeated `orders.request_id`, so a retry never makes a second order; if it still fails the
+form keeps the bag and everything typed and shows "We couldn't reach the shop just now").
 
 **Known limits.** The "X sold" label, the "#1 Best Seller" badge and the public coupons on product pages come from
 `storefront_stats()`, which needs `SUPABASE_SECRET_KEY`; Cloudflare's build has no secret keys, so the static pages
@@ -103,8 +128,15 @@ public coupons). Prices, photos, texts and offers are not affected, and checkout
 - Bucket → Settings → CORS: allow `PUT` from `https://livrelb.com` (and
   `http://localhost:3000` for development), header `Content-Type`.
 - Uploads: `createUploadUrl()` in `src/lib/storage/r2.ts` returns a
-  10-minute signed URL; the admin's browser makes photos WebP (max 1800 px)
-  and uploads them directly to R2. Until the `R2_*` variables are set, the
+  10-minute signed URL (and a second one for the card size); the admin's browser makes every product photo in TWO WebP
+  sizes (1200 px for the product page, 600 px for the grids, `src/lib/media.ts`) and uploads them directly to R2. The shop
+  serves them straight from R2: `images.unoptimized` in `next.config.ts` means no photo goes through `/_next/image` or the
+  Worker.
+- Free tier (Standard storage): 10 GB-month, 1 million Class A (writes) and 10 million Class B (reads) a month, egress free.
+  100 products with 7 photos is about 100-150 MB and ~1,400 writes.
+- **The `r2.dev` address is for development**: Cloudflare says it is rate-limited, has no caching and no WAF, and should not
+  carry production traffic. A custom domain on Cloudflare (e.g. `images.livrelb.com`, then change
+  `NEXT_PUBLIC_R2_PUBLIC_URL`) is the production answer, and it is free to add once the domain is on Cloudflare. Until the `R2_*` variables are set, the
   admin shows "Photo storage isn't set up yet" and the shop keeps the
   drawings.
 

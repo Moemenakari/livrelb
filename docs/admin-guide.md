@@ -8,7 +8,7 @@ For each part of the storefront: where it is controlled in the admin, and how.
 ## Home page / الصفحة الرئيسية
 
 Admin → **Home page** (`/admin/home`). One page, one **Save home page** button at the bottom. Saved changes reach customers tonight at 12:00 AM (or press Publish now at the top).
-لوحة الإدارة ← **Home page**. صفحة واحدة وزر **Save home page** بالأسفل. التغييرات تظهر في المتجر مباشرة.
+لوحة الإدارة ← **Home page**. صفحة واحدة وزر **Save home page** بالأسفل. التغييرات بتظهر للزباين الليلة الساعة 12:00 (أو فوراً بزر Publish now فوق).
 
 > First time only: the database needs the update `supabase/migrations/20261009120000_admin_redesign.sql` (Supabase → SQL Editor → paste → Run). It is ONE file for the whole admin update (order of the home sections, deleted orders, automatic points, customer verification, two Admins). Until then everything keeps working; only the new features say so.
 > مرة واحدة فقط: لازم تشغيل ملف التحديث أعلاه في Supabase → SQL Editor. هو ملف واحد لكل تحديث الأدمن. قبلها كل شيء يعمل كالمعتاد، والميزات الجديدة فقط تخبرك.
