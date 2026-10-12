@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { cardUrl } from "@/lib/media";
-import { materials } from "./materials";
+import { isBuiltinMaterial, materialInfo } from "./materials";
 import type {
   ChainConnection,
   FontKey,
@@ -16,7 +16,8 @@ export type CardOffer = {
   material: MaterialKey;
   name: string;
   swatch: string;
-  tone: MetalTone;
+  /** "none" for a color made in the admin or a simple product's price: it never matches the gold/silver filter. */
+  tone: MetalTone | "none";
   price: number;
   compareAtPrice?: number;
 };
@@ -49,14 +50,17 @@ export type CardProduct = {
 
 export function toCard(product: Product, locale: Locale, points?: PointsRules): CardProduct {
   const p = product.personalization;
-  const offers = product.offers.map((o) => ({
-    material: o.material,
-    name: materials[o.material].name[locale],
-    swatch: materials[o.material].swatch,
-    tone: materials[o.material].tone,
-    price: o.price,
-    compareAtPrice: o.compareAtPrice,
-  }));
+  const offers = product.offers.map((o) => {
+    const info = materialInfo(o.material, o.custom);
+    return {
+      material: o.material,
+      name: info.name[locale],
+      swatch: info.swatch,
+      tone: isBuiltinMaterial(o.material) ? info.tone : ("none" as const),
+      price: o.price,
+      compareAtPrice: o.compareAtPrice,
+    };
+  });
   const main = offers.find((o) => o.material === product.defaultMaterial) ?? offers[0];
   return {
     slug: product.slug,

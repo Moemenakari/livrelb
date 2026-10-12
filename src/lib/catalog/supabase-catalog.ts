@@ -28,6 +28,7 @@ import type {
 // Localized). Metals and fonts must be known to the code (a swatch, a font
 // file), so unknown keys are skipped rather than breaking a page.
 
+// A built-in metal or "standard" (their names are in materials.ts); any other key is a color made in the admin.
 const isMaterialKey = (k: string | undefined): k is MaterialKey => Boolean(k && k in materials);
 const isStyleKey = (k: string | null): k is StyleKey => Boolean(k && styleKeys.includes(k as StyleKey));
 const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order;
@@ -72,8 +73,9 @@ function fail(what: string, error: { message: string } | null): never {
 const productColumns = `
   slug, created_at, name_en, name_ar, summary_en, summary_ar, description_en, description_ar,
   details_en, details_ar, style, is_best_seller, best_seller_sort, is_new, free_delivery, free_gift_box, personalization, max_length,
+  ask_material, ask_size, ask_connection, ask_personalization,
   sample_text, chain_connections, art, sort_order, stock_qty,
-  product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
+  product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key, name_en, name_ar, swatch, is_active)),
   product_options (kind, value, price_modifier_cents, is_default, sort_order),
   product_fonts (sort_order, fonts (key)),
   product_media (url, type, alt_en, alt_ar, sort_order),
@@ -112,9 +114,15 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
 
   // Before the homepage-controls database update the new columns don't exist:
   // ask again without them, so the shop never goes blank.
-  const productRows = productsRes.error
-    ? ((await db.from("products").select(productColumns.replace(" best_seller_sort,", "") as typeof productColumns).eq("status", "active").order("sort_order")) as typeof productsRes)
-    : productsRes;
+  // The same for the flexible-products columns (ask_*) and the product page's own: ask again without them.
+  const noAsk = productColumns.replace("  ask_material, ask_size, ask_connection, ask_personalization,\n", "");
+  let productRows = productsRes;
+  if (productRows.error) {
+    productRows = (await db.from("products").select(noAsk as typeof productColumns).eq("status", "active").order("sort_order")) as typeof productsRes;
+  }
+  if (productRows.error) {
+    productRows = (await db.from("products").select(noAsk.replace(" best_seller_sort,", "") as typeof productColumns).eq("status", "active").order("sort_order")) as typeof productsRes;
+  }
   if (productRows.error) fail("products", productRows.error);
   if (categoriesRes.error) fail("categories", categoriesRes.error);
   if (reviewsRes.error) fail("reviews", reviewsRes.error);
@@ -129,18 +137,29 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
       : (areasRes.data ?? []);
 
   const products = productRows.data.flatMap((row): Product[] => {
-    const offers = [...row.product_materials]
+    // Each group a product can switch off in the admin (all on by default; a column that does not exist yet = on).
+    const askMaterial = row.ask_material !== false;
+    const askSize = row.ask_size !== false;
+    const askConnection = row.ask_connection !== false;
+    const askPersonalization = row.ask_personalization !== false;
+    const defaultKey = row.product_materials.find((pm) => pm.is_default)?.materials?.key;
+    const allOffers = [...row.product_materials]
       .sort(bySort)
-      .filter((pm) => isMaterialKey(pm.materials?.key))
+      .filter((pm) => pm.materials?.key && pm.materials.is_active !== false)
       .map((pm) => ({
-        material: pm.materials!.key as MaterialKey,
+        material: pm.materials!.key,
         price: dollars(pm.price_cents),
         compareAtPrice: pm.compare_at_price_cents ? dollars(pm.compare_at_price_cents) : undefined,
+        // A color made in the admin (not a built-in metal, not "standard"): its own name and swatch.
+        custom: isMaterialKey(pm.materials!.key)
+          ? undefined
+          : { name: loc(pm.materials!.name_en, pm.materials!.name_ar), swatch: pm.materials!.swatch },
       }));
+    // A product that does not ask for a metal or color has ONE price: its default row (the server does the same).
+    const offers = askMaterial ? allOffers : [allOffers.find((o) => o.material === defaultKey) ?? allOffers[0]].filter(Boolean);
     const art = asArt(row.art);
     if (offers.length === 0 || !art) return [];
 
-    const defaultKey = row.product_materials.find((pm) => pm.is_default)?.materials?.key;
     const options = [...row.product_options].sort(bySort);
     const mainKind = (options.find((o) => o.is_default) ?? options[0])?.kind;
     const fonts = [...row.product_fonts]
@@ -166,20 +185,21 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
         freeDelivery: row.free_delivery,
         freeGiftBox: row.free_gift_box,
         offers,
-        defaultMaterial: isMaterialKey(defaultKey) ? defaultKey : offers[0].material,
+        defaultMaterial: offers.some((o) => o.material === defaultKey) ? defaultKey! : offers[0].material,
+        askMaterial: askMaterial ? undefined : false,
         personalization:
-          row.personalization && row.max_length
+          row.personalization && row.max_length && askPersonalization
             ? {
                 kind: row.personalization,
                 maxLength: row.max_length,
                 fonts: fonts.length > 0 ? fonts : ["beirut"],
-                connections: row.chain_connections,
+                connections: askConnection ? row.chain_connections : [],
                 sample: row.sample_text ?? "",
               }
             : undefined,
-        connections: row.personalization ? undefined : row.chain_connections,
-        size: sizeOf(options, mainKind),
-        altSize: sizeOf(options, options.find((o) => o.kind !== mainKind && o.kind !== "ring")?.kind),
+        connections: row.personalization && askPersonalization ? undefined : askConnection ? row.chain_connections : [],
+        size: askSize ? sizeOf(options, mainKind) : undefined,
+        altSize: askSize ? sizeOf(options, options.find((o) => o.kind !== mainKind && o.kind !== "ring")?.kind) : undefined,
         art,
         stock: row.stock_qty ?? undefined,
         // Photos in order (the first is the main one), then the video.

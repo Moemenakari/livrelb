@@ -9,14 +9,13 @@ import {
   categoryTrail,
   findProduct,
   getCatalog,
-  materials,
   productsIn,
   relatedProducts,
   reviewStats,
   reviewsFor,
   toCard,
 } from "@/lib/catalog";
-import { fonts } from "@/lib/catalog/materials";
+import { fonts, materialInfo } from "@/lib/catalog/materials";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/product/product-card";
 import type { Deal } from "@/components/product/product-offer";
@@ -100,14 +99,19 @@ export default async function ProductPage({ params }: PageProps<"/[locale]/produ
     freeShippingOver: catalog.settings.freeShippingOver,
     whatsappNumber: catalog.settings.whatsappNumber,
     reviews: reviewStats(catalog, product.slug),
-    materials: product.offers.map((o) => ({
-      key: o.material,
-      name: materials[o.material].name[locale],
-      swatch: materials[o.material].swatch,
-      price: o.price,
-      compareAtPrice: o.compareAtPrice,
-    })),
+    materials: product.offers.map((o) => {
+      const info = materialInfo(o.material, o.custom);
+      return {
+        key: o.material,
+        name: info.name[locale],
+        names: info.name,
+        swatch: info.swatch,
+        price: o.price,
+        compareAtPrice: o.compareAtPrice,
+      };
+    }),
     defaultMaterial: product.defaultMaterial,
+    showMaterial: product.askMaterial !== false,
     personalization: p && {
       kind: p.kind,
       defaultType: defaultTypeFor(p.kind, p.sample),

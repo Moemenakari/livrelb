@@ -1,8 +1,11 @@
-import type { FontInfo, FontKey, FontScript, Material, MaterialKey } from "./types";
+import type { BuiltinMaterialKey, FontInfo, FontKey, FontScript, Localized, Material } from "./types";
+
+/** The materials key of a simple product's one price (gift boxes and the like). */
+export const NO_MATERIAL = "standard";
 
 // materials table (brief §7): all stainless steel. Prices are per product
 // (MaterialOffer), typed in the admin for every material.
-export const materials: Record<MaterialKey, Material> = {
+export const materials: Record<BuiltinMaterialKey | typeof NO_MATERIAL, Material> = {
   gold: {
     key: "gold",
     name: { en: "Gold Stainless Steel", ar: "ستانلس ستيل ذهبي" },
@@ -34,9 +37,27 @@ export const materials: Record<MaterialKey, Material> = {
     tone: "silver",
     swatch: "#9ea3a8",
   },
+  // The one neutral price of a simple product (a gift box): never shown to the customer as a choice.
+  standard: { key: NO_MATERIAL, name: { en: "Standard", ar: "عادي" }, tone: "silver", swatch: "#d8d4cc" },
 };
 
-export const allMaterials: MaterialKey[] = ["gold", "silver", "doubleGold", "doubleSilver", "steel"];
+export const allMaterials: BuiltinMaterialKey[] = ["gold", "silver", "doubleGold", "doubleSilver", "steel"];
+
+/** What a color made in the admin brings with it (the catalog, the cart line). */
+type CustomMaterial = { name: Localized; swatch: string };
+
+/** Name, swatch and tone of any materials key: a built-in metal, "standard", or a color made in the admin. */
+export function materialInfo(key: string, custom?: CustomMaterial): Material {
+  const known = (materials as Record<string, Material | undefined>)[key];
+  if (known) return known;
+  return { key, name: custom?.name ?? { en: key, ar: key }, tone: "silver", swatch: custom?.swatch ?? "#c9ccd1" };
+}
+
+/** A metal or color the customer chose (false for the neutral "standard" of a simple product: it has no label). */
+export const hasMaterialLabel = (key: string) => key !== NO_MATERIAL;
+
+/** True for the built-in metals: only they drive the gold/silver filter and the metal-colored previews. */
+export const isBuiltinMaterial = (key: string) => key in materials && key !== NO_MATERIAL;
 
 // fonts table: our own names, after Lebanese places (brief §7), each with
 // its look in plain words so customers see which ones are slanted. The font

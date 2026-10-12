@@ -49,11 +49,15 @@ export type ProductViewData = {
   materials: {
     key: MaterialKey;
     name: string;
+    /** Both languages, saved with the cart line. */
+    names: Localized;
     swatch: string;
     price: number;
     compareAtPrice?: number;
   }[];
   defaultMaterial: MaterialKey;
+  /** false = a simple product (a gift box): no metal or color to choose, one price. */
+  showMaterial?: boolean;
   personalization?: {
     kind: "name" | "initial";
     /** What the piece opens with: a name, a letter, a number or a zodiac sign. */
@@ -175,6 +179,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
       art: product.art,
       sizeKind: sizing?.kind,
       material,
+      materialName: product.showMaterial === false ? undefined : current.names,
       text: p ? text.trim() : undefined,
       font: p ? font : undefined,
       size,
@@ -229,6 +234,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           />
         </div>
 
+        {product.showMaterial !== false && (
         <div className="border-t border-line pt-6">
         <fieldset className="min-w-0">
           <legend className="mb-3 flex items-center gap-2 text-sm">
@@ -263,6 +269,7 @@ export function ProductView({ product, children }: { product: ProductViewData; c
           </div>
         </fieldset>
         </div>
+        )}
 
         {p && p.fonts.length > 1 && (
           <div className="flex min-w-0 flex-col gap-3">

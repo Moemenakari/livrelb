@@ -16,7 +16,7 @@ import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
 import { TrackOnMount } from "@/components/analytics/analytics";
 import { primaryButton } from "@/components/ui/styles";
-import { materials } from "@/lib/catalog/materials";
+import { hasMaterialLabel, materialInfo } from "@/lib/catalog/materials";
 import { CheckoutSteps } from "./checkout-steps";
 import { useCheckoutInit } from "./use-checkout-init";
 import { LoginButton } from "@/components/auth/login-dialog";
@@ -131,7 +131,7 @@ export function CheckoutForm({ areas, helpers: builtHelpers, freeShippingOver, l
     const line = (i: (typeof items)[number]) => {
       const what = i.charmNames?.length ? i.charmNames.map((n) => n[who]).join(", ") : i.text;
       const size = i.size ? ` ${i.size} cm` : "";
-      return `• ${i.name[who]}${what ? ` (${what})` : ""}${size} ${materials[i.material]?.name[who] ?? ""} ×${i.qty}`.replace(/\s+/g, " ");
+      return `• ${i.name[who]}${what ? ` (${what})` : ""}${size} ${hasMaterialLabel(i.material) ? (i.materialName ?? materialInfo(i.material).name)[who] : ""} ×${i.qty}`.replace(/\s+/g, " ");
     };
     return [
       t("whatsappIntro", { number: orderNumber }),

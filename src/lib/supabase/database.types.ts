@@ -1561,6 +1561,10 @@ export type Database = {
       products: {
         Row: {
           art: Json
+          ask_connection: boolean
+          ask_material: boolean
+          ask_personalization: boolean
+          ask_size: boolean
           best_seller_sort: number
           chain_connections: Database["public"]["Enums"]["chain_connection"][]
           created_at: string
@@ -1595,6 +1599,10 @@ export type Database = {
         }
         Insert: {
           art: Json
+          ask_connection: boolean
+          ask_material: boolean
+          ask_personalization: boolean
+          ask_size: boolean
           best_seller_sort?: number
           chain_connections?: Database["public"]["Enums"]["chain_connection"][]
           created_at?: string
@@ -1629,6 +1637,10 @@ export type Database = {
         }
         Update: {
           art?: Json
+          ask_connection?: boolean
+          ask_material?: boolean
+          ask_personalization?: boolean
+          ask_size?: boolean
           best_seller_sort?: number
           chain_connections?: Database["public"]["Enums"]["chain_connection"][]
           created_at?: string

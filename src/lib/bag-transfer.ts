@@ -21,7 +21,8 @@ export type BagLine = {
   sizeKind?: "chain" | "bracelet" | "ring";
 };
 
-const MATERIALS = ["gold", "silver", "doubleGold", "doubleSilver", "steel"];
+// A built-in metal, "standard" or a color made in the admin (the server checks it against the product).
+const MATERIAL_KEY = /^[A-Za-z0-9_-]{1,40}$/;
 const SLUG = /^[a-z0-9-]{1,80}$/;
 const CHARM = /^(stock:[0-9a-f-]{36}|[a-z0-9_-]{1,60})$/i;
 
@@ -68,7 +69,7 @@ export function decodeBag(param: string): BagLine[] {
     if (!Array.isArray(entry)) continue;
     const [slug, material, qty, text, font, size, connection, charms, sizeKind] = entry as unknown[];
     if (typeof slug !== "string" || !SLUG.test(slug)) continue;
-    if (typeof material !== "string" || !MATERIALS.includes(material)) continue;
+    if (typeof material !== "string" || !MATERIAL_KEY.test(material)) continue;
     if (!Number.isInteger(qty) || (qty as number) < 1) continue;
     const cleanCharms = Array.isArray(charms) ? charms.filter((c): c is string => typeof c === "string" && CHARM.test(c)).slice(0, 30) : undefined;
     lines.push({

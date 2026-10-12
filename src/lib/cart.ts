@@ -25,6 +25,8 @@ export type CartItem = {
   art: ProductArt;
   sizeKind?: SizeOption["kind"];
   material: MaterialKey;
+  /** Both languages of a color made in the admin, saved with the line (built-in metals are named from materials.ts). */
+  materialName?: Localized;
   text?: string;
   font?: FontKey;
   size?: number;

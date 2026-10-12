@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { findProduct, getCatalog } from "@/lib/catalog";
-import { allMaterials, isFontKey } from "@/lib/catalog/materials";
+import { isFontKey } from "@/lib/catalog/materials";
 import { normalizePhone } from "@/lib/phone";
 import { rateLimit } from "@/lib/security/rate-limit";
 import type { Json } from "@/lib/supabase/database.types";
@@ -29,6 +29,8 @@ import type {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG = /^[a-z0-9-]{1,80}$/;
+// A built-in metal, "standard" or a color made in the admin: the database checks it against the product's own list.
+const MATERIAL_KEY = /^[A-Za-z0-9_-]{1,40}$/;
 const dollars = (cents: number) => cents / 100;
 
 function admin() {
@@ -54,7 +56,7 @@ function cleanItems(raw: unknown): CartItemInput[] | null {
     if (!r || typeof r !== "object") return null;
     const i = r as Record<string, unknown>;
     if (typeof i.product !== "string" || !SLUG.test(i.product)) return null;
-    if (!allMaterials.includes(i.material as CartItemInput["material"])) return null;
+    if (typeof i.material !== "string" || !MATERIAL_KEY.test(i.material)) return null;
     if (!Number.isInteger(i.qty) || (i.qty as number) < 1 || (i.qty as number) > 20) return null;
     items.push({
       product: i.product,
