@@ -61,9 +61,10 @@
   "images": {
     "binding": "IMAGES"
   },
-  // Every 15 minutes worker.mjs checks whether a promotion started or ended, and asks for a new build if so.
+  // Every hour worker.mjs asks the Beirut clock whether it is the night window (00:00-03:59 Beirut, summer or winter)
+  // and starts the nightly build when something was saved; it also starts one when a promotion starts or ends.
   "triggers": {
-    "crons": ["*/15 * * * *"]
+    "crons": ["0 * * * *"]
   },
   "observability": {
     "enabled": true

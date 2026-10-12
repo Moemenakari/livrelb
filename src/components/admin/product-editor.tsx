@@ -132,7 +132,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         setMessage({ ok: false, text: result.error });
         return;
       }
-      setMessage({ ok: true, text: "Saved. Customers see the change in about 5 minutes." });
+      setMessage({ ok: true, text: "Saved. Customers see the change tonight at 12:00 AM." });
       if (!f.id && result.data) router.replace(`/admin/products/${result.data.id}`);
     });
 

@@ -13,8 +13,9 @@
 //   _redirects  "/" opens "/en" (what the proxy did, now without starting the Worker)
 // and .open-next/publish-at.mjs, read by worker.mjs (see step 5).
 //
-// Fresh pages: they are rebuilt whenever the admin saves (src/lib/catalog/publish.ts calls the Cloudflare
-// Deploy Hook), so a change reaches customers a few minutes after it is saved.
+// Fresh pages: admin saves only save to the database. A build runs every night at 00:00 Beirut time (when
+// something changed), when a promotion starts or ends, and when someone presses "Publish now" in the admin
+// (3 a day): src/lib/publish, publish-due.mjs, worker.mjs. All of them ask Cloudflare through the Deploy Hook.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -96,9 +97,14 @@ writeFileSync(join(OUT, "_headers"), headersFile);
 // 4. _redirects: "/" opens "/en" without starting the Worker (the proxy did the same with a 307).
 writeFileSync(join(OUT, "_redirects"), "/ /en 307\n");
 
-// 5. When do the pages go out of date by themselves? A promotion shows between its start and end time, and
-//    `next build` decided which ones were running at build time. worker.mjs asks Cloudflare for a new build
-//    when the time written here has passed (a scheduled check, every 15 minutes). null = nothing is scheduled.
+// 5. What worker.mjs needs to know about these pages (.open-next/publish-at.mjs):
+//    builtAt     when this build started (ms): saves made after it are not on the pages yet
+//    publishAt   the next time a promotion starts or ends after builtAt (a promotion shows between its start and
+//                end time, and `next build` decided which ones were running): the hourly check asks for a new
+//                build once it has passed. null = nothing is scheduled.
+//    supabaseUrl where the hourly check looks for saves (it uses the Worker's own SUPABASE_SECRET_KEY)
+const startedAt = Number(JSON.parse(readFileSync(join(NEXT, "required-server-files.json"), "utf8")).config?.env?.BUILD_STARTED_AT);
+const builtAt = Number.isFinite(startedAt) && startedAt > 0 ? startedAt : null;
 
 // A build variable on Cloudflare; on this computer the same two lines of .env.local.
 function setting(name) {
@@ -113,7 +119,7 @@ function setting(name) {
   }
 }
 
-async function nextPromotionChange() {
+async function nextPromotionChange(after) {
   const url = setting("NEXT_PUBLIC_SUPABASE_URL");
   const key = setting("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
   if (!url || !key) {
@@ -126,18 +132,21 @@ async function nextPromotionChange() {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const now = Date.now();
     const times = (await response.json()).flatMap((p) => [p.starts_at, p.ends_at]).map((t) => (t ? Date.parse(t) : NaN));
-    const future = times.filter((t) => Number.isFinite(t) && t > now);
+    const future = times.filter((t) => Number.isFinite(t) && t > after);
     return future.length ? Math.min(...future) : null;
   } catch (error) {
     console.warn(`static-pages: could not read the promotions (${error.message}), scheduled promotions will not rebuild the pages.`);
     return null;
   }
 }
-const publishAt = await nextPromotionChange();
-writeFileSync(join(".open-next", "publish-at.mjs"), `export const publishAt = ${publishAt === null ? "null" : String(publishAt)};\n`);
+const publishAt = await nextPromotionChange(builtAt ?? Date.now());
+const supabaseUrl = setting("NEXT_PUBLIC_SUPABASE_URL") ?? null;
+writeFileSync(
+  join(".open-next", "publish-at.mjs"),
+  `export const builtAt = ${builtAt};\nexport const publishAt = ${publishAt};\nexport const supabaseUrl = ${JSON.stringify(supabaseUrl)};\n`,
+);
 
 const bytes = pages.reduce((sum, route) => sum + statSync(join(OUT, `${route}.html`)).size, 0);
 console.log(`static-pages: ${pages.length} pages (${(bytes / 1024).toFixed(0)} KB) + ${Object.keys(types).length} files published as static assets.`);
-console.log(`static-pages: next promotion start/end: ${publishAt === null ? "none" : new Date(publishAt).toISOString()}.`);
+console.log(`static-pages: built at ${builtAt === null ? "unknown time" : new Date(builtAt).toISOString()}; next promotion start/end: ${publishAt === null ? "none" : new Date(publishAt).toISOString()}.`);

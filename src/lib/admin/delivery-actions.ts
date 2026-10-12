@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { publishStorefront } from "@/lib/catalog/publish";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 
 export type AreaInput = {
@@ -122,8 +122,8 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
         if (error) throw error;
       }
     } finally {
-      // Whatever was saved is published, even after a failure.
-      await publishStorefront();
+      // Whatever was saved counts as changed, even after a failure.
+      storefrontChanged();
     }
     refresh();
   });

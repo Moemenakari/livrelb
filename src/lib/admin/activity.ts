@@ -74,9 +74,10 @@ const things: Record<string, [label: string, href: string]> = {
   points_ledger: ["LIVRE Points", "/admin/customers"],
   customers: ["a customer", "/admin/customers"],
   imported_orders: ["imported orders", "/admin/sales"],
+  publish: ["the shop's pages", "/admin"],
 };
 
-const verbs: Record<string, string> = { insert: "added", update: "edited", delete: "removed", import: "imported" };
+const verbs: Record<string, string> = { insert: "added", update: "edited", delete: "removed", import: "imported", publish_now: "published", publish_auto: "published (night)" };
 
 const field = (changes: Json | null, key: string): Json | undefined =>
   changes && typeof changes === "object" && !Array.isArray(changes) ? changes[key] : undefined;

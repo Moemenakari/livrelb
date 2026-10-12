@@ -3,6 +3,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin();
 
+// When this build started. The admin shows it as "last published", and the Worker's nightly check looks for saves
+// made after it (src/lib/publish). Set once, so every process of the build agrees on the same moment.
+process.env.BUILD_STARTED_AT ??= String(Date.now());
+
 // Product photos are served from Cloudflare R2 (NEXT_PUBLIC_R2_PUBLIC_URL,
 // e.g. https://images.livrelb.com). Changing host later = changing the env var.
 const imagesUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
@@ -49,6 +53,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  env: { BUILD_STARTED_AT: process.env.BUILD_STARTED_AT },
   images: {
     remotePatterns: imagesUrl
       ? [{ protocol: "https", hostname: new URL(imagesUrl).hostname, pathname: "/**" }]

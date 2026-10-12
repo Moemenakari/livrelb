@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { publishStorefront } from "@/lib/catalog/publish";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { cleanHeroCards, type HeroCard } from "@/lib/hero-cards";
 import { isMissingColumn } from "@/lib/supabase/compat";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
@@ -85,7 +85,7 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
       ({ error } = await db.from("site_settings").update(fields).eq("id", 1));
     }
     if (error) throw error;
-    await publishStorefront();
+    storefrontChanged();
     refresh();
   });
 }

@@ -348,7 +348,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
 
       <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t border-line bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:start-60">
         <div className="mx-auto flex max-w-6xl items-center justify-end gap-3">
-          {saved && <p className="me-auto text-sm text-emerald-700">Saved. Customers see it in about 5 minutes.</p>}
+          {saved && <p className="me-auto text-sm text-emerald-700">Saved. Customers see it tonight at 12:00 AM.</p>}
           <FormError error={error} />
           <button disabled={pending} className={buttonClass}>
             {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}

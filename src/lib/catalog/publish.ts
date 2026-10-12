@@ -2,29 +2,18 @@ import "server-only";
 import { revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "./index";
 
-// The shop's pages are static files built by `next build` (scripts/static-pages.mjs), so a saved change
-// reaches customers with the next build. Cloudflare "Deploy Hook" = a secret address that starts one:
-// Cloudflare dashboard > Workers & Pages > shop > Settings > Builds > Deploy Hooks, then the address goes
-// in the Worker secret DEPLOY_HOOK_URL (docs/hosting.md). Cloudflare skips repeated requests that arrive
-// before a build starts, so saving ten times in a row costs one or two builds.
+// The shop's pages are static files built by `next build`. An admin save ONLY saves to the database: customers
+// see it with the next build, which runs every night at 00:00 Beirut time (when something changed) or when
+// someone presses "Publish now" in the admin. See src/lib/publish, publish-due.mjs and docs/hosting.md.
 
-/** True when the admin can ask Cloudflare to rebuild the pages (the secret is set). */
+/** True when builds can be asked for: the Cloudflare Deploy Hook address is in the Worker secret DEPLOY_HOOK_URL. */
 export const publishConfigured = () => Boolean(process.env.DEPLOY_HOOK_URL?.trim());
 
 /**
- * Call after a change that customers can see (prices, photos, texts, offers...). Refreshes the data the
- * Worker keeps for the pages it still renders itself and asks Cloudflare to rebuild the static pages.
- * Never throws: the change is already saved, and a failure only shows in the Worker logs.
+ * Call after a change customers can see (prices, photos, texts, offers...). It refreshes the data of the few pages
+ * the Worker still renders itself (a product created today has no static page until the next build). It does NOT
+ * start a build.
  */
-export async function publishStorefront(): Promise<void> {
+export function storefrontChanged(): void {
   revalidateTag(CATALOG_TAG, { expire: 0 });
-  const hook = process.env.DEPLOY_HOOK_URL?.trim();
-  if (!hook) return;
-  try {
-    const response = await fetch(hook, { method: "POST", signal: AbortSignal.timeout(5000) });
-    // The address is a secret: log the status only.
-    if (!response.ok) console.error("publish: the deploy hook answered", response.status);
-  } catch (error) {
-    console.error("publish: the deploy hook could not be reached", (error as Error).name);
-  }
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { publishStorefront } from "@/lib/catalog/publish";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { allMaterials, isFontKey } from "@/lib/catalog/materials";
 import type { Json } from "@/lib/supabase/database.types";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
@@ -133,7 +133,7 @@ export async function saveProduct(form: ProductForm): Promise<ActionResult<{ id:
     const payload = toPayload(form, existing);
     const { data, error } = await db.rpc("admin_save_product", { p: payload as unknown as Json });
     if (error) throw error;
-    await publishStorefront();
+    storefrontChanged();
     refresh();
     return { id: data as string };
   });
@@ -149,7 +149,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     const { error, count: deleted } = await db.from("products").delete({ count: "exact" }).eq("id", id);
     if (error) throw error;
     if (!deleted) throw new AdminError("You don't have permission to do this.");
-    await publishStorefront();
+    storefrontChanged();
   });
 }
 

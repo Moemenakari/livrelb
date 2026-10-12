@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/admin/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { PublishBar } from "@/components/admin/publish-bar";
 import { publishConfigured } from "@/lib/catalog/publish";
 import { vapidPublicKey } from "@/lib/push/web-push";
 
@@ -17,9 +18,10 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
         <div className="mx-auto max-w-6xl">
           {process.env.NODE_ENV === "production" && !publishConfigured() && (
             <p role="status" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Publishing is not connected yet: changes you save will not reach customers until the site is updated by hand. Tell the developer.
+              Publishing is not connected yet: the nightly publish and Publish now cannot start, so saved changes will not reach customers until the developer connects it.
             </p>
           )}
+          <PublishBar staff={staff} />
           {children}
         </div>
       </main>
