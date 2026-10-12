@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { storefrontChanged } from "@/lib/catalog/publish";
-import { allMaterials, isFontKey } from "@/lib/catalog/materials";
+import { isFontKey } from "@/lib/catalog/materials";
 import type { Json } from "@/lib/supabase/database.types";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
@@ -36,12 +36,12 @@ function mediaAllowed(url: string): boolean {
 }
 
 /** Validates the editor's form on the server and builds admin_save_product's input. */
-function toPayload(f: ProductForm, existingMedia: Set<string>) {
+function toPayload(f: ProductForm, existingMedia: Set<string>, materialKeys: Set<string>) {
   const slug = text(f.slug, 80, "Link (slug)", true).toLowerCase();
   if (!SLUG.test(slug)) throw new AdminError("The link (slug) may only use a-z, 0-9 and dashes, e.g. cursive-name-necklace.");
 
   const materials = (f.materials ?? []).map((m) => {
-    if (!allMaterials.includes(m.key)) throw new AdminError("Unknown material.");
+    if (!materialKeys.has(m.key)) throw new AdminError("Unknown material or color.");
     const price = cents(m.price, `Price (${m.key})`, true)!;
     if (price <= 0) throw new AdminError(`Price (${m.key}) must be more than 0.`);
     const compare = cents(m.compareAt, `Old price (${m.key})`, false);
@@ -70,9 +70,11 @@ function toPayload(f: ProductForm, existingMedia: Set<string>) {
 
   const fonts = [...new Set((f.fonts ?? []).filter((k) => isFontKey(k)))];
   const personalization = f.personalization === "name" || f.personalization === "initial" ? f.personalization : null;
-  if (personalization && fonts.length === 0) throw new AdminError("Choose at least one font for a personalized piece.");
+  // A hidden choice is not checked (and the server ignores it when pricing), but what was typed is kept for later.
+  const askPersonalization = f.askPersonalization !== false;
+  if (askPersonalization && personalization && fonts.length === 0) throw new AdminError("Choose at least one font for a personalized piece.");
   const maxLength = Math.round(Number(f.maxLength) || 10);
-  if (personalization && (maxLength < 1 || maxLength > 20)) throw new AdminError("Max letters must be between 1 and 20.");
+  if (askPersonalization && personalization && (maxLength < 1 || maxLength > 20)) throw new AdminError("Max letters must be between 1 and 20.");
 
   const media = (f.media ?? []).map((m) => {
     if (!mediaAllowed(m.url) && !existingMedia.has(m.url)) throw new AdminError("A photo isn't from our image storage. Upload it again.");
@@ -107,6 +109,10 @@ function toPayload(f: ProductForm, existingMedia: Set<string>) {
     is_new: Boolean(f.isNew),
     free_delivery: Boolean(f.freeDelivery),
     free_gift_box: f.freeGiftBox !== false,
+    ask_material: f.askMaterial !== false,
+    ask_size: f.askSize !== false,
+    ask_connection: f.askConnection !== false,
+    ask_personalization: askPersonalization,
     personalization,
     max_length: personalization ? maxLength : null,
     sample_text: text(f.sampleText, 20, "Sample name") || null,
@@ -130,12 +136,35 @@ export async function saveProduct(form: ProductForm): Promise<ActionResult<{ id:
       const { data } = await db.from("product_media").select("url").eq("product_id", form.id);
       existing = new Set((data ?? []).map((m) => m.url));
     }
-    const payload = toPayload(form, existing);
+    const { data: keys } = await db.from("materials").select("key").eq("is_active", true);
+    const payload = toPayload(form, existing, new Set((keys ?? []).map((k) => k.key)));
     const { data, error } = await db.rpc("admin_save_product", { p: payload as unknown as Json });
     if (error) throw error;
     storefrontChanged();
     refresh();
     return { id: data as string };
+  });
+}
+
+/**
+ * A new color for products that are not metal jewelry (red, blue...). It becomes a row of the materials table:
+ * the customer sees its name and swatch, the price is set per product like for a metal. Letters and digits only
+ * in the key (the table's rule); the name is what people see.
+ */
+export async function createColor(input: { nameEn: string; nameAr: string; swatch: string }): Promise<ActionResult<{ key: string; name: string; swatch: string }>> {
+  return run(async () => {
+    const { db } = await authorize("products.edit");
+    const nameEn = text(input.nameEn, 40, "Color name", true);
+    const nameAr = text(input.nameAr, 40, "Color name (Arabic)") || nameEn;
+    const swatch = String(input.swatch ?? "").trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(swatch)) throw new AdminError("Pick the color from the color box.");
+    const { data: existing } = await db.from("materials").select("name_en").eq("is_active", true);
+    if ((existing ?? []).some((m) => m.name_en.toLowerCase() === nameEn.toLowerCase())) throw new AdminError("There is already a color or metal with this name.");
+    const key = `c${Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    const { error } = await db.from("materials").insert({ key, name_en: nameEn, name_ar: nameAr, tone: "silver", swatch: swatch.toLowerCase(), sort_order: 100 });
+    if (error) throw error;
+    storefrontChanged();
+    return { key, name: nameEn, swatch: swatch.toLowerCase() };
   });
 }
 

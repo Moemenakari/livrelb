@@ -3,10 +3,11 @@ import { allMaterials, fonts as fontInfo, isFontKey, materials as materialInfo }
 import { suggestedPriceFactor } from "@/lib/catalog/pricing";
 import type { ChainConnection, FontKey, MaterialKey, ProductArt } from "@/lib/catalog/types";
 import { createClient } from "@/lib/supabase/server";
-import { artPresets, type ProductForm } from "./product-types";
+import { artPresets, STANDARD_KEY, type ProductForm } from "./product-types";
 
 export type EditorLookups = {
-  materials: { key: MaterialKey; name: string; factor: number | null }[];
+  /** The five metals, then the colors made in the admin. */
+  materials: { key: MaterialKey; name: string; factor: number | null; swatch: string; custom: boolean }[];
   fonts: { key: FontKey; name: string; script: "latin" | "arabic" }[];
   categories: { slug: string; name: string }[];
 };
@@ -16,14 +17,20 @@ export async function editorLookups(): Promise<EditorLookups> {
   const [{ data: cats }, { data: fontRows }, { data: materialRows }] = await Promise.all([
     db.from("categories").select("slug, name_en, rule").order("sort_order"),
     db.from("fonts").select("key, is_active").order("sort_order"),
-    db.from("materials").select("key, is_active").order("sort_order"),
+    db.from("materials").select("key, name_en, swatch, is_active").order("sort_order"),
   ]);
   const activeMaterials = new Set((materialRows ?? []).filter((m) => m.is_active).map((m) => m.key));
+  const builtinKeys: string[] = [...allMaterials, STANDARD_KEY];
+  // A color made in the admin: any active material that is not one of the built-ins.
+  const colors = (materialRows ?? []).filter((m) => m.is_active && !builtinKeys.includes(m.key));
   const activeFonts = (fontRows ?? []).filter((f) => f.is_active && isFontKey(f.key)).map((f) => f.key as FontKey);
   return {
-    materials: allMaterials
-      .filter((k) => activeMaterials.size === 0 || activeMaterials.has(k))
-      .map((k) => ({ key: k, name: materialInfo[k].name.en, factor: suggestedPriceFactor[k] })),
+    materials: [
+      ...allMaterials
+        .filter((k) => activeMaterials.size === 0 || activeMaterials.has(k))
+        .map((k) => ({ key: k as MaterialKey, name: materialInfo[k].name.en, factor: suggestedPriceFactor[k], swatch: materialInfo[k].swatch, custom: false })),
+      ...colors.map((m) => ({ key: m.key as MaterialKey, name: m.name_en, factor: null, swatch: m.swatch, custom: true })),
+    ],
     fonts: (activeFonts.length ? activeFonts : (Object.keys(fontInfo) as FontKey[])).map((k) => ({
       key: k,
       name: fontInfo[k].name.en,
@@ -54,6 +61,10 @@ export function emptyProduct(): ProductForm {
     isNew: true,
     freeDelivery: false,
     freeGiftBox: true,
+    askMaterial: true,
+    askSize: true,
+    askConnection: true,
+    askPersonalization: true,
     personalization: "name",
     maxLength: 10,
     sampleText: "",
@@ -78,7 +89,7 @@ export async function loadProduct(id: string): Promise<{ form: ProductForm; meta
   const { data: p } = await db
     .from("products")
     .select(
-      `*, product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key)),
+      `*, product_materials (price_cents, compare_at_price_cents, is_default, sort_order, materials (key, is_active)),
        product_options (kind, value, price_modifier_cents, is_default, sort_order),
        product_fonts (sort_order, fonts (key)),
        product_categories (sort_order, categories (slug)),
@@ -108,6 +119,10 @@ export async function loadProduct(id: string): Promise<{ form: ProductForm; meta
       isNew: p.is_new,
       freeDelivery: p.free_delivery,
       freeGiftBox: p.free_gift_box,
+      askMaterial: p.ask_material,
+      askSize: p.ask_size,
+      askConnection: p.ask_connection,
+      askPersonalization: p.ask_personalization,
       personalization: p.personalization ?? "",
       maxLength: p.max_length ?? 10,
       sampleText: p.sample_text ?? "",
@@ -116,7 +131,7 @@ export async function loadProduct(id: string): Promise<{ form: ProductForm; meta
       stock: p.stock_qty,
       materials: [...p.product_materials]
         .sort(by)
-        .filter((m) => m.materials && (allMaterials as string[]).includes(m.materials.key))
+        .filter((m) => m.materials && m.materials.is_active)
         .map((m) => ({
           key: m.materials!.key as MaterialKey,
           price: dollars(m.price_cents),

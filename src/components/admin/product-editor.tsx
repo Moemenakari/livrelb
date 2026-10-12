@@ -4,9 +4,9 @@ import { siteConfig } from "@/config/site";
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Loader2, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
-import { deleteProduct, saveProduct } from "@/lib/admin/product-actions";
+import { createColor, deleteProduct, saveProduct } from "@/lib/admin/product-actions";
 import { suggestCategories } from "@/lib/admin/suggest-actions";
-import { artKey, artPresets, type ProductForm } from "@/lib/admin/product-types";
+import { artKey, artPresets, STANDARD_KEY, type ProductForm } from "@/lib/admin/product-types";
 import type { ChainConnection, FontKey, MaterialKey } from "@/lib/catalog/types";
 import { AdminPreview } from "./admin-preview";
 import { MediaManager } from "./media-manager";
@@ -14,7 +14,7 @@ import { RichTextarea } from "./rich-textarea";
 import { Card, Field, buttonClass, dangerButtonClass, inputClass, secondaryButtonClass, smallButtonClass } from "./ui";
 
 type Lookups = {
-  materials: { key: MaterialKey; name: string; factor: number | null }[];
+  materials: { key: MaterialKey; name: string; factor: number | null; swatch: string; custom: boolean }[];
   fonts: { key: FontKey; name: string; script: "latin" | "arabic" }[];
   categories: { slug: string; name: string }[];
 };
@@ -51,6 +51,68 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   );
 }
 
+/** Makes a new color (red, blue...) for products that are not metal jewelry. */
+function ColorMaker({ onCreated }: { onCreated: (color: Lookups["materials"][number]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [nameAr, setNameAr] = useState("");
+  const [swatch, setSwatch] = useState("#c0392b");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const add = () =>
+    start(async () => {
+      setError(null);
+      const r = await createColor({ nameEn: name, nameAr, swatch });
+      if (!r.ok || !r.data) {
+        setError(r.ok ? "Something went wrong." : r.error);
+        return;
+      }
+      onCreated({ key: r.data.key, name: r.data.name, factor: null, swatch: r.data.swatch, custom: true });
+      setName("");
+      setNameAr("");
+      setOpen(false);
+    });
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={`${smallButtonClass} mt-3`}>
+        <Plus className="size-3" aria-hidden />
+        New color (red, blue...)
+      </button>
+    );
+  }
+  const onEnter = (e: React.KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (name.trim() && !pending) add();
+  };
+  return (
+    <div className="mt-3 rounded-lg border border-dashed border-line p-3">
+      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <Field label="Color name (English)" htmlFor="color-en">
+          <input id="color-en" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onEnter} className={inputClass} placeholder="Red" />
+        </Field>
+        <Field label="Color name (Arabic)" htmlFor="color-ar">
+          <input id="color-ar" maxLength={40} value={nameAr} onChange={(e) => setNameAr(e.target.value)} onKeyDown={onEnter} className={inputClass} placeholder="أحمر" dir="rtl" />
+        </Field>
+        <Field label="Color" htmlFor="color-swatch">
+          <input id="color-swatch" type="color" value={swatch} onChange={(e) => setSwatch(e.target.value)} className="h-10 w-16 cursor-pointer rounded border border-line bg-background p-1" />
+        </Field>
+      </div>
+      {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
+      <div className="mt-2 flex gap-2">
+        <button type="button" disabled={pending || !name.trim()} onClick={add} className={smallButtonClass}>
+          {pending ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <Plus className="size-3" aria-hidden />}
+          Add color
+        </button>
+        <button type="button" onClick={() => setOpen(false)} className={smallButtonClass}>
+          Cancel
+        </button>
+      </div>
+      <p className="mt-2 text-xs text-muted">It is added to this piece. You can tick it on other pieces later; the price is set per piece.</p>
+    </div>
+  );
+}
+
 // Product editor (brief §8.5): names, tagline, rich descriptions,
 // categories, a price and an old price per material (Double Gold can be
 // pre-filled at 3× gold), sizes, chain connections, fonts + default,
@@ -74,6 +136,9 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
   const [suggestion, setSuggestion] = useState<{ reason: string; ai: boolean } | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
+  // Colors made on this page (the lookups from the server only know the ones that existed when it loaded).
+  const [newColors, setNewColors] = useState<Lookups["materials"]>([]);
+  const allMats = [...lookups.materials, ...newColors];
 
   // Suggests the shop pages for this piece (AI when it is set up, else keyword rules).
   const suggest = async (auto: boolean) => {
@@ -101,7 +166,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
     // Double Gold: pre-filled at 3× the gold price (still editable).
     // Materials with no factor (Double Silver, Steel) start empty.
     const gold = Number(material("gold")?.price);
-    const factor = lookups.materials.find((m) => m.key === key)?.factor ?? null;
+    const factor = allMats.find((m) => m.key === key)?.factor ?? null;
     const scaled = (n: number) => (n > 0 && factor && factor !== 1 ? String(Math.round(n * factor * 100) / 100) : "");
     const goldOld = Number(material("gold")?.compareAt);
     set("materials", [...f.materials, { key, price: scaled(gold), compareAt: scaled(goldOld), isDefault: f.materials.length === 0 }]);
@@ -115,12 +180,45 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
       "materials",
       f.materials.map((m) => {
         if (m.key === key) return { ...m, [field]: value };
-        const factor = lookups.materials.find((x) => x.key === m.key)?.factor ?? null;
+        const factor = allMats.find((x) => x.key === m.key)?.factor ?? null;
         if (key === "gold" && factor === 1 && (m[field] === "" || m[field] === before)) return { ...m, [field]: value };
         return m;
       }),
     );
   };
+
+  // What the customer is asked for. All on = jewelry; all off = a simple product (a gift box): one price, nothing to pick.
+  const setChoices = (patch: Partial<Pick<ProductForm, "askMaterial" | "askSize" | "askConnection" | "askPersonalization">>) =>
+    setF((prev) => {
+      const next = { ...prev, ...patch };
+      const std = prev.materials.find((m) => m.key === STANDARD_KEY);
+      if (patch.askMaterial && std) {
+        // Back to metals: the neutral "standard" price becomes the price of Gold and Silver.
+        next.materials = [
+          { key: "gold", price: std.price, compareAt: std.compareAt, isDefault: true },
+          { key: "silver", price: std.price, compareAt: std.compareAt, isDefault: false },
+        ];
+      } else if (patch.askMaterial === false && !prev.id && !std) {
+        // A new simple product: one neutral price (what was typed for the first metal is kept).
+        const first = prev.materials.find((m) => m.isDefault) ?? prev.materials[0];
+        next.materials = [{ key: STANDARD_KEY, price: first?.price ?? "", compareAt: first?.compareAt ?? "", isDefault: true }];
+      }
+      return next;
+    });
+  const simpleProduct = () => {
+    setChoices({ askMaterial: false, askSize: false, askConnection: false, askPersonalization: false });
+    // A new piece has nothing to keep: no sizes, no engraving.
+    if (!f.id) setF((prev) => ({ ...prev, options: [], personalization: "", connections: [] }));
+  };
+  const jewelryProduct = () => setChoices({ askMaterial: true, askSize: true, askConnection: true, askPersonalization: true });
+
+  // The price of a product that does not ask for a metal or color: its main row.
+  const main = f.materials.find((m) => m.isDefault) ?? f.materials[0];
+  const setMain = (patch: { price?: string; compareAt?: string }) =>
+    set(
+      "materials",
+      main ? f.materials.map((m) => (m === main ? { ...m, ...patch } : m)) : [{ key: STANDARD_KEY, price: "", compareAt: "", isDefault: true, ...patch }],
+    );
 
   const save = () =>
     start(async () => {
@@ -243,46 +341,93 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         </p>
       </Card>
 
+      <Card
+        title="What the customer chooses"
+        actions={
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" className={smallButtonClass} onClick={jewelryProduct}>
+              Jewelry (all choices)
+            </button>
+            <button type="button" className={smallButtonClass} onClick={simpleProduct}>
+              Simple product (gift box...)
+            </button>
+          </div>
+        }
+      >
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Toggle label="Metal or color" checked={f.askMaterial} onChange={(v) => setChoices({ askMaterial: v })} />
+          <Toggle label="Size / chain length" checked={f.askSize} onChange={(v) => setChoices({ askSize: v })} />
+          <Toggle label="Design (one ring or both sides)" checked={f.askConnection} onChange={(v) => setChoices({ askConnection: v })} />
+          <Toggle label="Name or letters to engrave" checked={f.askPersonalization} onChange={(v) => setChoices({ askPersonalization: v })} />
+        </div>
+        <p className="mt-2 text-xs text-muted">
+          Switched off = the product page does not show it, the customer does not have to pick it, and the cart, checkout and order work without it. A gift box: tap
+          “Simple product”, then add the photos, one price and the description. Pieces that already exist keep all their choices.
+        </p>
+      </Card>
+
       <Card title="Photos & video">
         <MediaManager slug={f.slug} media={f.media} onChange={(m) => set("media", m)} />
       </Card>
 
-      <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver follows the Gold price until you change it; type the others by hand.</span>}>
-        <ul className="flex flex-col gap-2">
-          {lookups.materials.map((m) => {
-            const row = material(m.key);
-            return (
-              <li key={m.key} className={`rounded-lg border p-3 ${row ? "border-line" : "border-dashed border-line bg-surface"}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 text-sm font-medium">
-                    <input type="checkbox" checked={Boolean(row)} onChange={(e) => toggleMaterial(m.key, e.target.checked)} className="size-4 accent-[var(--cedar)]" />
-                    {m.name}
-                    {m.factor !== null && m.factor !== 1 && <span className="text-xs font-normal text-muted">(pre-filled at {m.factor}× gold)</span>}
-                  </label>
-                  {row && (
-                    <label className="flex items-center gap-1.5 text-xs text-muted">
-                      <input type="radio" name="default-material" checked={row.isDefault} onChange={() => setMaterial(m.key, { isDefault: true })} className="accent-[var(--gold)]" />
-                      Shown first
+      {f.askMaterial ? (
+        <Card title="Prices per material" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale. Silver follows the Gold price until you change it; type the others by hand.</span>}>
+          <ul className="flex flex-col gap-2">
+            {allMats.map((m) => {
+              const row = material(m.key);
+              return (
+                <li key={m.key} className={`rounded-lg border p-3 ${row ? "border-line" : "border-dashed border-line bg-surface"}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <input type="checkbox" checked={Boolean(row)} onChange={(e) => toggleMaterial(m.key, e.target.checked)} className="size-4 accent-[var(--cedar)]" />
+                      {m.custom && <span aria-hidden className="inline-block size-3.5 rounded-full border border-line" style={{ background: m.swatch }} />}
+                      {m.name}
+                      {m.factor !== null && m.factor !== 1 && <span className="text-xs font-normal text-muted">(pre-filled at {m.factor}× gold)</span>}
                     </label>
-                  )}
-                </div>
-                {row && (
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <Field label="Price" htmlFor={`price-${m.key}`}>
-                      <input id={`price-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" required value={row.price} onChange={(e) => setPrice(m.key, "price", e.target.value)} className={inputClass} />
-                    </Field>
-                    <Field label="Old price" htmlFor={`old-${m.key}`}>
-                      <input id={`old-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" value={row.compareAt} onChange={(e) => setPrice(m.key, "compareAt", e.target.value)} className={inputClass} />
-                    </Field>
+                    {row && (
+                      <label className="flex items-center gap-1.5 text-xs text-muted">
+                        <input type="radio" name="default-material" checked={row.isDefault} onChange={() => setMaterial(m.key, { isDefault: true })} className="accent-[var(--gold)]" />
+                        Shown first
+                      </label>
+                    )}
                   </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
+                  {row && (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Field label="Price" htmlFor={`price-${m.key}`}>
+                        <input id={`price-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" required value={row.price} onChange={(e) => setPrice(m.key, "price", e.target.value)} className={inputClass} />
+                      </Field>
+                      <Field label="Old price" htmlFor={`old-${m.key}`}>
+                        <input id={`old-${m.key}`} type="number" min="0" step="0.01" inputMode="decimal" value={row.compareAt} onChange={(e) => setPrice(m.key, "compareAt", e.target.value)} className={inputClass} />
+                      </Field>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <ColorMaker
+            onCreated={(c) => {
+              setNewColors((prev) => [...prev, c]);
+              set("materials", [...f.materials, { key: c.key, price: "", compareAt: "", isDefault: f.materials.length === 0 }]);
+            }}
+          />
+        </Card>
+      ) : (
+        <Card title="Price" actions={<span className="text-xs text-muted">USD. Old price = crossed out (the piece shows as on sale), empty = no sale.</span>}>
+          <div className="grid max-w-md grid-cols-2 gap-2">
+            <Field label="Price" htmlFor="price-main">
+              <input id="price-main" type="number" min="0" step="0.01" inputMode="decimal" required value={main?.price ?? ""} onChange={(e) => setMain({ price: e.target.value })} className={inputClass} />
+            </Field>
+            <Field label="Old price" htmlFor="old-main">
+              <input id="old-main" type="number" min="0" step="0.01" inputMode="decimal" value={main?.compareAt ?? ""} onChange={(e) => setMain({ compareAt: e.target.value })} className={inputClass} />
+            </Field>
+          </div>
+        </Card>
+      )}
 
+      {(f.askPersonalization || f.askConnection) && (
       <Card title="Personalization">
+        {f.askPersonalization && (
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Customer writes" htmlFor="p-pers">
             <select id="p-pers" value={f.personalization} onChange={(e) => set("personalization", e.target.value as ProductForm["personalization"])} className={inputClass}>
@@ -302,7 +447,9 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
             </>
           )}
         </div>
+        )}
 
+        {f.askConnection && (
         <fieldset className="mt-4">
           <legend className="mb-2 text-sm font-medium">Chain connection options</legend>
           <div className="flex flex-wrap gap-2">
@@ -319,8 +466,9 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
             ))}
           </div>
         </fieldset>
+        )}
 
-        {f.personalization && (
+        {f.askPersonalization && f.personalization && (
           <fieldset className="mt-4">
             <legend className="mb-2 text-sm font-medium">Allowed fonts</legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -361,7 +509,9 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
           </fieldset>
         )}
       </Card>
+      )}
 
+      {f.askSize && (
       <Card
         title="Sizes"
         actions={
@@ -423,6 +573,7 @@ export function ProductEditor({ initial, lookups, canSave, canDelete, meta }: Pr
         )}
         <p className="mt-2 text-xs text-muted">Price change is added to the material price (e.g. 2 for a longer chain, 0 for the same price).</p>
       </Card>
+      )}
 
       <Card title="Description">
         <div className="grid gap-3 lg:grid-cols-2">
