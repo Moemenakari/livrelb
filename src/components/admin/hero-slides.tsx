@@ -20,7 +20,7 @@ export function HeroSlides({ slides }: { slides: SlideInput[] }) {
     setBusy(true);
     try {
       const isVideo = f.type.startsWith("video/");
-      const body: Blob = isVideo ? f : await toWebp(f);
+      const body: Blob = isVideo ? f : await toWebp(f, 1600, 0.82);
       const contentType = isVideo ? f.type : "image/webp";
       const target = await createSlideUpload({ contentType, size: body.size });
       if (!target.ok || !target.data) throw new Error(target.ok ? "Upload failed." : target.error);

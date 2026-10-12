@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import { cardUrl } from "@/lib/media";
 import { materials } from "./materials";
 import type {
   ChainConnection,
@@ -40,7 +41,8 @@ export type CardProduct = {
   fonts?: FontKey[];
   connection?: ChainConnection;
   art: ProductArt;
-  media: { src: string; alt: string }[];
+  /** src: the small size for the grids; full: the product-page size (the fallback if the small one is missing). */
+  media: { src: string; full: string; alt: string }[];
   categories: Product["categories"];
   style?: Product["style"];
 };
@@ -71,7 +73,7 @@ export function toCard(product: Product, locale: Locale, points?: PointsRules): 
     fonts: p?.fonts,
     connection: (p?.connections ?? product.connections)?.[0],
     art: product.art,
-    media: product.media.filter((m) => m.type !== "video").map((m) => ({ src: m.src, alt: m.alt[locale] })),
+    media: product.media.filter((m) => m.type !== "video").map((m) => ({ src: cardUrl(m.src), full: m.src, alt: m.alt[locale] })),
     categories: product.categories,
     style: product.style,
   };

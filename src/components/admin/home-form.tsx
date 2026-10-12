@@ -130,7 +130,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
     setUploadError(null);
     setUploading(slug);
     try {
-      const body = await toWebp(file);
+      const body = await toWebp(file, 800, 0.8);
       const target = await createTileUpload({ contentType: "image/webp", size: body.size });
       if (!target.ok || !target.data) throw new Error(target.ok ? "Upload failed." : target.error);
       const put = await fetch(target.data.uploadUrl, { method: "PUT", body, headers: { "Content-Type": "image/webp" } });

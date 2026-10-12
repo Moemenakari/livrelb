@@ -162,7 +162,9 @@ export async function createMediaUpload(input: {
   slug: string;
   contentType: string;
   size: number;
-}): Promise<ActionResult<{ uploadUrl: string; publicUrl: string }>> {
+  /** A photo is uploaded in two sizes (src/lib/media.ts): the size of the small one. */
+  cardSize?: number;
+}): Promise<ActionResult<{ uploadUrl: string; publicUrl: string; cardUploadUrl?: string }>> {
   return run(async () => {
     await authorize("products.edit");
     if (!isR2Configured()) {
@@ -174,7 +176,8 @@ export async function createMediaUpload(input: {
       throw new AdminError(`This file is too big (max ${max / 1024 / 1024} MB).`);
     }
     const slug = SLUG.test(input.slug) ? input.slug : "new";
-    const target = await createUploadUrl({ folder: `products/${slug}`, contentType: input.contentType });
-    return { uploadUrl: target.uploadUrl, publicUrl: target.publicUrl };
+    const withCard = input.contentType === "image/webp" && Number.isFinite(input.cardSize) && (input.cardSize ?? 0) > 0 && (input.cardSize ?? 0) <= max;
+    const target = await createUploadUrl({ folder: `products/${slug}`, contentType: input.contentType, card: withCard });
+    return { uploadUrl: target.uploadUrl, publicUrl: target.publicUrl, cardUploadUrl: target.cardUploadUrl };
   });
 }

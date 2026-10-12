@@ -55,6 +55,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   env: { BUILD_STARTED_AT: process.env.BUILD_STARTED_AT },
   images: {
+    // Photos are served as they are, straight from R2 / the static files: never through the Worker or /_next/image
+    // (free plan: 10 ms of CPU per request). The admin makes the sizes before the upload (src/lib/media.ts).
+    unoptimized: true,
     remotePatterns: imagesUrl
       ? [{ protocol: "https", hostname: new URL(imagesUrl).hostname, pathname: "/**" }]
       : [],

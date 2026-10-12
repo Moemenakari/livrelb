@@ -1,5 +1,6 @@
 import "server-only";
 import { AwsClient } from "aws4fetch";
+import { cardKey } from "@/lib/media";
 
 // Product photos and videos live in Cloudflare R2 (free tier), never in the
 // database. The admin (next phase) asks the server for a short-lived signed
@@ -42,6 +43,8 @@ export type UploadTarget = {
   /** Where the file will be served from: store this in product_media.url. */
   publicUrl: string;
   key: string;
+  /** Only when a card size was asked for: PUT the smaller WebP here (same id + "-card"). */
+  cardUploadUrl?: string;
 };
 
 /**
@@ -52,9 +55,12 @@ export type UploadTarget = {
 export async function createUploadUrl({
   folder,
   contentType,
+  card = false,
 }: {
   folder: string;
   contentType: string;
+  /** Also sign the card-size address (photos only, WebP). */
+  card?: boolean;
 }): Promise<UploadTarget> {
   const r2 = r2Config();
   if (!r2) throw new Error("R2 is not configured (see .env.example).");
@@ -63,13 +69,14 @@ export async function createUploadUrl({
   const safeFolder = folder.replace(/[^a-z0-9/-]/gi, "").replace(/^\/+|\/+$/g, "");
   const key = `${safeFolder}/${crypto.randomUUID()}.${ext}`;
 
-  const url = new URL(`${r2.endpoint}/${key}`);
-  url.searchParams.set("X-Amz-Expires", String(UPLOAD_TTL_SECONDS));
-  const signed = await r2.client.sign(
-    new Request(url, { method: "PUT", headers: { "Content-Type": contentType } }),
-    { aws: { signQuery: true } },
-  );
-  return { uploadUrl: signed.url, publicUrl: `${r2.publicUrl}/${key}`, key };
+  const sign = async (path: string) => {
+    const url = new URL(`${r2.endpoint}/${path}`);
+    url.searchParams.set("X-Amz-Expires", String(UPLOAD_TTL_SECONDS));
+    const signed = await r2.client.sign(new Request(url, { method: "PUT", headers: { "Content-Type": contentType } }), { aws: { signQuery: true } });
+    return signed.url;
+  };
+  const cardUploadUrl = card && ext === "webp" ? await sign(cardKey(key)) : undefined;
+  return { uploadUrl: await sign(key), publicUrl: `${r2.publicUrl}/${key}`, key, cardUploadUrl };
 }
 
 /** Deletes a file (when a photo is removed in the admin). */
