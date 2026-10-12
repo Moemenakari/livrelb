@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { quoteCart } from "@/lib/checkout/actions";
-import type { CartItemInput, Quote } from "@/lib/checkout/types";
+import type { CartItemInput, Quote, QuoteResult } from "@/lib/checkout/types";
 
 type Input = { items: CartItemInput[]; coupon?: string; phone?: string; area?: string; usePoints?: boolean };
+
+// A plain POST to /api/quote (src/app/api/quote/route.ts) and not a server action: the shop's pages are static
+// files, and a server action posts to the page's own address, which a file cannot answer.
+async function fetchQuote(input: Input): Promise<QuoteResult> {
+  try {
+    const response = await fetch("/api/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+    return response.ok ? ((await response.json()) as QuoteResult) : { ok: false, error: "unavailable" };
+  } catch {
+    return { ok: false, error: "unavailable" };
+  }
+}
 
 /**
  * The server's prices for the bag (quote_order), refreshed shortly after
@@ -19,7 +29,7 @@ export function useQuote(input: Input) {
     if (input.items.length === 0) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const result = await quoteCart(JSON.parse(key) as Input);
+      const result = await fetchQuote(JSON.parse(key) as Input);
       if (cancelled) return;
       setState((prev) => ({
         key,

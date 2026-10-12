@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { restoreToCart } from "@/lib/cart";
-import { restoreBag } from "@/lib/checkout/bag-actions";
+import { restoreToCart, type CartItem } from "@/lib/cart";
 
 const DONE_KEY = "livre-bag-restored";
+
+// A plain POST to /api/bag (src/app/api/bag/route.ts) and not a server action, because the shop's pages are
+// static files (see use-quote.ts).
+async function restoreBag(param: string): Promise<Omit<CartItem, "id">[]> {
+  const response = await fetch("/api/bag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ param }) });
+  if (!response.ok) throw new Error("bag");
+  return (await response.json()) as Omit<CartItem, "id">[];
+}
 
 /**
  * The real browser opened from an in-app browser with the bag in the address (?bag=): the server checks
