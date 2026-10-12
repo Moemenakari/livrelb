@@ -1,8 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { unstable_cache } from "next/cache";
 import { createClient as createSessionClient } from "@/lib/supabase/server";
-import { getSupabaseEnv, getSupabaseSecretKey, isSupabaseConfigured } from "@/lib/supabase/env";
+import { getSupabaseSecretKey, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createAdminClient } from "@/lib/supabase/public";
 import { hmac, same } from "@/lib/security/sign";
 import { CUSTOMER_COOKIE, CUSTOMER_MAX_AGE, KNOWN_COOKIE, REF_CODE, REF_COOKIE } from "./cookies";
@@ -172,23 +171,3 @@ export async function savedCustomer(): Promise<SavedCustomer | null> {
   };
 }
 
-/**
- * Whether "Continue with Google" can be offered: the Google provider is
- * switched on in Supabase (checked once an hour).
- */
-export const googleLoginEnabled = unstable_cache(
-  async (): Promise<boolean> => {
-    if (!isSupabaseConfigured()) return false;
-    try {
-      const { url, publishableKey } = getSupabaseEnv();
-      const res = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: publishableKey } });
-      if (!res.ok) return false;
-      const settings = (await res.json()) as { external?: { google?: boolean } };
-      return settings.external?.google === true;
-    } catch {
-      return false;
-    }
-  },
-  ["google-login-enabled"],
-  { revalidate: 3600 },
-);

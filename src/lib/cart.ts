@@ -107,7 +107,6 @@ export function setCoupon(code: string) {
   coupon.write(code.trim().toUpperCase());
 }
 
-export const openCart = () => setDrawer(true);
 export const closeCart = () => setDrawer(false);
 
 export function useCart(): CartItem[] {

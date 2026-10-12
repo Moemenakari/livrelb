@@ -153,18 +153,6 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   });
 }
 
-/** Quick show / hide from the product list. */
-export async function setProductStatus(id: string, status: "active" | "draft" | "archived"): Promise<ActionResult> {
-  return run(async () => {
-    if (!UUID.test(id) || !["active", "draft", "archived"].includes(status)) throw new AdminError("Invalid value.");
-    const { db } = await authorize("products.edit");
-    const { error } = await db.from("products").update({ status }).eq("id", id);
-    if (error) throw error;
-    await publishStorefront();
-    refresh();
-  });
-}
-
 const uploadTypes = ["image/webp", "image/jpeg", "image/png", "video/mp4", "video/webm"];
 const MAX_IMAGE = 8 * 1024 * 1024;
 const MAX_VIDEO = 60 * 1024 * 1024;

@@ -10,8 +10,6 @@ import type {
   Category,
   CategorySlug,
   HomeSection,
-  MaterialKey,
-  MaterialOffer,
   Product,
   Review,
   ReviewStats,
@@ -139,20 +137,6 @@ export function categoryTrail(catalog: Catalog, slug: CategorySlug): Category[] 
     current = current.parent ? findCategory(catalog, current.parent) : undefined;
   }
   return trail;
-}
-
-export function offerFor(product: Product, material: MaterialKey): MaterialOffer | undefined {
-  return product.offers.find((o) => o.material === material);
-}
-
-export function defaultOffer(product: Product): MaterialOffer {
-  return offerFor(product, product.defaultMaterial) ?? product.offers[0];
-}
-
-/** "-24%" style discount of one offer, rounded. */
-export function discountPercent(offer: MaterialOffer): number | undefined {
-  if (!offer.compareAtPrice) return undefined;
-  return Math.round((1 - offer.price / offer.compareAtPrice) * 100);
 }
 
 /** Average and count of a product's visible reviews; null when it has none. */
