@@ -50,19 +50,20 @@ So the pages customers browse are **plain files** that Cloudflare serves without
 (`storefrontChanged()` in `src/lib/catalog/publish.ts` does not start a build). A build starts:
 
 - **Every night at 00:00 Beirut time**, if something that shows on the pages was saved since the last build. Cloudflare's
-  cron is UTC and Beirut is UTC+2 in winter and UTC+3 in summer, so `wrangler.jsonc` wakes the Worker **every hour**
-  (`0 * * * *`) and `publish-due.mjs` asks the Beirut clock (`Intl`, with the daylight-saving rules) whether it is the night
-  window (00:00-03:59, so a missed run is retried), whether the pages were already built today, and whether anything was
-  saved: it looks in `audit_log` for lines of the storefront tables (`STOREFRONT_TABLES` in
-  `src/lib/publish/rules.mjs`) newer than the build start. Nothing saved = no build, no minutes used.
-- **When a promotion starts or ends** (the hourly check, no extra setup): see below.
+  cron is UTC and Beirut is UTC+2 in winter and UTC+3 in summer, so `wrangler.jsonc` wakes the Worker **3 times a day**
+  (`0 21,22,23 * * *`: Beirut's midnight is 21:00 UTC in summer and 22:00 UTC in winter, the other wake-up is the retry)
+  and `publish-due.mjs` asks the Beirut clock (`Intl`, with the daylight-saving rules) whether it is the night window
+  (00:00-03:59), whether the pages were already built today, and whether anything was saved: it looks in `audit_log`
+  for lines of the storefront tables (`STOREFRONT_TABLES` in `src/lib/publish/rules.mjs`) newer than the build start.
+  Nothing saved = no build, no minutes used. Cost of the wake-ups on the free plan: 3 invocations a day (about 90 a
+  month, 0.1% of the 100,000 a day), each a few milliseconds of CPU, one small database read at night.
 - **"Publish now"** in the admin (the bar at the top of every page): asks the Deploy Hook right away, at most **3 a day**
   (Beirut day), only when something is waiting. Each press and each automatic start is written in `audit_log`
   (`table_name = 'publish'`, action `publish_now` / `publish_auto`): that is what counts the 3 and shows
   "publishing started". No database migration was needed.
 
 `next.config.ts` stamps the build start (`BUILD_STARTED_AT`); the admin bar shows it as "Last published", and
-`scripts/static-pages.mjs` copies it into `.open-next/publish-at.mjs` for the Worker.
+`scripts/static-pages.mjs` copies it into `.open-next/build-info.mjs` for the Worker.
 
 Set up once (Moemen, in the Cloudflare dashboard):
 
@@ -77,13 +78,13 @@ exists the admin shows an amber "Publishing is not connected yet" note.
 
 **Build minutes.** Workers Builds on the free plan: **3,000 minutes a month**, 1 build at a time, 20 minutes at most. A build
 takes about 4-5 minutes (the push of 2026-10-11 went live in about 4). Nightly-only is at most ~30 builds (150 min); with
-promotions (2 builds each) and the worst case of 3 "Publish now" a day it stays under ~700 minutes. Each push to GitHub
+the worst case of 3 "Publish now" a day it stays under ~500 minutes. Each push to GitHub
 also builds (previews too). Deploy Hooks skip repeats that arrive before a build starts.
 
-**Promotions that start or end by the clock.** Which promotions run is decided at build time, so
-`scripts/static-pages.mjs` writes the next start/end time (after the build start) into `.open-next/publish-at.mjs` and the
-hourly check asks for a build once it has passed (a lag of up to an hour plus the build). Note that such a build also
-publishes everything else that was saved by then.
+**Promotions do not start builds.** A promotion's discount code is checked by the database at checkout (it is valid or
+not at that moment), so it works on time without a build. What waits for the next publish is only the promo bar and the
+first-screen offer, which are part of the static pages (an offer that ended at 15:00 is still shown until the next
+publish; the code is already refused at checkout).
 
 **Checkout.** `/en/checkout` is a static file too. Who she is, her saved details and the employees come from
 `GET /api/checkout-init`; prices from `POST /api/quote`; Place order is `POST /api/order` and "Not you?" `POST /api/forget`

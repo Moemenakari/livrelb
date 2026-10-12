@@ -2,13 +2,15 @@
 // Worker's scheduled check (worker.mjs / publish-due.mjs) and the admin (src/lib/publish/status.ts) share ONE copy.
 //
 // The pages customers browse are static files built by `next build`. Admin saves only save to the database;
-// one build runs every night at 00:00 Beirut time and publishes everything saved since the last build. Cloudflare's
-// cron runs in UTC, and Beirut is UTC+2 in winter and UTC+3 in summer, so the Worker is woken EVERY hour and asks
-// the Beirut clock (Intl knows the daylight saving rules) whether it is the night window.
+// one build runs every night at 00:00 Beirut time and publishes everything saved since the last build ("Publish
+// now" in the admin is the only other way). Cloudflare's cron runs in UTC, and Beirut is UTC+2 in winter and UTC+3
+// in summer, so the Worker is woken at 21:00, 22:00 and 23:00 UTC (wrangler.jsonc): one of them is Beirut's midnight
+// in either season and the others are retries. Each time it asks the Beirut clock (Intl knows the daylight saving
+// rules) whether it is the night window.
 
 export const TIME_ZONE = "Asia/Beirut";
 
-/** The night window: Beirut hours 0 to 3. The hourly check tries again in each of them if a build did not start. */
+/** The night window: Beirut hours 0 to 3 (the three daily wake-ups reach at most two of them, so one retry). */
 export const NIGHT_HOURS = 4;
 
 /** "Publish now" can be used this many times per Beirut day. */
@@ -87,13 +89,12 @@ export function beirutDayStart(ms) {
 }
 
 /**
- * Should a build start now? `builtAt` is when the pages now live were built (ms, null if unknown), `hasChanges`
- * says whether anything saved after that shows on the pages (null = could not check: assume yes), and `promoAt`
- * is the time (ms) of the next promotion start/end (null = none).
+ * Should the nightly build start now? `builtAt` is when the pages now live were built (ms, null if unknown) and
+ * `hasChanges` says whether anything saved after that shows on the pages (null = could not check: assume yes).
+ * Promotions that start or end by the clock do NOT start builds: their discount codes are checked by the database
+ * at checkout, and the promo bar changes with the next publish.
  */
-export function decidePublish({ now, builtAt, hasChanges, promoAt }) {
-  // A promotion starts or ends by its own clock: the pages must follow, at any hour.
-  if (typeof promoAt === "number" && now >= promoAt) return { build: true, reason: "a promotion started or ended" };
+export function decidePublish({ now, builtAt, hasChanges }) {
   if (beirutHour(now) >= NIGHT_HOURS) return { build: false, reason: "not the night window" };
   if (typeof builtAt === "number" && beirutDay(builtAt) === beirutDay(now)) return { build: false, reason: "already published today" };
   if (hasChanges === false) return { build: false, reason: "nothing changed" };

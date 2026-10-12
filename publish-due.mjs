@@ -1,9 +1,7 @@
-// The scheduled check of worker.mjs, apart so that it can be tested without Cloudflare. It runs every hour (the
-// Beirut night depends on summer/winter time, so the Beirut clock decides: see src/lib/publish/rules.mjs) and
-// asks Cloudflare for a build when:
-//   - it is the night window (00:00-03:59 Beirut), the pages were not built yet today, and something that shows
-//     on the pages was saved since the last build (audit_log), or
-//   - a promotion started or ended since the last build.
+// The scheduled check of worker.mjs, apart so that it can be tested without Cloudflare. It wakes at 21:00, 22:00 and
+// 23:00 UTC (the Beirut night depends on summer/winter time, so the Beirut clock decides: see
+// src/lib/publish/rules.mjs) and asks Cloudflare for a build when it is the night window (00:00-03:59 Beirut), the
+// pages were not built yet today, and something that shows on the pages was saved since the last build (audit_log).
 import { PUBLISH_TABLE, STOREFRONT_TABLES, decidePublish } from "./src/lib/publish/rules.mjs";
 
 /** How many saves that show on the shop's pages happened after `builtAt` (only 0 or 1 is looked up). */
@@ -26,15 +24,14 @@ async function logRequest({ supabaseUrl, key, reason, fetchFn }) {
 }
 
 /**
- * `data` is what scripts/static-pages.mjs wrote into .open-next/publish-at.mjs: builtAt (when the pages now live
- * were built), publishAt (next promotion start/end) and supabaseUrl. Returns what it did, for the Worker logs;
- * never throws about the audit log.
+ * `data` is what scripts/static-pages.mjs wrote into .open-next/build-info.mjs: builtAt (when the pages now live
+ * were built) and supabaseUrl. Returns what it did, for the Worker logs; never throws about the audit log.
  */
 export async function publishCheck(env, data, { now = Date.now(), fetchFn = fetch } = {}) {
-  const { builtAt = null, publishAt = null, supabaseUrl = null } = data;
+  const { builtAt = null, supabaseUrl = null } = data;
   const key = env.SUPABASE_SECRET_KEY?.trim();
 
-  let decision = decidePublish({ now, builtAt, hasChanges: null, promoAt: publishAt });
+  let decision = decidePublish({ now, builtAt, hasChanges: null });
   if (!decision.build) return decision.reason;
 
   // A night with nothing saved since the last build costs nothing: no build.
@@ -45,7 +42,7 @@ export async function publishCheck(env, data, { now = Date.now(), fetchFn = fetc
     } catch (error) {
       console.error("publish check: could not look for saved changes:", error.message);
     }
-    decision = decidePublish({ now, builtAt, hasChanges, promoAt: publishAt });
+    decision = decidePublish({ now, builtAt, hasChanges });
     if (!decision.build) return decision.reason;
   }
 

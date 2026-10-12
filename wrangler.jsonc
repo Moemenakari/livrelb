@@ -61,10 +61,11 @@
   "images": {
     "binding": "IMAGES"
   },
-  // Every hour worker.mjs asks the Beirut clock whether it is the night window (00:00-03:59 Beirut, summer or winter)
-  // and starts the nightly build when something was saved; it also starts one when a promotion starts or ends.
+  // Beirut's midnight is 21:00 UTC in summer (UTC+3) and 22:00 UTC in winter (UTC+2): worker.mjs wakes at 21, 22 and 23
+  // UTC, asks the Beirut clock whether it is the night window (00:00-03:59) and starts the nightly build when something
+  // was saved. 3 wake-ups a day (the other times of day cost nothing).
   "triggers": {
-    "crons": ["0 * * * *"]
+    "crons": ["0 21,22,23 * * *"]
   },
   "observability": {
     "enabled": true
