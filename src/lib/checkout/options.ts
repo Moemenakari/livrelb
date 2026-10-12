@@ -25,6 +25,13 @@ const load = unstable_cache(
   { tags: [CATALOG_TAG], revalidate: 300 },
 );
 
+/** The active employees for "Who helped you?", read now (not cached): used by /api/checkout-init. */
+export async function getHelpers(): Promise<HelperOption[]> {
+  if (!isSupabaseConfigured()) return [];
+  const { data } = (await createAdminClient()?.rpc("list_helpers")) ?? { data: null };
+  return (data ?? []) as HelperOption[];
+}
+
 export async function getCheckoutOptions(
   locale: Locale,
 ): Promise<{ areas: AreaOption[]; helpers: HelperOption[]; available: boolean }> {

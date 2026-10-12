@@ -37,7 +37,7 @@ const routes = JSON.parse(readFileSync(join(NEXT, "routes-manifest.json"), "utf8
 
 // Pages that show per-person data must never be published as files (scripts/check-dynamic-routes.mjs
 // already fails the build if one is prerendered; this is a second lock).
-const perPerson = /^\/(en|ar)?\/?(checkout|account|track|order|auth)(\/|$)|^\/(admin|api)(\/|$)/;
+const perPerson = /^\/(en|ar)?\/?(account|track|order|auth)(\/|$)|^\/(admin|api)(\/|$)/;
 
 function copy(from, to) {
   mkdirSync(dirname(to), { recursive: true });

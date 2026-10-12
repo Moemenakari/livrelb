@@ -91,7 +91,9 @@ export type CheckoutError =
   | "unavailable"
   | "login_required"
   | "rate_limited"
-  | "failed";
+  | "failed"
+  /** The shop could not be reached after trying again: nothing was lost, she can press the button again. */
+  | "unreachable";
 
 export type CheckoutResult = { ok: true; number: number } | { ok: false; error: CheckoutError };
 

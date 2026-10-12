@@ -496,6 +496,7 @@
       "cart_changed": "Some pieces in your bag changed. Please check your bag.",
       "unavailable": "We can't take orders right now. Please try again in a moment.",
       "failed": "Something went wrong. Please try again.",
+      "unreachable": "We couldn't reach the shop just now. Your bag and everything you typed are still here. Please try again.",
       "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
       "login_required": "Please sign in to place your order."
     },
