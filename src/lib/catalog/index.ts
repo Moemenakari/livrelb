@@ -34,6 +34,8 @@ const cachedSupabaseCatalog = unstable_cache(loadSupabaseCatalog, ["catalog-v1"]
   revalidate: process.env.NODE_ENV === "production" ? 3600 : 30,
 });
 
+let buildCatalog: Promise<Catalog> | undefined;
+
 /**
  * The storefront data. From Supabase when it is configured, otherwise from
  * the sample files in this folder, so the dev site never breaks.
@@ -41,6 +43,10 @@ const cachedSupabaseCatalog = unstable_cache(loadSupabaseCatalog, ["catalog-v1"]
  */
 export const getCatalog = cache(async (): Promise<Catalog> => {
   if (!isSupabaseConfigured()) return loadStaticCatalog();
+  // `next build` writes the pages the shop serves as static files (scripts/static-pages.mjs). They must show
+  // what the admin saved last, never a copy kept by the build cache, so a build reads the database itself
+  // (once per build worker, not once per page).
+  if (process.env.NEXT_PHASE === "phase-production-build") return (buildCatalog ??= loadSupabaseCatalog());
   return cachedSupabaseCatalog();
 });
 

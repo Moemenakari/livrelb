@@ -7,9 +7,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shop",
-  "main": ".open-next/worker.js",
+  "main": "worker.mjs",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Runs before every `wrangler deploy` / `wrangler dev`: the shop's prerendered pages become static files
+  // that Cloudflare serves without starting the Worker (free plan: 10 ms of CPU per request). See the
+  // header of scripts/static-pages.mjs.
+  "build": {
+    "command": "node scripts/static-pages.mjs"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -54,6 +60,10 @@
   // next/image resizing through Cloudflare Images.
   "images": {
     "binding": "IMAGES"
+  },
+  // Every 15 minutes worker.mjs checks whether a promotion started or ended, and asks for a new build if so.
+  "triggers": {
+    "crons": ["*/15 * * * *"]
   },
   "observability": {
     "enabled": true

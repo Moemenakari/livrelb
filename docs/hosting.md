@@ -28,6 +28,49 @@ Product photos go to **Cloudflare R2**. Not deployed yet.
    `NEXT_PUBLIC_*` ones must also be present at build time.
 4. `npm run deploy`, then add the `livrelb.com` domain in the dashboard.
 
+## Static pages and publishing (free plan)
+
+The free Cloudflare plan gives the Worker **10 ms of CPU per request**. Next.js needs 55-85 ms to serve even a
+cached page, so pages served by the Worker ended in **error 1102** as soon as several customers came at once.
+So the pages customers browse are **plain files** that Cloudflare serves without starting the Worker:
+
+- `scripts/static-pages.mjs` runs before every `wrangler deploy` / `wrangler dev` (`build.command` in
+  `wrangler.jsonc`). It copies the HTML `next build` wrote (home, categories, products, Charms, FAQ, About,
+  Contact, Size guide, policies, the cart page) into the assets folder, with `manifest.webmanifest`, the icons,
+  `robots.txt` and `sitemap.xml`. It also writes `_headers` (the security headers of `next.config.ts`, read back
+  from `.next/routes-manifest.json`, plus a one-year cache for the hashed files in `/_next/static`) and
+  `_redirects` (`/` opens `/en`).
+- The Worker still runs for everything personal: checkout, account, track, order pages, the admin, `/api/*`,
+  `/auth/callback`, `/r/<code>`, and any product or category created after the last build.
+- Links never prefetch and open pages with a normal browser navigation (`src/components/ui/site-link.tsx`).
+- `?ref=amal` on any page is handled in the browser (`src/components/layout/ref-capture.tsx` asks `/r/amal`),
+  because no server code sees a page that is a file.
+
+**Publishing.** The files are only as new as the last build. When the admin saves something customers can see,
+`publishStorefront()` (`src/lib/catalog/publish.ts`) asks Cloudflare for a new build through a **Deploy Hook**, and
+the change reaches customers in about 5 minutes. Saving many times in a row costs one or two builds (Cloudflare
+skips repeated requests that arrive before a build starts).
+
+Set up once (Moemen, in the Cloudflare dashboard):
+
+1. Workers & Pages > `shop` > Settings > Builds > **Deploy Hooks** > create one (name `admin-publish`, branch
+   `main`) and copy its address.
+2. Workers & Pages > `shop` > Settings > **Variables and Secrets** > Add > type **Secret**, name
+   `DEPLOY_HOOK_URL`, value = that address > Deploy. It is a *runtime* secret, not a build variable.
+
+The address does not expire. It stops working only if the hook is deleted or re-created in the dashboard; then
+saves still work but nothing is published (the Worker logs `publish: the deploy hook answered 404`). Until the
+secret exists the admin shows an amber "Publishing is not connected yet" note.
+
+**Promotions that start or end by the clock.** Which promotions run is decided at build time, so
+`scripts/static-pages.mjs` writes the next start/end time into `.open-next/publish-at.mjs` and `worker.mjs`
+(the Worker's entry file) checks it every 15 minutes (`triggers.crons`), asking for a new build once it passed.
+
+**Known limits.** The "X sold" label, the "#1 Best Seller" badge and the public coupons on product pages come from
+`storefront_stats()`, which needs `SUPABASE_SECRET_KEY`; Cloudflare's build has no secret keys, so the static pages
+do not show them (today nothing is lost: the best seller has 7 sales, the label starts at 10, and there are no
+public coupons). Prices, photos, texts and offers are not affected, and checkout always prices from the database.
+
 ## Phone notifications (Web Push)
 
 - Staff press **Notify me** in the admin (on iPhone: from the "LIVRE Admin"
