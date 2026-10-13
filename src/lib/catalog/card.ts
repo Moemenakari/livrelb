@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/routing";
-import { materials } from "./materials";
+import { cardUrl } from "@/lib/media";
+import { isBuiltinMaterial, materialInfo } from "./materials";
 import type {
   ChainConnection,
   FontKey,
@@ -15,7 +16,8 @@ export type CardOffer = {
   material: MaterialKey;
   name: string;
   swatch: string;
-  tone: MetalTone;
+  /** "none" for a color made in the admin or a simple product's price: it never matches the gold/silver filter. */
+  tone: MetalTone | "none";
   price: number;
   compareAtPrice?: number;
 };
@@ -40,21 +42,25 @@ export type CardProduct = {
   fonts?: FontKey[];
   connection?: ChainConnection;
   art: ProductArt;
-  media: { src: string; alt: string }[];
+  /** src: the small size for the grids; full: the product-page size (the fallback if the small one is missing). */
+  media: { src: string; full: string; alt: string }[];
   categories: Product["categories"];
   style?: Product["style"];
 };
 
 export function toCard(product: Product, locale: Locale, points?: PointsRules): CardProduct {
   const p = product.personalization;
-  const offers = product.offers.map((o) => ({
-    material: o.material,
-    name: materials[o.material].name[locale],
-    swatch: materials[o.material].swatch,
-    tone: materials[o.material].tone,
-    price: o.price,
-    compareAtPrice: o.compareAtPrice,
-  }));
+  const offers = product.offers.map((o) => {
+    const info = materialInfo(o.material, o.custom);
+    return {
+      material: o.material,
+      name: info.name[locale],
+      swatch: info.swatch,
+      tone: isBuiltinMaterial(o.material) ? info.tone : ("none" as const),
+      price: o.price,
+      compareAtPrice: o.compareAtPrice,
+    };
+  });
   const main = offers.find((o) => o.material === product.defaultMaterial) ?? offers[0];
   return {
     slug: product.slug,
@@ -71,7 +77,7 @@ export function toCard(product: Product, locale: Locale, points?: PointsRules): 
     fonts: p?.fonts,
     connection: (p?.connections ?? product.connections)?.[0],
     art: product.art,
-    media: product.media.filter((m) => m.type !== "video").map((m) => ({ src: m.src, alt: m.alt[locale] })),
+    media: product.media.filter((m) => m.type !== "video").map((m) => ({ src: cardUrl(m.src), full: m.src, alt: m.alt[locale] })),
     categories: product.categories,
     style: product.style,
   };

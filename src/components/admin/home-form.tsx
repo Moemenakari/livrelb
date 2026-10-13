@@ -130,7 +130,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
     setUploadError(null);
     setUploading(slug);
     try {
-      const body = await toWebp(file);
+      const body = await toWebp(file, 800, 0.8);
       const target = await createTileUpload({ contentType: "image/webp", size: body.size });
       if (!target.ok || !target.data) throw new Error(target.ok ? "Upload failed." : target.error);
       const put = await fetch(target.data.uploadUrl, { method: "PUT", body, headers: { "Content-Type": "image/webp" } });
@@ -348,7 +348,7 @@ export function HomeForm({ initial }: { initial: HomeFormData }) {
 
       <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t border-line bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:start-60">
         <div className="mx-auto flex max-w-6xl items-center justify-end gap-3">
-          {saved && <p className="me-auto text-sm text-emerald-700">Saved. The shop shows it right away.</p>}
+          {saved && <p className="me-auto text-sm text-emerald-700">Saved. Customers see it tonight at 12:00 AM.</p>}
           <FormError error={error} />
           <button disabled={pending} className={buttonClass}>
             {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}

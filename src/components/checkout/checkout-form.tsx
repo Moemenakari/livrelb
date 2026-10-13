@@ -7,8 +7,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { whatsappUrl } from "@/config/site";
 import { useWhatsappNumber } from "@/lib/use-whatsapp";
 import { clearCart, toInput, useCart, useCoupon } from "@/lib/cart";
-import { clearSavedCustomer, placeOrder } from "@/lib/checkout/actions";
-import type { AreaOption, CheckoutError, HelperOption, SavedCustomer } from "@/lib/checkout/types";
+import { requestJson } from "@/lib/checkout/client";
+import type { AreaOption, CheckoutError, CheckoutResult, HelperOption, SavedCustomer } from "@/lib/checkout/types";
 import { formatMoney } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { CartLine } from "@/components/cart/cart-line";
@@ -16,16 +16,16 @@ import { CartSummary, CouponField } from "@/components/cart/cart-summary";
 import { useQuote } from "@/components/cart/use-quote";
 import { TrackOnMount } from "@/components/analytics/analytics";
 import { primaryButton } from "@/components/ui/styles";
-import { materials } from "@/lib/catalog/materials";
+import { hasMaterialLabel, materialInfo } from "@/lib/catalog/materials";
 import { CheckoutSteps } from "./checkout-steps";
+import { useCheckoutInit } from "./use-checkout-init";
 import { LoginButton } from "@/components/auth/login-dialog";
 
 type Props = {
   areas: AreaOption[];
+  /** The employees known when the page was built (usually none: /api/checkout-init brings them). */
   helpers: HelperOption[];
   freeShippingOver: number;
-  /** The customer this browser is verified as: prefills the form. */
-  saved: SavedCustomer | null;
   /** Checkout needs a login first (Settings). */
   loginRequired: boolean;
   /** The shop's WhatsApp number: the order goes there once it is saved. */
@@ -50,7 +50,7 @@ const legend = "mb-1 font-display text-2xl";
 // Checkout (brief §8.4): one page, no account and no email. Prices, the
 // discount and delivery come from the server (quote_order) and are
 // recalculated again when the order is placed (place_order).
-export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginRequired, whatsapp }: Props) {
+export function CheckoutForm({ areas, helpers: builtHelpers, freeShippingOver, loginRequired, whatsapp }: Props) {
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
   const router = useRouter();
@@ -65,12 +65,26 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
   const locale = useLocale();
   // Prefilled from her remembered device or Google account (never from a
   // typed phone number); she can edit everything.
-  const [known, setKnown] = useState(saved?.name ? saved : null);
-  const [name, setName] = useState(known?.name ?? "");
-  const [phone, setPhone] = useState(known?.phone ? localPhone(known.phone) : "");
-  const [area, setArea] = useState(known?.area && areas.some((a) => a.slug === known.area) ? known.area : "");
-  const [address, setAddress] = useState(known?.address ?? "");
-  const [building, setBuilding] = useState(known?.building ?? "");
+  const [known, setKnown] = useState<SavedCustomer | null>(null);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [area, setArea] = useState("");
+  const [address, setAddress] = useState("");
+  const [building, setBuilding] = useState("");
+  // This page is a static file, so it cannot know who she is: /api/checkout-init tells (signed in, remembered,
+  // her saved details, the employees). Her saved details only fill what she has not typed yet.
+  const init = useCheckoutInit((loaded) => {
+    const saved = loaded.saved;
+    if (!saved?.name) return;
+    setKnown(saved);
+    setName((v) => v || saved.name || "");
+    setPhone((v) => v || (saved.phone ? localPhone(saved.phone) : ""));
+    setArea((v) => v || (saved.area && areas.some((a) => a.slug === saved.area) ? saved.area : ""));
+    setAddress((v) => v || saved.address || "");
+    setBuilding((v) => v || saved.building || "");
+  });
+  const saved = init.saved;
+  const helpers = init.helpers.length > 0 ? init.helpers : builtHelpers;
   const [usePoints, setUsePoints] = useState(false);
   const [clearing, startClearing] = useTransition();
   const [notes, setNotes] = useState("");
@@ -99,7 +113,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
 
   const forget = () =>
     startClearing(async () => {
-      await clearSavedCustomer();
+      await requestJson("/api/forget", { body: {}, delays: [600] });
       setKnown(null);
       setName("");
       setPhone("");
@@ -117,7 +131,7 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
     const line = (i: (typeof items)[number]) => {
       const what = i.charmNames?.length ? i.charmNames.map((n) => n[who]).join(", ") : i.text;
       const size = i.size ? ` ${i.size} cm` : "";
-      return `• ${i.name[who]}${what ? ` (${what})` : ""}${size} ${materials[i.material]?.name[who] ?? ""} ×${i.qty}`.replace(/\s+/g, " ");
+      return `• ${i.name[who]}${what ? ` (${what})` : ""}${size} ${hasMaterialLabel(i.material) ? (i.materialName ?? materialInfo(i.material).name)[who] : ""} ×${i.qty}`.replace(/\s+/g, " ");
     };
     return [
       t("whatsappIntro", { number: orderNumber }),
@@ -150,20 +164,28 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
     setError(null);
     submitting.current = true;
     startTransition(async () => {
-      const result = await placeOrder({
-        requestId,
-        name,
-        phone,
-        area,
-        address,
-        building,
-        notes,
-        coupon,
-        helper,
-        usePoints,
-        website,
-        items: items.map(toInput),
+      // If the shop is busy (503 / "exceeded resources") it tries again by itself, twice, with the same requestId:
+      // the database returns the first order for it, so a retry can never make a second one.
+      const sent = await requestJson<CheckoutResult>("/api/order", {
+        body: {
+          requestId,
+          name,
+          phone,
+          area,
+          address,
+          building,
+          notes,
+          coupon,
+          helper,
+          usePoints,
+          website,
+          items: items.map(toInput),
+        },
+        delays: [800, 1800],
+        shouldRetry: (r) => !r.ok && r.error === "failed",
       });
+      // Still no answer: nothing is cleared. The bag and everything she typed stay, and she can press again.
+      const result: CheckoutResult = sent.kind === "ok" ? sent.data : { ok: false, error: "unreachable" };
       if (result.ok) {
         setPlaced(true);
         clearCart();
@@ -211,7 +233,10 @@ export function CheckoutForm({ areas, helpers, freeShippingOver, saved, loginReq
     );
   }
 
-  if (loginRequired && !saved?.signedIn) {
+  // Signed in? The server says (init). Until it answers, or if it cannot, go by what this browser shows: a Google
+  // session cookie ("sb-...") or the remembered-device flag ("livre_known"). Place order checks again on the server.
+  const signedIn = init.status === "ready" ? Boolean(saved?.signedIn) : /(?:^|;\s*)(livre_known=1|sb-)/.test(document.cookie);
+  if (loginRequired && !signedIn) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-5 rounded-2xl border border-line bg-surface p-8 text-center">
         <Lock className="size-8 text-gold-dark" strokeWidth={1.25} aria-hidden />

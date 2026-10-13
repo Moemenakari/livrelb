@@ -7,8 +7,14 @@ import type { HeroCard } from "@/lib/hero-cards";
 
 export type Localized = Record<Locale, string>;
 
-/** materials table. */
-export type MaterialKey = "gold" | "silver" | "doubleGold" | "doubleSilver" | "steel";
+/** The five metals the shop was built with. */
+export type BuiltinMaterialKey = "gold" | "silver" | "doubleGold" | "doubleSilver" | "steel";
+
+/**
+ * materials table key: a built-in metal, "standard" (the one neutral price of a simple product such as a gift box)
+ * or a color made in the admin (any other key, e.g. "c-red"). Look names and swatches up with materialInfo().
+ */
+export type MaterialKey = string;
 
 /** The three metal colors the previews and art can render. */
 export type MetalTone = "gold" | "silver" | "rose";
@@ -26,6 +32,8 @@ export type MaterialOffer = {
   material: MaterialKey;
   price: number;
   compareAtPrice?: number;
+  /** Only for a color made in the admin (not a built-in metal, not "standard"): its own name and swatch. */
+  custom?: { name: Localized; swatch: string };
 };
 
 /** fonts table: our own display names (Lebanese places), never the font file's name. */
@@ -126,9 +134,11 @@ export type Product = {
   freeDelivery?: boolean;
   /** The LIVRE gift box comes free with this piece (default on). */
   freeGiftBox?: boolean;
-  /** Metals offered, in display order, each with its price. */
+  /** Metals or colors offered, in display order, each with its price. One offer = nothing to choose. */
   offers: MaterialOffer[];
   defaultMaterial: MaterialKey;
+  /** false = the product page does not ask for a metal or color (a simple product: one price). */
+  askMaterial?: boolean;
   personalization?: Personalization;
   /**
    * Chain connection choices of a piece that is not personalized (coins,

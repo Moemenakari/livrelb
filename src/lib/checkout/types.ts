@@ -91,7 +91,9 @@ export type CheckoutError =
   | "unavailable"
   | "login_required"
   | "rate_limited"
-  | "failed";
+  | "failed"
+  /** The shop could not be reached after trying again: nothing was lost, she can press the button again. */
+  | "unreachable";
 
 export type CheckoutResult = { ok: true; number: number } | { ok: false; error: CheckoutError };
 
@@ -116,5 +118,4 @@ export type SavedCustomer = {
 };
 
 /** Order status steps shown on the confirmation and tracking pages. */
-export const orderSteps = ["pending", "confirmed", "in_production", "shipped", "delivered"] as const;
-export type OrderStatus = (typeof orderSteps)[number] | "cancelled";
+export type OrderStatus = "pending" | "confirmed" | "in_production" | "shipped" | "delivered" | "cancelled";

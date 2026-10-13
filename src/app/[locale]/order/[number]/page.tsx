@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { resolveLocale } from "@/i18n/resolve-locale";
 import { whatsappUrl } from "@/config/site";
 import { findProduct, getCatalog } from "@/lib/catalog";
-import { fonts, isFontKey, materials } from "@/lib/catalog/materials";
+import { fonts, hasMaterialLabel, isFontKey, materials } from "@/lib/catalog/materials";
 import { pieceOf, type DayRange, type MaterialKey } from "@/lib/catalog/types";
 import { ORDERS_COOKIE } from "@/lib/checkout/cookies";
 import { orderPoints } from "@/lib/checkout/points";
@@ -135,8 +135,8 @@ export default async function OrderPage({ params }: PageProps<"/[locale]/order/[
                   ? tProduct("usSize", { value: Number(item.size_value) })
                   : tProduct("cm", { value: Number(item.size_value) });
             const details = [
-              // Past Rose Gold orders keep the name they were sold under.
-              materials[material]?.name[locale] ?? item.material_name,
+              // Past Rose Gold orders keep the name they were sold under; a simple product has no metal to name.
+              hasMaterialLabel(material) ? ((materials as Record<string, { name: Record<"en" | "ar", string> } | undefined>)[material]?.name[locale] ?? item.material_name) : undefined,
               font && tCart("font", { font: fonts[font].name[locale] }),
               size && tCart(item.size_kind ?? "chain", { size }),
               item.chain_connection &&

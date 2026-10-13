@@ -35,7 +35,7 @@ function AddReview({ products, onDone }: { products: { id: string; name: string 
     setUploading(true);
     setUploadError(null);
     try {
-      const blob = await toWebp(f);
+      const blob = await toWebp(f, 800, 0.8);
       const t = await createReviewPhotoUpload(blob.size);
       if (!t.ok || !t.data) throw new Error(t.ok ? "Upload failed." : t.error);
       const res = await fetch(t.data.uploadUrl, { method: "PUT", body: blob, headers: { "Content-Type": "image/webp" } });

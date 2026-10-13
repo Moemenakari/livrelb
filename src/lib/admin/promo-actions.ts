@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh } from "next/cache";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
 import { fromLocalInput } from "./format";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
@@ -61,7 +61,7 @@ export async function saveCoupon(input: CouponInput): Promise<ActionResult> {
     const couponId = id(input.id);
     const { error } = couponId ? await db.from("coupons").update(row).eq("id", couponId) : await db.from("coupons").insert(row);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }
@@ -99,7 +99,7 @@ export async function savePromotion(input: PromotionInput): Promise<ActionResult
     const promoId = id(input.id);
     const { error } = promoId ? await db.from("promotions").update(row).eq("id", promoId) : await db.from("promotions").insert(row);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }
@@ -155,7 +155,7 @@ export async function saveSeason(input: SeasonInput): Promise<ActionResult> {
         .insert(products.map((product_id, i) => ({ collection_id: seasonId!, product_id, sort_order: i })));
       if (error) throw error;
     }
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }
@@ -212,7 +212,7 @@ export async function saveHeroSlide(input: SlideInput): Promise<ActionResult> {
     const slideId = id(input.id);
     const { error } = slideId ? await db.from("promotions").update(row).eq("id", slideId).eq("placement", "hero_slide") : await db.from("promotions").insert(row);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }
@@ -224,7 +224,7 @@ export async function deleteHeroSlide(slideId: string): Promise<ActionResult> {
     if (!target) throw new AdminError("Invalid slide.");
     const { error } = await db.from("promotions").delete().eq("id", target).eq("placement", "hero_slide");
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }

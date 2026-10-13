@@ -62,9 +62,9 @@ export const coinTint: Record<MetalTone, string> = {
 };
 
 export function toTone(material: MaterialKey | MetalTone): MetalTone {
-  return material in materials
-    ? materials[material as MaterialKey].tone
-    : (material as MetalTone);
+  if (material in materials) return materials[material as keyof typeof materials].tone;
+  // A tone itself, or a color made in the admin (drawn in the silver tone).
+  return material === "gold" || material === "silver" || material === "rose" ? material : "silver";
 }
 
 /**

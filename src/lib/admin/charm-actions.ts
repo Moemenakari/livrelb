@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidatePath, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh, revalidatePath } from "next/cache";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { authorize, AdminError, run, type ActionResult } from "./auth";
 
@@ -17,7 +17,7 @@ export async function saveCharmSettings(input: { price: string; max: string }): 
     if (!Number.isInteger(max) || max < 1 || max > 30) throw new AdminError("Most charms on one chain: 1–30.");
     const { error } = await db.from("site_settings").update({ charm_price_cents: Math.round(price * 100), charm_max: max }).eq("id", 1);
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     revalidatePath("/[locale]/charms", "page");
     refresh();
   });
@@ -83,6 +83,7 @@ export async function saveCharmItem(input: CharmItemInput): Promise<ActionResult
     };
     const { error } = input.id && UUID.test(input.id) ? await db.from("charm_items").update(row).eq("id", input.id) : await db.from("charm_items").insert(row);
     if (error) throw error;
+    storefrontChanged();
     revalidatePath("/[locale]/charms", "page");
     refresh();
   });
@@ -141,6 +142,7 @@ export async function importCharmItems(rows: CharmImportRow[]): Promise<ActionRe
       const { error } = await db.from("charm_items").insert(fresh);
       if (error) throw error;
     }
+    storefrontChanged();
     revalidatePath("/[locale]/charms", "page");
     refresh();
     return { created: fresh.length, updated };
@@ -153,6 +155,7 @@ export async function deleteCharmItem(id: string): Promise<ActionResult> {
     if (!UUID.test(id)) throw new AdminError("Invalid charm.");
     const { error } = await db.from("charm_items").delete().eq("id", id);
     if (error) throw error;
+    storefrontChanged();
     revalidatePath("/[locale]/charms", "page");
     refresh();
   });
@@ -176,6 +179,7 @@ export async function bulkUpdateCharms(input: CharmBulk & { remove?: boolean }):
     if (input.remove) {
       const { error, count } = await db.from("charm_items").delete({ count: "exact" }).in("id", ids);
       if (error) throw error;
+      storefrontChanged();
       revalidatePath("/[locale]/charms", "page");
       refresh();
       return { count: count ?? 0 };
@@ -197,6 +201,7 @@ export async function bulkUpdateCharms(input: CharmBulk & { remove?: boolean }):
 
     const { error, count } = await db.from("charm_items").update(patch, { count: "exact" }).in("id", ids);
     if (error) throw error;
+    storefrontChanged();
     revalidatePath("/[locale]/charms", "page");
     refresh();
     return { count: count ?? 0 };

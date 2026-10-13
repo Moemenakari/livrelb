@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { canSee, describe, loadNames, orderEvent, type AuditRow } from "@/lib/admin/activity";
 import { requireStaff } from "@/lib/admin/auth";
 import { addDays, beirutDay, beirutDayStart, dateTime, money } from "@/lib/admin/format";

@@ -14,9 +14,11 @@ if (!existsSync(manifestFile)) {
   process.exit(1);
 }
 
-// Per-person routes: never static. (/admin/manifest.webmanifest is a plain PWA file, fine static.)
+// Per-person routes: never static. (/admin/manifest.webmanifest is a plain PWA file, fine static. /checkout is static ON
+// PURPOSE since the free-plan work: the page holds nothing personal, and who she is, her saved details and the
+// employees come from /api/checkout-init after it opens, so it is not in this list any more.)
 const perPerson = [
-  /^\/(en|ar)?\/?(checkout|account|track)(\/|$)/,
+  /^\/(en|ar)?\/?(account|track)(\/|$)/,
   /^\/(en|ar)?\/?order(\/|$)/,
   /^\/(en|ar)?\/?auth(\/|$)/,
   /^\/admin(\/|$)(?!manifest\.webmanifest)/,

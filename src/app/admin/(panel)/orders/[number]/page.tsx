@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin/auth";
 import { nameOf, staffNames } from "@/lib/admin/data";
 import { dateTime, money, prettyPhone, statusLabels, statusTones } from "@/lib/admin/format";
 import { can } from "@/lib/admin/permissions";
-import { allMaterials, isFontKey } from "@/lib/catalog/materials";
+import { hasMaterialLabel, isFontKey } from "@/lib/catalog/materials";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPreview } from "@/components/admin/admin-preview";
 import { OrderControls } from "@/components/admin/order-controls";
@@ -67,7 +67,11 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
   const live = !deleted && order.status !== "cancelled";
 
   const itemsText = order.order_items
-    .map((i) => `${i.qty}× ${i.product_name}${i.custom_text ? ` "${i.custom_text}"` : ""} (${i.material_name}${i.font_name ? `, ${i.font_name}` : ""}${i.size_value ? `, ${i.size_value} cm` : ""})`)
+    .map((i) => {
+      // A simple product (a gift box) has no metal, font or size to list.
+      const parts = [hasMaterialLabel(i.materials?.key ?? "") ? i.material_name : "", i.font_name, i.size_value ? `${i.size_value} cm` : ""].filter(Boolean);
+      return `${i.qty}× ${i.product_name}${i.custom_text ? ` "${i.custom_text}"` : ""}${parts.length ? ` (${parts.join(", ")})` : ""}`;
+    })
     .join("\n");
   const whatsappText = `LIVRE order #${order.number}\n${itemsText}\nTotal: ${money(order.total_cents)}\n${order.customer_name} · ${prettyPhone(order.phone)}\n${order.area_name ?? ""} ${order.address ?? ""}`.trim();
 
@@ -99,7 +103,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
             <ul className="divide-y divide-line">
               {order.order_items.map((i) => {
                 // Past Rose Gold orders still draw in rose gold.
-                const material = allMaterials.find((m) => m === i.materials?.key) ?? (i.materials?.key === "rose" ? "rose" : "gold");
+                const material = i.materials?.key ?? "gold";
                 const font = isFontKey(i.fonts?.key) ? i.fonts!.key : undefined;
                 return (
                   <li key={i.id} className="flex gap-4 py-3 first:pt-0 last:pb-0">
@@ -126,8 +130,12 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[nu
                         </p>
                       )}
                       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-muted">
-                        <dt>Material</dt>
-                        <dd className="text-foreground">{i.material_name}</dd>
+                        {hasMaterialLabel(i.materials?.key ?? "") && (
+                          <>
+                            <dt>Material</dt>
+                            <dd className="text-foreground">{i.material_name}</dd>
+                          </>
+                        )}
                         {i.font_name && (
                           <>
                             <dt>Font</dt>

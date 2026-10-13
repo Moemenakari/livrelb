@@ -13,6 +13,24 @@ import { formatMoney, formatPrice } from "@/lib/format";
 import { PhotoSlot } from "@/components/ui/photo-slot";
 import { ProductArt } from "./product-art";
 
+/**
+ * A product photo in the grid: the small size (src/lib/media.ts), straight from R2. A photo that was uploaded
+ * before the two sizes has no small one: the product-page size takes its place.
+ */
+function CardPhoto({ src, full, alt }: { src: string; full: string; alt: string }) {
+  const [shown, setShown] = useState(src);
+  return (
+    <Image
+      src={shown}
+      alt={alt}
+      fill
+      sizes="(min-width: 1024px) 25vw, 50vw"
+      className="object-cover"
+      onError={() => setShown((current) => (current === full ? current : full))}
+    />
+  );
+}
+
 type Props = {
   product: CardProduct;
   /** Name typed once on a category page, drawn on every name piece. */
@@ -69,14 +87,7 @@ export function ProductCard({ product, previewText, preferredTone, font, title, 
   const slides =
     product.media.length > 0
       ? product.media.map((m) => (
-          <Image
-            key={m.src}
-            src={m.src}
-            alt={m.alt}
-            fill
-            sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover"
-          />
+          <CardPhoto key={m.full} src={m.src} full={m.full} alt={m.alt} />
         ))
       : [
           <div key="art" className="flex h-full items-start bg-surface">
@@ -147,7 +158,7 @@ export function ProductCard({ product, previewText, preferredTone, font, title, 
                   aria-label={t("showSlide", { index: i + 1 })}
                   aria-current={slide === i || undefined}
                   onClick={() => goTo(i)}
-                  className="flex size-6 items-center justify-center"
+                  className="relative before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] flex size-6 items-center justify-center"
                 >
                   <span className={`size-1.5 rounded-full transition-colors ${slide === i ? "bg-ink" : "bg-ink/25"}`} />
                 </button>
@@ -184,7 +195,7 @@ export function ProductCard({ product, previewText, preferredTone, font, title, 
               aria-pressed={material === o.material}
               onClick={() => setMaterial(o.material)}
               style={{ backgroundColor: o.swatch }}
-              className={`size-4 rounded-full border border-black/10 transition-shadow ${material === o.material ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
+              className={`relative before:absolute before:-inset-1 before:content-[''] size-4 rounded-full border border-black/10 transition-shadow ${material === o.material ? "ring-1 ring-gold-dark ring-offset-2" : ""}`}
             />
           ))}
         </div>

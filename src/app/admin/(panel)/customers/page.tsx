@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { requireStaff } from "@/lib/admin/auth";
 import { nameOf, staffNames } from "@/lib/admin/data";
 import { dateOnly, dateTime, prettyPhone } from "@/lib/admin/format";

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Loader2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
 import { GoogleIcon } from "@/components/icons/brand-icons";
 import { CedarMark } from "@/components/icons/cedar-mark";
 import { usePathname } from "@/i18n/navigation";
@@ -25,13 +24,24 @@ const set = (patch: Partial<State>) => {
   listeners.forEach((l) => l());
 };
 
+// The Supabase browser library (about 70 KB) is only downloaded when it is needed: a browser with no Supabase
+// cookie ("sb-...", the same test as the proxy and SeenPing) has no session, so a visitor just looking around
+// never loads it. It loads when a cookie is there, or when she taps "Continue with Google".
+const hasSessionCookie = () => /(?:^|;\s*)sb-/.test(document.cookie);
+const loadClient = () => import("@/lib/supabase/client").then((m) => m.createClient());
+
 let watching = false;
 function watch() {
   if (watching) return;
   watching = true;
-  const auth = createClient().auth;
-  auth.getSession().then(({ data }) => set({ user: Boolean(data.session) }));
-  auth.onAuthStateChange((_event, session) => set({ user: Boolean(session) }));
+  if (!hasSessionCookie()) {
+    set({ user: false });
+    return;
+  }
+  void loadClient().then((client) => {
+    client.auth.getSession().then(({ data }) => set({ user: Boolean(data.session) }));
+    client.auth.onAuthStateChange((_event, session) => set({ user: Boolean(session) }));
+  });
 }
 
 export const openLogin = () => set({ open: true });
@@ -43,7 +53,7 @@ export async function ensureLogin(): Promise<boolean> {
   // Safari / Chrome (the bag goes with her), at the checkout. The order itself still needs the account.
   if (isEmbeddedBrowser()) return true;
   watch();
-  if (state.user === null) set({ user: Boolean((await createClient().auth.getSession()).data.session) });
+  if (state.user === null) set({ user: hasSessionCookie() ? Boolean((await (await loadClient()).auth.getSession()).data.session) : false });
   if (state.user) return true;
   openLogin();
   return false;
@@ -91,6 +101,8 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    // Download the library while she reads the dialog, so the Google button answers at once.
+    if (open) void loadClient();
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
   }, [open]);
@@ -101,7 +113,7 @@ export function LoginDialog({ required: needed }: { required: boolean }) {
     setBusy(true);
     setError(false);
     rememberPage();
-    const { error: e } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+    const { error: e } = await (await loadClient()).auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
     if (e) {
       setBusy(false);
       setError(true);

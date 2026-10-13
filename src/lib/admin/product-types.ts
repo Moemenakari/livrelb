@@ -20,6 +20,14 @@ export type ProductForm = {
   isNew: boolean;
   freeDelivery: boolean;
   freeGiftBox: boolean;
+  /**
+   * What the product page asks the customer for. All on = a jewelry piece (the default); a gift box turns them off.
+   * A hidden choice is not shown, not required to add to the bag, and ignored by the server's pricing.
+   */
+  askMaterial: boolean;
+  askSize: boolean;
+  askConnection: boolean;
+  askPersonalization: boolean;
   personalization: "name" | "initial" | "";
   maxLength: number;
   sampleText: string;
@@ -54,3 +62,9 @@ export function artKey(art: ProductArt): string {
 }
 
 export const MAX_PHOTOS = 7;
+
+/** The one neutral price of a simple product (same key as materials.ts NO_MATERIAL). */
+export const STANDARD_KEY = "standard";
+
+/** A color the owner made in the admin: materials keys are letters and digits only, and start with "c". */
+export const COLOR_KEY = /^c[a-z0-9]{8}$/;

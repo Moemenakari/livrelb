@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/plain-link";
 import { ShoppingBag, Star, UserCog, XCircle, type LucideIcon } from "lucide-react";
 import type { ActivityEvent, ActivityKind } from "@/lib/admin/activity";
 import { Empty } from "./ui";

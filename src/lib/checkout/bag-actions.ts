@@ -38,6 +38,7 @@ export async function restoreBag(param: string): Promise<Omit<CartItem, "id">[]>
       art: product.art,
       sizeKind: l.sizeKind,
       material: l.material,
+      materialName: product.offers.find((o) => o.material === l.material)?.custom?.name,
       text: l.text,
       font: l.font as CartItem["font"],
       size: l.size,

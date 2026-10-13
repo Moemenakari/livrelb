@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { CHARM_DESIGN_SLUG, productHref } from "@/config/navigation";
 import { MAX_QTY, removeFromCart, setQty, type CartItem } from "@/lib/cart";
-import { fonts, materials } from "@/lib/catalog/materials";
+import { fonts, hasMaterialLabel, materialInfo } from "@/lib/catalog/materials";
 import { pieceOf } from "@/lib/catalog/types";
 import type { QuoteLine } from "@/lib/checkout/types";
 import { formatPrice } from "@/lib/format";
@@ -42,7 +42,7 @@ export function CartLine({ item, quoted, readOnly = false, onNavigate }: Props) 
         : tProduct("cm", { value: item.size });
 
   const details = [
-    materials[item.material]?.name[locale],
+    hasMaterialLabel(item.material) ? (item.materialName ?? materialInfo(item.material).name)[locale] : undefined,
     item.font && item.text && t("font", { font: fonts[item.font]?.name[locale] ?? item.font }),
     size && t(item.sizeKind ?? "chain", { size }),
     item.connection && t("connection", { connection: tProduct(`connection.${item.connection}`) }),

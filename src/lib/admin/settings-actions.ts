@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh, revalidateTag } from "next/cache";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { refresh } from "next/cache";
+import { storefrontChanged } from "@/lib/catalog/publish";
 import { cleanHeroCards, type HeroCard } from "@/lib/hero-cards";
 import { isMissingColumn } from "@/lib/supabase/compat";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
@@ -85,7 +85,7 @@ export async function saveSettings(input: SettingsInput): Promise<ActionResult> 
       ({ error } = await db.from("site_settings").update(fields).eq("id", 1));
     }
     if (error) throw error;
-    revalidateTag(CATALOG_TAG, { expire: 0 });
+    storefrontChanged();
     refresh();
   });
 }

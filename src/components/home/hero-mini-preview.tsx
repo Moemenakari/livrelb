@@ -125,7 +125,7 @@ export function HeroMiniPreview({ fonts }: { fonts: FontKey[] }) {
               pathname: productHref(PRODUCT),
               query: { ...(text.trim() && { name: text.trim() }), material, connection, font },
             }}
-            className="ms-auto inline-flex items-center gap-1 text-sm font-medium text-gold-dark underline-offset-4 hover:underline"
+            className="relative before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] ms-auto inline-flex items-center gap-1 text-sm font-medium text-gold-dark underline-offset-4 hover:underline"
           >
             {t("cta")}
             <ArrowRight className="size-4 rtl:-scale-x-100" strokeWidth={1.5} aria-hidden />

@@ -4,24 +4,27 @@ import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Film, ImagePlus, Loader2, Star, Trash2 } from "lucide-react";
 import { createMediaUpload } from "@/lib/admin/product-actions";
 import { MAX_PHOTOS, type ProductForm } from "@/lib/admin/product-types";
+import { CARD_PX, PRODUCT_PX } from "@/lib/media";
 import { secondaryButtonClass } from "./ui";
 
 type Media = ProductForm["media"];
 
 /**
  * Photos are made smaller and turned into WebP in the browser before the
- * upload (max 1800 px on the long side), so phones upload fast and the
- * storefront stays light.
+ * upload (default: max 1800 px on the long side), so phones upload fast and the
+ * storefront stays light. Product photos use two sizes (src/lib/media.ts).
  */
-export async function toWebp(file: File): Promise<Blob> {
+export async function toWebp(file: File, maxSide = 1800, quality = 0.85): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext("2d")!;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
   if (!blob) throw new Error("This photo couldn't be converted.");
   return blob;
 }
@@ -51,12 +54,19 @@ export function MediaManager({ slug, media, onChange }: { slug: string; media: M
       }
       try {
         setBusy(`Uploading ${file.name}…`);
-        const body: Blob = isVideo ? file : await toWebp(file);
+        // A photo goes up in two WebP sizes made here, in the browser: the product page's and a small one for the
+        // shop's grids (both served straight from R2, never through the Worker).
+        const body: Blob = isVideo ? file : await toWebp(file, PRODUCT_PX, 0.82);
+        const small: Blob | null = isVideo ? null : await toWebp(file, CARD_PX, 0.8);
         const contentType = isVideo ? file.type : "image/webp";
-        const target = await createMediaUpload({ slug: slug || "new", contentType, size: body.size });
+        const target = await createMediaUpload({ slug: slug || "new", contentType, size: body.size, cardSize: small?.size });
         if (!target.ok || !target.data) throw new Error(target.ok ? "Upload failed." : target.error);
         const res = await fetch(target.data.uploadUrl, { method: "PUT", body, headers: { "Content-Type": contentType } });
         if (!res.ok) throw new Error(`Upload failed (${res.status}).`);
+        if (small && target.data.cardUploadUrl) {
+          const cardRes = await fetch(target.data.cardUploadUrl, { method: "PUT", body: small, headers: { "Content-Type": contentType } });
+          if (!cardRes.ok) throw new Error(`Upload failed (${cardRes.status}).`);
+        }
         next = [...next, { url: target.data.publicUrl, type: isVideo ? "video" : "image", altEn: "", altAr: "" }];
         onChange(next);
       } catch (e) {
