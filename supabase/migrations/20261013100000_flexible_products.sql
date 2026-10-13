@@ -48,9 +48,10 @@ begin
 
   n := d;
   -- A product that does not ask for a metal or color has ONE price: its default row (else its first).
+  -- A product that does ask can never sell the neutral "standard" row (it is only for simple products).
   n := pg_temp.patch_once(n,
     'and m.key = item ->> ''material'' and m.is_active;',
-    E'and m.is_active\n    and (m.key = item ->> ''material'' or not v_product.ask_material)\n  order by pm.is_default desc, pm.sort_order\n  limit 1;');
+    E'and m.is_active\n    and (not v_product.ask_material or (m.key = item ->> ''material'' and m.key <> ''standard''))\n  order by pm.is_default desc, pm.sort_order\n  limit 1;');
   -- Sizes: a hidden size adds nothing and is not required.
   n := pg_temp.patch_once(n,
     'if exists (select 1 from public.product_options where product_id = v_product.id) then',

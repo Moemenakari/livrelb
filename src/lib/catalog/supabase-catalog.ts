@@ -4,7 +4,7 @@ import { createAdminClient, createPublicClient } from "@/lib/supabase/public";
 import { CHARM_DESIGN_SLUG, defaultNavSort } from "@/config/navigation";
 import { parseHeroCards } from "@/lib/hero-cards";
 import { defaultHomeTiles, styleKeys } from "./categories";
-import { isFontKey, materials } from "./materials";
+import { isFontKey, materials, NO_MATERIAL } from "./materials";
 import { reviews as sampleReviews, showSampleReviews } from "./reviews";
 import type {
   Catalog,
@@ -145,7 +145,8 @@ export async function loadSupabaseCatalog(): Promise<Catalog> {
     const defaultKey = row.product_materials.find((pm) => pm.is_default)?.materials?.key;
     const allOffers = [...row.product_materials]
       .sort(bySort)
-      .filter((pm) => pm.materials?.key && pm.materials.is_active !== false)
+      // The neutral "standard" row is only the one price of a simple product, never a choice.
+      .filter((pm) => pm.materials?.key && pm.materials.is_active !== false && (!askMaterial || pm.materials.key !== NO_MATERIAL))
       .map((pm) => ({
         material: pm.materials!.key,
         price: dollars(pm.price_cents),

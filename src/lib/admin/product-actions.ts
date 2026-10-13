@@ -6,7 +6,7 @@ import { isFontKey } from "@/lib/catalog/materials";
 import type { Json } from "@/lib/supabase/database.types";
 import { createUploadUrl, isR2Configured } from "@/lib/storage/r2";
 import { AdminError, authorize, run, type ActionResult } from "./auth";
-import { artPresets, artKey, MAX_PHOTOS, type ProductForm } from "./product-types";
+import { artPresets, artKey, MAX_PHOTOS, STANDARD_KEY, type ProductForm } from "./product-types";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -49,6 +49,9 @@ function toPayload(f: ProductForm, existingMedia: Set<string>, materialKeys: Set
     return { key: m.key, price_cents: price, compare_at_price_cents: compare, is_default: Boolean(m.isDefault) };
   });
   if (materials.length === 0) throw new AdminError("Add at least one material with a price.");
+  if (f.askMaterial !== false && materials.some((m) => m.key === STANDARD_KEY)) {
+    throw new AdminError("The plain price is only for simple products. Choose a metal or color, or switch off \"Metal or color\".");
+  }
   if (new Set(materials.map((m) => m.key)).size !== materials.length) throw new AdminError("Each material only once.");
   if (!materials.some((m) => m.is_default)) materials[0].is_default = true;
   const firstDefault = materials.findIndex((m) => m.is_default);
