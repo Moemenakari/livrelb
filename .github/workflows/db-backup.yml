@@ -38,9 +38,11 @@ jobs:
             exit 1
           fi
 
+      # Pinned, not "latest": the run of 2026-10-13 07:43 UTC failed in this very step. 2.120.0 is the version the
+      # green runs used. Raise it by hand now and then (github.com/supabase/cli/releases, stable ones only).
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.120.0
 
       - name: Dump roles, schema and data
         run: |

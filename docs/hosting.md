@@ -1,8 +1,9 @@
 # Hosting on Cloudflare (free tier)
 
-The site is prepared for **Cloudflare Workers** with
+The site runs on **Cloudflare Workers** with
 [OpenNext](https://opennext.js.org/cloudflare) (`@opennextjs/cloudflare`).
-Product photos go to **Cloudflare R2**. Not deployed yet.
+Product photos go to **Cloudflare R2**. The shop is live at
+<https://shop.livrelb.workers.dev> (Worker `shop`).
 
 ## Scripts
 
